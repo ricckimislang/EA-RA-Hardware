@@ -1,0 +1,244 @@
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #34495e;
+    --accent-color: #3498db;
+    --success-color: #2ecc71;
+    --warning-color: #f1c40f;
+    --danger-color: #e74c3c;
+    --text-color: #333;
+    --light-bg: #f5f6fa;
+    --border-color: #dcdde1;
+    --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
+}
+
+.pos-header {
+    background: white;
+    padding: 1rem 1.5rem;
+    box-shadow: var(--card-shadow);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.store-logo {
+    max-width: 50px;
+    height: auto;
+}
+
+.store-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.store-info h1 {
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.transaction-info {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
+
+.cashier-info, .datetime-info, .transaction-number {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+#current-date, #current-time {
+    font-size: 0.9rem;
+    color: var(--text-color);
+}
+/* POS Layout */
+.pos-container {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    height: calc(100vh - 80px);
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Search and Items Section */
+.pos-main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.search-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: var(--card-shadow);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.search-bar {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.category-filter {
+    min-width: 200px;
+}
+
+.category-filter select {
+    padding: 0.8rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    background-color: white;
+}
+
+.category-filter select:focus {
+    border-color: var(--accent-color);
+    outline: none;
+}
+
+.search-bar input {
+    flex: 1;
+    padding: 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1.1rem;
+}
+
+.search-bar input:focus {
+    border-color: var(--accent-color);
+    outline: none;
+}
+
+/* Items Grid */
+.items-grid {
+    min-height: 470px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 10px;
+    box-shadow: var(--card-shadow);
+    overflow-y: auto;
+}
+
+.item-card {
+    background: var(--light-bg);
+    border-radius: 8px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.item-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Cart Section */
+.cart-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: var(--card-shadow);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.cart-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.cart-items {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.cart-item-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Totals and Checkout */
+.cart-totals {
+    padding: 1rem;
+    border-top: 1px solid var(--border-color);
+    background: var(--light-bg);
+}
+
+.discount-section {
+    padding: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.checkout-btn {
+    width: 100%;
+    padding: 1rem;
+    background: var(--success-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.checkout-btn:hover {
+    background: #27ae60;
+}
+
+/* Checkout button styles */
+#checkout-btn:disabled {
+    background-color: #6c757d; /* Bootstrap's gray color */
+    border-color: #6c757d;
+    cursor: not-allowed;
+}
+
+
+
+/* Receipt Preview */
+.receipt-preview {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .pos-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .cart-section {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 60vh;
+        border-radius: 20px 20px 0 0;
+        z-index: 1000;
+    }
+}
