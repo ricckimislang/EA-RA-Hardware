@@ -1,0 +1,197 @@
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #34495e;
+    --accent-color: #3498db;
+    --success-color: #2ecc71;
+    --warning-color: #f1c40f;
+    --danger-color: #e74c3c;
+    --text-color: #333;
+    --light-bg: #f5f6fa;
+    --border-color: #dcdde1;
+    --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
+}
+
+/* Page Header Styles */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 10px;
+    box-shadow: var(--card-shadow);
+}
+
+.page-header h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.page-header .btn {
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Summary Cards Styles */
+.summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.summary-cards .card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: var(--card-shadow);
+    transition: var(--transition);
+    border: none;
+    overflow: hidden;
+}
+
+.summary-cards .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.summary-cards .card-body {
+    padding: 1.5rem;
+    position: relative;
+}
+
+.summary-cards h5 {
+    color: var(--text-color);
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    font-weight: 500;
+    opacity: 0.8;
+}
+
+.summary-cards h2 {
+    color: var(--primary-color);
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 600;
+}
+
+/* Filter Section Styles */
+.filter-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 2rem;
+}
+
+.filter-section .row {
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+.filter-section .form-control {
+    border: 1px solid var(--border-color);
+    padding: 0.75rem;
+    border-radius: 6px;
+    transition: var(--transition);
+}
+
+.filter-section .form-control:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.filter-section .btn {
+    padding: 0.75rem 1.5rem;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+/* Table Styles */
+.table-responsive {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: var(--card-shadow);
+}
+
+.table {
+    margin: 0;
+}
+
+.table th {
+    background: var(--light-bg);
+    color: var(--primary-color);
+    font-weight: 600;
+    padding: 1rem;
+    border-top: none;
+}
+
+.table td {
+    padding: 1rem;
+    vertical-align: middle;
+}
+
+.table .badge {
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    border-radius: 20px;
+}
+
+.badge-Rent { background-color: var(--accent-color); color: white; }
+.badge-Utilities { background-color: var(--success-color); color: white; }
+.badge-Salaries { background-color: var(--warning-color); color: var(--text-color); }
+.badge-Supplies { background-color: var(--secondary-color); color: white; }
+.badge-Purchases { background-color: var(--danger-color); color: white; }
+
+.table .btn-sm {
+    padding: 0.5rem;
+    border-radius: 4px;
+    margin: 0 0.2rem;
+}
+
+/* employee */
+
+
+
+/* Import Modal Styles */
+@import 'modals.css';
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+
+    .page-header .btn {
+        width: 100%;
+    }
+
+    .filter-section .row > div {
+        margin-bottom: 1rem;
+    }
+
+    .table-responsive {
+        padding: 1rem;
+    }
+
+    .table td, .table th {
+        padding: 0.75rem;
+    }
+
+    .table .btn-sm {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.875rem;
+    }
+}
