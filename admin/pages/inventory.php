@@ -3,14 +3,21 @@
 
 <body>
     <?php include '../includes/sidebar.php'; ?>
-    
+
     <div class="main-content">
         <div class="page-header">
             <h1>Inventory Management</h1>
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
-                <i class="fas fa-plus"></i> Add Product
-            </button>
+            <div class="header-buttons d-flex gap-1">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                    <i class="fas fa-plus"></i> Add Product
+                </button>
+                <!-- <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#contactSuppliers">
+                    <i class="fas fa-address-card"></i> Add Product
+                </button> -->
+            </div>
+
         </div>
+
 
         <!-- Inventory Summary Cards -->
         <div class="row summary-cards mb-4">
@@ -106,6 +113,7 @@
 
     <!-- modals -->
     <?php include_once 'modals/inventory-modals.php'; ?>
+
 
     <script src="../js/inventory.js"></script>
 </body>

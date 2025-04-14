@@ -54,7 +54,7 @@ const sampleCategories = [
 ];
 
 // Initialize DataTable with buttons
-$('#productsTable').DataTable({
+const productsTable = $('#productsTable').DataTable({
     responsive: true,
     dom: 'Bfrtlip',
     buttons: [
@@ -74,39 +74,60 @@ $('#productsTable').DataTable({
         }
     ],
     data: sampleProducts,
+    processing: true,
+    language: {
+        processing: "Loading..."
+    },
+    pageLength: 10,
+    lengthMenu: [
+        [10, 25, 50, -1],
+        [10, 25, 50, "All"]
+    ],
+    order: [[1, "asc"]],
     columns: [
         { data: 'sku' },
         { data: 'itemName' },
         { data: 'category' },
         { data: 'brand' },
-        { 
+        {
             data: 'stockLevel',
-            render: function(data, type, row) {
-                let levelClass = 'normal';
-                if (data <= 0) {
-                    levelClass = 'out';
-                } else if (data <= row.lowStockThreshold) {
-                    levelClass = 'low';
+            render: function (data, type, row) {
+                if (type === 'display') {
+                    let levelClass = 'normal';
+                    if (data <= 0) {
+                        levelClass = 'out';
+                    } else if (data <= row.lowStockThreshold) {
+                        levelClass = 'low';
+                    }
+                    return `<span class="stock-level ${levelClass}">${data} ${row.unit}</span>`;
                 }
-                return `<span class="stock-level ${levelClass}">${data} ${row.unit}</span>`;
+                return data;
             }
         },
         { data: 'unit' },
-        { 
+        {
             data: 'costPrice',
-            render: function(data) {
-                return '₱' + parseFloat(data).toFixed(2);
+            render: function (data, type, row) {
+                if (type === 'display' || type === 'filter') {
+                    return '₱' + parseFloat(data).toFixed(2);
+                }
+                return data;
             }
         },
-        { 
+        {
             data: 'sellingPrice',
-            render: function(data) {
-                return '₱' + parseFloat(data).toFixed(2);
+            render: function (data, type, row) {
+                if (type === 'display' || type === 'filter') {
+                    return '₱' + parseFloat(data).toFixed(2);
+                }
+                return data;
             }
         },
         {
             data: null,
-            render: function(data, type, row) {
+            orderable: false,
+            searchable: false,
+            render: function (data, type, row) {
                 return `
                     <div class="action-buttons">
                         <button class="btn btn-info btn-sm" onclick="editProduct(${row.id})" title="Edit">
@@ -129,12 +150,12 @@ $('#productsTable').DataTable({
 function loadCategories() {
     const categorySelect = $('#category');
     const categoryFilter = $('#categoryFilter');
-    
+
     categorySelect.empty();
     categoryFilter.empty();
-    
+
     categoryFilter.append('<option value="">All Categories</option>');
-    
+
     sampleCategories.forEach(category => {
         categorySelect.append(`<option value="${category.id}">${category.name}</option>`);
         categoryFilter.append(`<option value="${category.id}">${category.name}</option>`);
@@ -142,7 +163,7 @@ function loadCategories() {
 }
 
 // Handle product form submission
-$('#saveProduct').click(function() {
+$('#saveProduct').click(function () {
     if (!$('#productForm')[0].checkValidity()) {
         $('#productForm')[0].reportValidity();
         return;
@@ -170,7 +191,7 @@ $('#saveProduct').click(function() {
 });
 
 // Handle stock adjustment form submission
-$('#saveAdjustment').click(function() {
+$('#saveAdjustment').click(function () {
     if (!$('#stockAdjustmentForm')[0].checkValidity()) {
         $('#stockAdjustmentForm')[0].reportValidity();
         return;
@@ -195,25 +216,34 @@ $('#saveAdjustment').click(function() {
 });
 
 // Filter handling
-$('#applyFilters').click(function() {
+$('#applyFilters').click(function () {
     const categoryFilter = $('#categoryFilter').val();
     const brandFilter = $('#brandFilter').val();
     const stockFilter = $('#stockFilter').val();
 
-    productsTable.clear();
-    
-    const filteredProducts = sampleProducts.filter(product => {
-        const categoryMatch = !categoryFilter || product.category === $('#categoryFilter option:selected').text();
-        const brandMatch = !brandFilter || product.brand.toLowerCase().includes(brandFilter.toLowerCase());
-        const stockMatch = !stockFilter || 
-            (stockFilter === 'low' && product.stockLevel <= product.lowStockThreshold && product.stockLevel > 0) ||
-            (stockFilter === 'out' && product.stockLevel <= 0) ||
-            (stockFilter === 'normal' && product.stockLevel > product.lowStockThreshold);
+    $.fn.dataTable.ext.search.push(
+        function (settings, data, dataIndex) {
+            const product = productsTable.row(dataIndex).data();
 
-        return categoryMatch && brandMatch && stockMatch;
-    });
+            const categoryMatch = !categoryFilter ||
+                product.category === $('#categoryFilter option:selected').text();
 
-    productsTable.rows.add(filteredProducts).draw();
+            const brandMatch = !brandFilter ||
+                product.brand.toLowerCase().includes(brandFilter.toLowerCase());
+
+            const stockMatch = !stockFilter ||
+                (stockFilter === 'low' && product.stockLevel <= product.lowStockThreshold && product.stockLevel > 0) ||
+                (stockFilter === 'out' && product.stockLevel <= 0) ||
+                (stockFilter === 'normal' && product.stockLevel > product.lowStockThreshold);
+
+            return categoryMatch && brandMatch && stockMatch;
+        }
+    );
+
+    productsTable.draw();
+
+    // Clear custom filter
+    $.fn.dataTable.ext.search.pop();
 });
 
 // Update summary cards
@@ -266,7 +296,7 @@ function adjustStock(productId) {
 }
 
 // Initialize page
-$(document).ready(function() {
+$(document).ready(function () {
     loadCategories();
     updateSummaryCards();
 });

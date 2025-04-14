@@ -1,0 +1,13 @@
+.chart-container {
+    position: relative;
+    width: 100%;
+    min-height: 300px;
+}
+
+.chart-container canvas {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    height: 100% !important;
+}

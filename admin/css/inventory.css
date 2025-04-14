@@ -44,6 +44,9 @@
 
 .summary-cards .card-body {
   padding: 1.5rem;
+  height: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .summary-cards h6 {
@@ -59,6 +62,16 @@
   margin: 0;
   font-size: 2rem;
   font-weight: 600;
+}
+
+.summary-cards .btn-warning,
+.summary-cards .btn-danger {
+  font-size: 0.875rem;
+  padding: 0.375rem 0.75rem;
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 /* Filter Section Styles */
