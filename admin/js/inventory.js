@@ -1,32 +1,25 @@
 // Initialize DataTable with buttons
 // Modify the DataTable initialization to add better error handling
+// Replace the existing DataTable initialization with this:
+
 const productsTable = $("#productsTable").DataTable({
-  // Replace ajax with serverSide processing and custom data loading
-  serverSide: true,
   processing: true,
-  ajax: function(data, callback, settings) {
-    fetch("api/get_inventory.php")
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(json => {
-        if (!json || !json.data) {
-          console.error("Invalid API response structure", json);
-          callback({ data: [] });
-          return;
-        }
-        updateSummaryCards(json.data.summary);
-        loadCategories(json.data.categories);
-        loadBrands(json.data.brands);
-        callback({ data: json.data.products });
-      })
-      .catch(error => {
-        console.error("Fetch error:", error);
-        callback({ data: [] });
-      });
+  ajax: {
+    url: "api/get_inventory.php",
+    dataSrc: function(json) {
+      if (!json || !json.data) {
+        console.error("Invalid API response structure", json);
+        return [];
+      }
+      updateSummaryCards(json.data.summary);
+      loadCategories(json.data.categories);
+      loadBrands(json.data.brands);
+      return json.data.products;
+    },
+    error: function(xhr, error, thrown) {
+      console.error("AJAX Error:", xhr.responseText);
+      return [];
+    }
   },
   responsive: true,
   dom: "Bfrtlip",
@@ -46,9 +39,13 @@ const productsTable = $("#productsTable").DataTable({
       },
     },
   ],
-  processing: true,
   language: {
     processing: "Loading...",
+    emptyTable: "No data available in table",
+    zeroRecords: "No matching records found",
+    info: "Showing _START_ to _END_ of _TOTAL_ entries",
+    infoEmpty: "Showing 0 to 0 of 0 entries",
+    infoFiltered: "(filtered from _MAX_ total entries)"
   },
   pageLength: 10,
   lengthMenu: [
