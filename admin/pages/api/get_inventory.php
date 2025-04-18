@@ -21,16 +21,16 @@ try {
              FROM products p 
              LEFT JOIN categories c ON p.category_id = c.category_id 
              LEFT JOIN brands b ON p.brand_id = b.brand_id";
-    
+
     $stmt = $conn->prepare($query);
     if (!$stmt) {
         throw new Exception("Prepare failed: " . $conn->error);
     }
-    
+
     if (!$stmt->execute()) {
         throw new Exception("Execute failed: " . $stmt->error);
     }
-    
+
     $result = $stmt->get_result();
     $products = [];
     while ($row = $result->fetch_assoc()) {
@@ -47,7 +47,6 @@ try {
             'unit' => $row['unit'],
             'costPrice' => (float)$row['cost_price'],
             'sellingPrice' => (float)$row['selling_price'],
-            'supplier' => $row['supplier'] ?? '',
             'categoryId' => $row['category_id'],
             'brandId' => $row['brand_id']
         ];
@@ -64,7 +63,7 @@ try {
     foreach ($products as $product) {
         $summary['total_products']++;
         $summary['total_value'] += $product['stockLevel'] * $product['costPrice'];
-        
+
         if ($product['stockLevel'] <= 0) {
             $summary['out_of_stock']++;
         } elseif ($product['stockLevel'] <= $product['lowStockThreshold']) {
@@ -99,7 +98,6 @@ try {
             'brands' => $brands
         ]
     ]);
-
 } catch (Exception $e) {
     echo json_encode([
         'success' => false,

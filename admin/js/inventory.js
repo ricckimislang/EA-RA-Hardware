@@ -1,126 +1,174 @@
-// Initialize DataTable with buttons
-// Modify the DataTable initialization to add better error handling
-// Replace the existing DataTable initialization with this:
+// Initialize with null to avoid undefined errors
+let productsTable = null;
 
-const productsTable = $("#productsTable").DataTable({
-  processing: true,
-  ajax: {
-    url: "api/get_inventory.php",
-    dataSrc: function(json) {
-      if (!json || !json.data) {
-        console.error("Invalid API response structure", json);
+function initProductsTable() {
+  if ($.fn.DataTable.isDataTable("#productsTable")) {
+    $("#productsTable").DataTable().destroy();
+    $("#productsTable tbody").empty();
+  }
+
+  productsTable = $("#productsTable").DataTable({
+    processing: true,
+    ajax: {
+      url: "api/get_inventory.php",
+      dataSrc: function (json) {
+        console.log("Received JSON:", json);
+
+        if (!json || !json.data) {
+          console.error("Invalid API response", json);
+          return [];
+        }
+
+        try {
+          updateSummaryCards(json.data.summary);
+          loadCategories(json.data.categories);
+          loadBrands(json.data.brands);
+        } catch (e) {
+          console.error("Error during post-processing:", e);
+        }
+
+        if (!Array.isArray(json.data.products)) {
+          console.error("Products data is not an array", json.data.products);
+          return [];
+        }
+
+        return json.data.products;
+      },
+      error: function (xhr, error, thrown) {
+        if (error === "abort" || thrown === "abort") return;
+
+        if (xhr.status === 0) {
+          console.error("Network error");
+          alert("Unable to connect to server. Check your internet connection.");
+        } else {
+          console.error("AJAX Error", {
+            status: xhr.status,
+            responseText: xhr.responseText,
+            error,
+            thrown,
+          });
+          alert("Error loading data. Check the console.");
+        }
+
         return [];
-      }
-      updateSummaryCards(json.data.summary);
-      loadCategories(json.data.categories);
-      loadBrands(json.data.brands);
-      return json.data.products;
-    },
-    error: function(xhr, error, thrown) {
-      console.error("AJAX Error:", xhr.responseText);
-      return [];
-    }
-  },
-  responsive: true,
-  dom: "Bfrtlip",
-  buttons: [
-    {
-      extend: "print",
-      className: "btn btn-primary",
-      exportOptions: {
-        columns: ":not(:last-child)",
       },
     },
-    {
-      extend: "excel",
-      className: "btn btn-primary",
-      exportOptions: {
-        columns: ":not(:last-child)",
+    responsive: true,
+    dom: "Bfrtlip",
+    buttons: [
+      {
+        extend: "print",
+        className: "btn btn-primary",
+        exportOptions: { columns: ":not(:last-child)" },
       },
+      {
+        extend: "excel",
+        className: "btn btn-primary",
+        exportOptions: { columns: ":not(:last-child)" },
+      },
+    ],
+    language: {
+      processing: '<i class="fas fa-spinner fa-spin"></i> Loading...',
+      emptyTable: "No inventory data available",
+      zeroRecords: "No matching products found",
+      info: "Showing _START_ to _END_ of _TOTAL_ products",
+      infoEmpty: "Showing 0 products",
+      infoFiltered: "(filtered from _MAX_ total products)",
     },
-  ],
-  language: {
-    processing: "Loading...",
-    emptyTable: "No data available in table",
-    zeroRecords: "No matching records found",
-    info: "Showing _START_ to _END_ of _TOTAL_ entries",
-    infoEmpty: "Showing 0 to 0 of 0 entries",
-    infoFiltered: "(filtered from _MAX_ total entries)"
-  },
-  pageLength: 10,
-  lengthMenu: [
-    [10, 25, 50, -1],
-    [10, 25, 50, "All"],
-  ],
-  order: [[1, "asc"]],
-  columns: [
-    { data: "sku" },
-    { data: "itemName" },
-    { data: "category" },
-    { data: "brand" },
-    {
-      data: "stockLevel",
-      render: function (data, type, row) {
-        if (type === "display") {
+    pageLength: 10,
+    lengthMenu: [
+      [10, 25, 50, -1],
+      [10, 25, 50, "All"],
+    ],
+    order: [[1, "asc"]],
+    columns: [
+      { data: "sku" },
+      { data: "itemName" },
+      { data: "category" },
+      { data: "brand" },
+      {
+        data: "stockLevel",
+        render: function (data, type, row) {
+          const stock = parseInt(data);
+          const threshold = parseInt(row.lowStockThreshold);
           let levelClass = "normal";
-          if (data <= 0) {
-            levelClass = "out";
-          } else if (data <= row.lowStockThreshold) {
-            levelClass = "low";
+
+          if (type === "display") {
+            if (!isNaN(stock) && stock <= 0) levelClass = "out";
+            else if (!isNaN(stock) && !isNaN(threshold) && stock <= threshold)
+              levelClass = "low";
+
+            const displayStock = isNaN(stock) ? "N/A" : stock;
+            const displayUnit = isNaN(stock) ? "" : row.unit;
+            return `<span class="stock-level ${levelClass}">${displayStock} ${displayUnit}</span>`;
           }
-          return `<span class="stock-level ${levelClass}">${data} ${row.unit}</span>`;
-        }
-        return data;
+
+          return data;
+        },
       },
-    },
-    { data: "unit" },
-    {
-      data: "costPrice",
-      render: function (data, type, row) {
-        if (type === "display" || type === "filter") {
-          return "₱" + parseFloat(data).toFixed(2);
-        }
-        return data;
+      { data: "unit" },
+      {
+        data: "costPrice",
+        render: function (data, type) {
+          const price = parseFloat(data);
+          if ((type === "display" || type === "filter") && !isNaN(price)) {
+            return "₱" + price.toFixed(2);
+          }
+          return data;
+        },
       },
-    },
-    {
-      data: "sellingPrice",
-      render: function (data, type, row) {
-        if (type === "display" || type === "filter") {
-          return "₱" + parseFloat(data).toFixed(2);
-        }
-        return data;
+      {
+        data: "sellingPrice",
+        render: function (data, type) {
+          const price = parseFloat(data);
+          if ((type === "display" || type === "filter") && !isNaN(price)) {
+            return "₱" + price.toFixed(2);
+          }
+          return data;
+        },
       },
-    },
-    {
-      data: null,
-      orderable: false,
-      searchable: false,
-      render: function (data, type, row) {
-        return `
-                    <div class="action-buttons">
-                        <button class="btn btn-info btn-sm" onclick="editProduct(${row.id})" title="Edit">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-warning btn-sm" onclick="adjustStock(${row.id})" title="Adjust Stock">
-                            <i class="fas fa-boxes"></i>
-                        </button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteProduct(${row.id})" title="Delete">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                `;
+      {
+        data: null,
+        orderable: false,
+        searchable: false,
+        render: function (data, type, row) {
+          if (!row?.id) return "";
+          return `
+            <div class="action-buttons">
+              <button class="btn btn-info btn-sm" onclick="editProduct(${row.id})" title="Edit">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="btn btn-warning btn-sm" onclick="adjustStock(${row.id})" title="Adjust Stock">
+                <i class="fas fa-boxes"></i>
+              </button>
+              <button class="btn btn-danger btn-sm" onclick="deleteProduct(${row.id})" title="Delete">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          `;
+        },
       },
+    ],
+    drawCallback: function () {
+      console.log("Table draw complete.");
     },
-  ],
-});
+    initComplete: function (settings, json) {
+      console.log("Table init complete", json);
+      if (!json?.data?.products?.length) {
+        console.warn("No products received on init.");
+      }
+    },
+  });
+}
 
 // Load and populate categories
 function loadCategories(categories) {
   const categorySelect = $("#category");
+  const editCategory = $("#editCategory");
   const categoryFilter = $("#categoryFilter");
 
   categorySelect.empty();
+  editCategory.empty();
   categoryFilter.empty();
 
   categoryFilter.append('<option value="">All Categories</option>');
@@ -132,88 +180,11 @@ function loadCategories(categories) {
     categoryFilter.append(
       `<option value="${category.category_id}">${category.name}</option>`
     );
+    editCategory.append(
+      `<option value="${category.category_id}">${category.name}</option>`
+    );
   });
 }
-
-// Handle product form submission
-$("#saveProduct").click(function () {
-  if (!$("#productForm")[0].checkValidity()) {
-    $("#productForm")[0].reportValidity();
-    return;
-  }
-
-  const productData = {
-    itemName: $("#itemName").val(),
-    sku: $("#sku").val(),
-    category: $("#category option:selected").text(),
-    brand: $("#brand").val(),
-    description: $("#description").val(),
-    unit: $("#unit").val(),
-    costPrice: parseFloat($("#costPrice").val()),
-    sellingPrice: parseFloat($("#sellingPrice").val()),
-    supplier: $("#supplier").val(),
-    stockLevel: parseInt($("#initialStock").val()),
-  };
-
-  // Send data to server and refresh table
-  fetch("api/add_product.php", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(productData),
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.success) {
-        $("#addProductModal").modal("hide");
-        productsTable.ajax.reload();
-        updateSummaryCards();
-      } else {
-        alert("Error adding product: " + data.message);
-      }
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-      alert("Error adding product");
-    });
-});
-
-// Handle stock adjustment form submission
-$("#saveAdjustment").click(function () {
-  if (!$("#stockAdjustmentForm")[0].checkValidity()) {
-    $("#stockAdjustmentForm")[0].reportValidity();
-    return;
-  }
-
-  const adjustmentData = {
-    productId: parseInt($("#adjustmentProductId").val()),
-    adjustmentType: $("#adjustmentType").val(),
-    quantity: parseInt($("#adjustmentQuantity").val()),
-  };
-
-  fetch("api/adjust_stock.php", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(adjustmentData),
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.success) {
-        $("#stockAdjustmentModal").modal("hide");
-        productsTable.ajax.reload();
-        updateSummaryCards();
-      } else {
-        alert("Error adjusting stock: " + data.message);
-      }
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-      alert("Error adjusting stock");
-    });
-});
 
 // Filter handling
 $("#applyFilters").click(function () {
@@ -227,14 +198,14 @@ $("#applyFilters").click(function () {
 
     if (!product) return false;
 
+    // Category matching - check if no filter or if category ID matches
     const categoryMatch =
-      !categoryFilter ||
-      product.category === $("#categoryFilter option:selected").text();
+      !categoryFilter || product.categoryId == categoryFilter; // Use == for type coercion
 
-    const brandMatch =
-      !brandFilter ||
-      product.brand.toLowerCase().includes(brandFilter.toLowerCase());
+    // Brand matching - check if no filter or if brand ID matches
+    const brandMatch = !brandFilter || product.brandId == brandFilter; // Use == for type coercion
 
+    // Stock level matching - unchanged
     const stockMatch =
       !stockFilter ||
       (stockFilter === "low" &&
@@ -252,96 +223,6 @@ $("#applyFilters").click(function () {
   // Clear custom filter
   $.fn.dataTable.ext.search.pop();
 });
-
-fetch("api/filter_products.php", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    category: categoryFilter,
-    brand: brandFilter,
-    stock: stockFilter,
-  }),
-})
-  .then((response) => response.json())
-  .then((data) => {
-    if (data.success) {
-      productsTable.clear().rows.add(data.products).draw();
-    } else {
-      console.error("Filter error:", data.message);
-    }
-  })
-  .catch((error) => {
-    console.error("Filter error:", error);
-  });
-
-// Delete product
-function deleteProduct(productId) {
-  if (confirm("Are you sure you want to delete this product?")) {
-    fetch("api/delete_product.php", {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ id: productId }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.success) {
-          productsTable.ajax.reload();
-          updateSummaryCards();
-        } else {
-          alert("Error deleting product: " + data.message);
-        }
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-        alert("Error deleting product");
-      });
-  }
-}
-
-// Edit product
-function editProduct(productId) {
-  fetch(`api/get_product.php?id=${productId}`)
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.success) {
-        const product = data.product;
-        $("#editProductId").val(product.id);
-        $("#editItemName").val(product.itemName);
-        $("#editSku").val(product.sku);
-        $("#editCategory").val(product.categoryId);
-        $("#editBrand").val(product.brand);
-        $("#editDescription").val(product.description);
-        $("#editUnit").val(product.unit);
-        $("#editCostPrice").val(product.costPrice);
-        $("#editSellingPrice").val(product.sellingPrice);
-        $("#editStockLevel").val(product.stockLevel);
-        $("#editProductModal").modal("show");
-      } else {
-        alert("Error loading product: " + data.message);
-      }
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-      alert("Error loading product");
-    });
-}
-
-// Adjust stock
-function adjustStock(productId) {
-  $("#adjustmentProductId").val(productId);
-  $("#stockAdjustmentModal").modal("show");
-}
-
-// Initialize page
-$(document).ready(function () {
-  productsTable.ajax.reload();
-});
-
-// Add these functions before the DataTable initialization
 
 // Update summary cards with data from API
 function updateSummaryCards(summary) {
@@ -374,3 +255,8 @@ function loadBrands(brands) {
     );
   });
 }
+
+// Trigger once DOM is fully ready
+$(function () {
+  initProductsTable();
+});

@@ -29,6 +29,7 @@ try {
     $product = [
         'id' => $row['product_id'],
         'sku' => $row['sku'],
+        'barcode' => $row['barcode'],
         'itemName' => $row['name'],
         'category' => $row['category_name'],
         'brand' => $row['brand_name'],

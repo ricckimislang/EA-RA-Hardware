@@ -9,13 +9,17 @@
             <div class="modal-body">
                 <form id="productForm">
                     <div class="row mb-3">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label for="itemName" class="form-label">Item Name</label>
                             <input type="text" class="form-control" id="itemName" required>
                         </div>
-                        <div class="col-md-6">
-                            <label for="sku" class="form-label">SKU/Barcode</label>
+                        <div class="col-md-4">
+                            <label for="sku" class="form-label">SKU</label>
                             <input type="text" class="form-control" id="sku" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="barCode" class="form-label">Barcode</label>
+                            <input type="text" class="form-control" id="barCode" required>
                         </div>
                     </div>
                     <div class="row mb-3">
@@ -55,12 +59,13 @@
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label for="supplier" class="form-label">Supplier</label>
-                            <input type="text" class="form-control" id="supplier" required>
-                        </div>
-                        <div class="col-md-6">
                             <label for="initialStock" class="form-label">Initial Stock</label>
                             <input type="number" class="form-control" id="initialStock" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="lowStockThreshold" class="form-label">Low Stock Threshold</label>
+                            <input type="number" class="form-control" id="lowStockThreshold" value="5">
+                            <small class="form-text text-muted">Alert when stock falls below this level</small>
                         </div>
                     </div>
                 </form>
@@ -121,13 +126,17 @@
                 <form id="editProductForm">
                     <input type="hidden" id="editProductId">
                     <div class="row mb-3">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label for="editItemName" class="form-label">Item Name</label>
                             <input type="text" class="form-control" id="editItemName" required>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label for="editSku" class="form-label">SKU/Barcode</label>
                             <input type="text" class="form-control" id="editSku" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="editBarCode" class="form-label">Barcode</label>
+                            <input type="text" class="form-control" id="editBarCode" required>
                         </div>
                     </div>
                     <div class="row mb-3">
@@ -170,12 +179,17 @@
                             <label for="editStockLevel" class="form-label">Current Stock</label>
                             <input type="number" class="form-control" id="editStockLevel" required>
                         </div>
+                        <div class="col-md-6">
+                            <label for="editLowStockThreshold" class="form-label">Low Stock Threshold</label>
+                            <input type="number" class="form-control" id="editLowStockThreshold" value="5">
+                            <small class="form-text text-muted">Alert when stock falls below this level</small>
+                        </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="updateProduct">Update Product</button>
+                <button type="submit" form="editProductForm" class="btn btn-primary" id="saveEditProduct">Update Product</button>
             </div>
         </div>
     </div>

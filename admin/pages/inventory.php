@@ -116,4 +116,5 @@
 
 
     <script src="../js/inventory.js"></script>
+    <script src="../js/CRUD_inventory.js"></script>
 </body>
