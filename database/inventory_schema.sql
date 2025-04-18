@@ -56,7 +56,7 @@ CREATE TABLE products (
 CREATE TABLE stock_transactions (
     transaction_id INT PRIMARY KEY AUTO_INCREMENT,
     product_id INT NOT NULL,
-    transaction_type ENUM('purchase', 'sale', 'adjustment') NOT NULL,
+    transaction_type TEXT NOT NULL,
     quantity INT NOT NULL,
     unit_price DECIMAL(10,2) NOT NULL,
     total_amount DECIMAL(10,2) NOT NULL,

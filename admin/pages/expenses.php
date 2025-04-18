@@ -19,44 +19,51 @@ require_once '../includes/head.php';
             <div class="card">
                 <div class="card-body">
                     <h5><i class="fas fa-wallet me-2"></i>Total Expenses (This Month)</h5>
-                    <h2>₱<span id="monthlyTotal">0.00</span></h2>
+                    <h2><span id="monthlyTotal"></span></h2>
                 </div>
             </div>
             <div class="card">
                 <div class="card-body">
                     <h5><i class="fas fa-calendar-day me-2"></i>Today's Expenses</h5>
-                    <h2>₱<span id="todayTotal">0.00</span></h2>
+                    <h2><span id="todayTotal"></span></h2>
                 </div>
             </div>
             <div class="card">
                 <div class="card-body">
                     <h5><i class="fas fa-receipt me-2"></i>Pending Receipts</h5>
-                    <h2><span id="pendingReceipts">0</span></h2>
+                    <h2><span id="pendingReceipts"></span></h2>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <h5><i class="fas fa-wallet me-2"></i>Total Expense</h5>
+                    <h2><span id="totalExpense"></span></h2>
+                </div>
+            </div>
+            <div class="card" style="display: none;">
+                <div class="card-body">
+                    <h5><i class="fas fa-money-bill-alt"></i> Total Filtered Expense</h5>
+                    <h2><span id="totalFilteredExpense"></span></h2>
                 </div>
             </div>
         </div>
 
         <!-- Expense Filter Section -->
         <div class="filter-section">
-            <div class="row">
+            <div class="row mb-2">
                 <div class="col-md-3">
-                    <input type="date" class="form-control" id="startDate">
+                    <input type="date" class="form-control" id="startDate" max="<?php echo date('Y-m-d'); ?>">
                 </div>
                 <div class="col-md-3">
-                    <input type="date" class="form-control" id="endDate">
+                    <input type="date" class="form-control" id="endDate" max="<?php echo date('Y-m-d'); ?>">
                 </div>
                 <div class="col-md-3">
                     <select class="form-control" id="categoryFilter">
                         <option value="">All Categories</option>
-                        <option value="Rent">Rent</option>
-                        <option value="Utilities">Utilities</option>
-                        <option value="Salaries">Salaries</option>
-                        <option value="Supplies">Supplies</option>
-                        <option value="Purchases">Purchases</option>
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <button class="btn btn-secondary" id="applyFilter">
+                    <button class="btn btn-primary" id="applyFilter">
                         <i class="fas fa-filter"></i> Apply Filter
                     </button>
                 </div>
@@ -69,29 +76,17 @@ require_once '../includes/head.php';
             <table id="expenseTable" class="table table-hover display responsive nowrap" width="100%">
                 <thead>
                     <tr>
-                        <th>Date</th>
+                        <th>Name</th>
                         <th>Category</th>
-                        <th>Payee</th>
                         <th>Amount</th>
                         <th>Receipt</th>
                         <th>Notes</th>
+                        <th>Date</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody id="expenseTableBody">
+                <tbody>
                     <!-- Expense rows will be dynamically added here -->
-                    <tr>
-                        <td>2024-01-15</td>
-                        <td>Utilities</td>
-                        <td>Electric Company</td>
-                        <td>5,000</td>
-                        <td><a href="#" class="view-receipt">View</a></td>
-                        <td>Monthly electricity bill</td>
-                        <td>
-                            <button class="btn btn-sm btn-info edit-expense"><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-sm btn-danger delete-expense"><i class="fas fa-trash"></i></button>
-                        </td>
-                    </tr>
                 </tbody>
             </table>
         </div>
@@ -101,4 +96,5 @@ require_once '../includes/head.php';
     <?php include_once 'modals/add-expense.php'; ?>
 
     <script src="../js/expenses.js"></script>
+    <script src="../js/CRUD_expense.js"></script>
 </body>

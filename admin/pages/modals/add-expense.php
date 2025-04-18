@@ -10,8 +10,13 @@
                 <form id="expenseForm" class="needs-validation" novalidate>
                     <div class="mb-3">
                         <label for="expenseDate" class="form-label">Date</label>
-                        <input type="date" class="form-control" id="expenseDate" name="date" required>
+                        <input type="date" class="form-control" id="expenseDate" name="date" max="<?php echo date('Y-m-d'); ?>" value="<?php echo date('Y-m-d')  ?>" required>
                         <div class="invalid-feedback">Please select a date.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="expenseName" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="expenseName" name="expenseName" required>
+                        <div class="invalid-feedback">Please enter a name.</div>
                     </div>
                     <div class="mb-3">
                         <label for="expenseAmount" class="form-label">Amount</label>
@@ -22,19 +27,9 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label for="expensePayee" class="form-label">Payee</label>
-                        <input type="text" class="form-control" id="expensePayee" name="payee" required>
-                        <div class="invalid-feedback">Please enter a payee.</div>
-                    </div>
-                    <div class="mb-3">
                         <label for="expenseCategory" class="form-label">Category</label>
                         <select class="form-select" id="expenseCategory" name="category" required>
                             <option value="" selected disabled>Select Category</option>
-                            <option value="Rent">Rent</option>
-                            <option value="Utilities">Utilities</option>
-                            <option value="Salaries">Salaries</option>
-                            <option value="Supplies">Supplies</option>
-                            <option value="Purchases">Purchases</option>
                         </select>
                         <div class="invalid-feedback">Please select a category.</div>
                     </div>
@@ -51,8 +46,9 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="saveExpense">Save Expense</button>
+                <button type="submit" form="expenseForm" class="btn btn-primary" id="saveExpense">Save Expense</button>
             </div>
         </div>
     </div>
 </div>
+
