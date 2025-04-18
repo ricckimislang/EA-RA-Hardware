@@ -80,7 +80,19 @@ function initExpensesTable() {
           return data;
         },
       },
-      { data: "receiptPath" },
+      {
+        data: "receiptPath",
+        render: function (data, type, row) {
+          if (type === "display") {
+            if (data) {
+              return `<a href="../../${data}" target="_blank" class="btn btn-sm btn-primary">View</a>`;
+            } else {
+              return '<span class="badge bg-warning text-dark">No Receipt</span>';
+            }
+          }
+          return data;
+        },
+      },
       { data: "notes" },
       { data: "transactionDate" },
       {
@@ -91,7 +103,7 @@ function initExpensesTable() {
           if (!row?.transaction_id) return "";
           return `
             <div class="action-buttons">
-              <button class="btn btn-info btn-sm" onclick="editExpense(${row.transaction_idid})" title="Edit">
+              <button class="btn btn-info btn-sm" onclick="editExpense(${row.transaction_id})" title="Edit">
                 <i class="fas fa-edit"></i>
               </button>
               <button class="btn btn-danger btn-sm" onclick="deleteProduct(${row.transaction_idid})" title="Delete">
@@ -137,17 +149,23 @@ function updateSummaryCards(summary) {
 function loadCategories(expenseCategories) {
   const category = $("#expenseCategory");
   const categoryFilter = $("#categoryFilter");
+  const editCategory = $("#editExpenseCategory");
 
   categoryFilter.empty();
   category.empty();
+  editCategory.empty();
 
   categoryFilter.append('<option value="">All Categories</option>');
+  editCategory.append('<option value="">Select Category</option>');
 
   expenseCategories.forEach((categories) => {
     categoryFilter.append(
       `<option value="${categories.category_id}">${categories.name}</option>`
     );
     category.append(
+      `<option value="${categories.category_id}">${categories.name}</option>`
+    );
+    editCategory.append(
       `<option value="${categories.category_id}">${categories.name}</option>`
     );
   });
