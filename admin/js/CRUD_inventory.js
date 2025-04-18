@@ -17,7 +17,9 @@ function addProduct() {
     sku: $("#sku").val().trim(),
     barCode: $("#barCode").val().trim(),
     category: $("#category option:selected").text(),
-    brand: $("#brand").val().trim().charAt(0).toUpperCase() + $("#brand").val().trim().slice(1),
+    brand:
+      $("#brand").val().trim().charAt(0).toUpperCase() +
+      $("#brand").val().trim().slice(1),
     description: $("#description").val().trim(),
     unit: $("#unit").val().trim(),
     costPrice: parseFloat($("#costPrice").val()),
@@ -161,7 +163,7 @@ function updateProduct() {
 function deleteProduct(productId) {
   if (confirm("Are you sure you want to delete this product?")) {
     fetch("api/delete_product.php", {
-      method: "DELETE",
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
@@ -201,38 +203,38 @@ function saveStockAdjustment() {
     productId: parseInt($("#adjustmentProductId").val()),
     adjustmentType: $("#adjustmentType").val(),
     quantity: parseInt($("#adjustmentQuantity").val()),
-    notes: $("#adjustmentNotes").val().trim()
-};
+    notes: $("#adjustmentNotes").val().trim(),
+  };
 
-$("#saveAdjustment")
+  $("#saveAdjustment")
     .prop("disabled", true)
     .html('<i class="fas fa-spinner fa-spin"></i> Saving...');
 
-fetch("api/adjust_stock.php", {
+  fetch("api/adjust_stock.php", {
     method: "POST",
     headers: {
-        "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify(adjustmentData)
-})
+    body: JSON.stringify(adjustmentData),
+  })
     .then((response) => response.json())
     .then((data) => {
-        if (data.success) {
-            showNotification("Stock adjusted successfully", "success");
-            $("#stockAdjustmentModal").modal("hide");
-            $("#stockAdjustmentForm")[0].reset();
-            productsTable.ajax.reload();
-            updateSummaryCards();
-        } else {
-            showNotification("Error adjusting stock: " + data.message, "error");
-        }
+      if (data.success) {
+        showNotification("Stock adjusted successfully", "success");
+        $("#stockAdjustmentModal").modal("hide");
+        $("#stockAdjustmentForm")[0].reset();
+        productsTable.ajax.reload();
+        updateSummaryCards();
+      } else {
+        showNotification("Error adjusting stock: " + data.message, "error");
+      }
     })
     .catch((error) => {
-        console.error("Error:", error);
-        showNotification("Error adjusting stock", "error");
+      console.error("Error:", error);
+      showNotification("Error adjusting stock", "error");
     })
     .finally(() => {
-        $("#saveAdjustment").prop("disabled", false).html("Save Adjustment");
+      $("#saveAdjustment").prop("disabled", false).html("Save Adjustment");
     });
 }
 
