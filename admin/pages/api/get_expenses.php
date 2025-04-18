@@ -69,6 +69,9 @@ try {
         if ($transactionDate->format('Y-m-d') === $currentDate->format('Y-m-d')) {
             $summary['todayTotal'] += $expense['amount'];
         }
+        if ($expense['receiptPath'] === NULL) {
+            $summary['pendingReceipts']++;
+        }
     }
 
     // get expense categories

@@ -106,7 +106,7 @@ function initExpensesTable() {
               <button class="btn btn-info btn-sm" onclick="editExpense(${row.transaction_id})" title="Edit">
                 <i class="fas fa-edit"></i>
               </button>
-              <button class="btn btn-danger btn-sm" onclick="deleteProduct(${row.transaction_idid})" title="Delete">
+              <button class="btn btn-danger btn-sm" onclick="deleteExpense(${row.transaction_id})" title="Delete">
                 <i class="fas fa-trash"></i>
               </button>
             </div>

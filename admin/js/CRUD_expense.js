@@ -311,6 +311,52 @@ function handleUpdateError(error) {
   $("#updateExpense").prop("disabled", false).html("Update Expense");
 }
 
+// DELETE - Delete expense
+function deleteExpense(transaction_id) {
+  if (!transaction_id || isNaN(parseInt(transaction_id))) {
+    showNotification("Invalid expense ID", "error");
+    return;
+  }
+
+  // Confirm deletion with the user
+  if (!confirm("Are you sure you want to delete this expense? This action cannot be undone.")) {
+    return;
+  }
+
+  // Show loading state (can be implemented with a spinner or disabling the delete button)
+  console.log("Deleting expense ID:", transaction_id);
+
+  // Send delete request to server
+  fetch(`api/delete_expense.php?id=${transaction_id}`, {
+    method: "DELETE"
+  })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log("Delete response:", data);
+      
+      if (data.success) {
+        showNotification("Expense deleted successfully", "success");
+        
+        // Refresh table and summary
+        if (typeof expenseTable !== "undefined") {
+          expenseTable.ajax.reload();
+        }
+        updateSummaryCards();
+      } else {
+        showNotification("Error: " + data.message, "error");
+      }
+    })
+    .catch(error => {
+      console.error("Error:", error);
+      showNotification("Error deleting expense. Please try again.", "error");
+    });
+}
+
 $(document).ready(function () {
   // add expense form
   $("#saveExpense").on("click", function (e) {
