@@ -76,10 +76,6 @@ $serverTime = date('H:i:s');
             <div class="success-message mt-3" id="success-message"></div>
             <div class="error-message mt-3" id="error-message"></div>
 
-            <p class="text-center mt-4">
-                <a href="employee_qr.php" class="btn btn-primary">View Employee QR Codes</a>
-                <a href="reports.php" class="btn btn-secondary">Attendance Reports</a>
-            </p>
         </div>
     </div>
 

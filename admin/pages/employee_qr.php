@@ -59,98 +59,281 @@ if (isset($_POST['toggle_status']) && isset($_POST['employee_id'])) {
 }
 ?>
 
-
 <?php include_once '../includes/head.php' ?>
+<!-- Add Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<style>
+    .card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+        margin-bottom: 25px;
+    }
 
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid rgba(0, 0, 0, .05);
+        padding: 15px 20px;
+    }
 
+    .card-title {
+        margin-bottom: 0;
+        color: #333;
+        font-weight: 600;
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    .table thead th {
+        background-color: #f8f9fa;
+        color: #495057;
+        font-weight: 600;
+        border-top: none;
+    }
+
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: rgba(0, 0, 0, .01);
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 0, 0, .03);
+    }
+
+    .badge {
+        padding: 6px 10px;
+        font-weight: 500;
+        border-radius: 30px;
+    }
+
+    .qr-code {
+        padding: 10px;
+        background-color: white;
+        border-radius: 6px;
+        border: 1px solid #e9ecef;
+        display: inline-block;
+        margin-bottom: 10px;
+    }
+
+    .btn-action {
+        border-radius: 6px;
+        font-weight: 500;
+        text-transform: none;
+        letter-spacing: normal;
+        padding: 0.375rem 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .btn-print {
+        background-color: #17a2b8;
+        border-color: #17a2b8;
+        color: white;
+    }
+
+    .btn-print:hover {
+        background-color: #138496;
+        border-color: #117a8b;
+        color: white;
+    }
+
+    .alert {
+        border-radius: 8px;
+        border: none;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.03);
+    }
+
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .alert-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+        margin: 0;
+        color: #333;
+        font-weight: 600;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px 0;
+        color: #6c757d;
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        opacity: 0.5;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 5px;
+    }
+
+    @media (max-width: 576px) {
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
+</style>
 
 <body>
     <?php include_once '../includes/sidebar.php' ?>
     <div class="main-content">
         <div class="container mt-4">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1>Employee QR Codes</h1>
+            <div class="page-header">
+                <h1 class="page-title">
+                    <i class="bi bi-qr-code me-2"></i>
+                    Employee QR Codes
+                </h1>
+                <a href="../pages/employees.php" class="btn btn-outline-primary btn-action">
+                    <i class="bi bi-people"></i>
+                    Manage Employees
+                </a>
             </div>
 
             <?php if (isset($_GET['success'])): ?>
-                <div class="alert alert-success"><?php echo $_GET['success']; ?></div>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <?php echo $_GET['success']; ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
             <?php endif; ?>
 
             <?php if (isset($_GET['error'])): ?>
-                <div class="alert alert-danger"><?php echo $_GET['error']; ?></div>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <?php echo $_GET['error']; ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
             <?php endif; ?>
 
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Position</th>
-                            <th>Contact</th>
-                            <th>QR Code</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if ($result->num_rows > 0): ?>
-                            <?php while ($row = $result->fetch_assoc()): ?>
-                                <tr>
-                                    <td><?php echo $row['full_name']; ?></td>
-                                    <td><?php echo $row['position']; ?></td>
-                                    <td><?php echo $row['contact_number']; ?></td>
-                                    <td>
-                                        <?php if ($row['qr_code_hash']): ?>
-                                            <div class="qr-code" id="qr-<?php echo $row['id']; ?>" data-hash="<?php echo $row['qr_code_hash']; ?>"></div>
-                                            <button class="btn btn-sm btn-secondary mt-1" onclick="printQR('qr-<?php echo $row['id']; ?>', '<?php echo $row['full_name']; ?>')">Print</button>
-                                        <?php else: ?>
-                                            <span class="text-danger">No QR code</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td>
-                                        <?php if ($row['qr_code_hash']): ?>
-                                            <?php if ($row['is_active']): ?>
-                                                <span class="badge bg-success">Active</span>
-                                            <?php else: ?>
-                                                <span class="badge bg-danger">Inactive</span>
-                                            <?php endif; ?>
-                                        <?php else: ?>
-                                            <span class="badge bg-secondary">N/A</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td>
-                                        <?php if ($row['qr_code_hash']): ?>
-                                            <form method="post" class="d-inline">
-                                                <input type="hidden" name="employee_id" value="<?php echo $row['id']; ?>">
-                                                <input type="hidden" name="regenerate" value="1">
-                                                <button type="submit" class="btn btn-sm btn-warning">Regenerate</button>
-                                            </form>
+            <div class="card">
 
-                                            <form method="post" class="d-inline">
-                                                <input type="hidden" name="employee_id" value="<?php echo $row['id']; ?>">
-                                                <input type="hidden" name="toggle_status" value="1">
-                                                <input type="hidden" name="new_status" value="<?php echo $row['is_active'] ? 0 : 1; ?>">
-                                                <button type="submit" class="btn btn-sm <?php echo $row['is_active'] ? 'btn-danger' : 'btn-success'; ?>">
-                                                    <?php echo $row['is_active'] ? 'Deactivate' : 'Activate'; ?>
-                                                </button>
-                                            </form>
-                                        <?php else: ?>
-                                            <form method="post">
-                                                <input type="hidden" name="employee_id" value="<?php echo $row['id']; ?>">
-                                                <input type="hidden" name="regenerate" value="1">
-                                                <button type="submit" class="btn btn-sm btn-primary">Generate QR</button>
-                                            </form>
-                                        <?php endif; ?>
-                                    </td>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Position</th>
+                                    <th>Contact</th>
+                                    <th>QR Code</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
                                 </tr>
-                            <?php endwhile; ?>
-                        <?php else: ?>
-                            <tr>
-                                <td colspan="6" class="text-center">No employees found</td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
+                            </thead>
+                            <tbody>
+                                <?php if ($result->num_rows > 0): ?>
+                                    <?php while ($row = $result->fetch_assoc()): ?>
+                                        <tr>
+                                            <td class="align-middle"><?php echo $row['full_name']; ?></td>
+                                            <td class="align-middle"><?php echo $row['position']; ?></td>
+                                            <td class="align-middle"><?php echo $row['contact_number']; ?></td>
+                                            <td class="align-middle ">
+                                                <?php if ($row['qr_code_hash']): ?>
+                                                    <div class="qr-code" id="qr-<?php echo $row['id']; ?>" data-hash="<?php echo $row['qr_code_hash']; ?>"></div>
+
+                                                <?php else: ?>
+                                                    <span class="text-danger">
+                                                        <i class="bi bi-x-circle me-1"></i>
+                                                        No QR code
+                                                    </span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td class="align-middle">
+                                                <?php if ($row['qr_code_hash']): ?>
+                                                    <?php if ($row['is_active']): ?>
+                                                        <span class="badge bg-success">
+                                                            <i class="bi bi-check-circle me-1"></i>
+                                                            Active
+                                                        </span>
+                                                    <?php else: ?>
+                                                        <span class="badge bg-danger">
+                                                            <i class="bi bi-x-circle me-1"></i>
+                                                            Inactive
+                                                        </span>
+                                                    <?php endif; ?>
+                                                <?php else: ?>
+                                                    <span class="badge bg-secondary">
+                                                        <i class="bi bi-dash-circle me-1"></i>
+                                                        N/A
+                                                    </span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td class="align-middle">
+                                                <div class="action-buttons">
+                                                    <button class="btn btn-sm btn-print" onclick="printQR('qr-<?php echo $row['id']; ?>', '<?php echo $row['full_name']; ?>')">
+                                                        <i class="bi bi-printer"></i>
+                                                        Print
+                                                    </button>
+                                                    <?php if ($row['qr_code_hash']): ?>
+                                                        <form method="post" class="d-inline">
+                                                            <input type="hidden" name="employee_id" value="<?php echo $row['id']; ?>">
+                                                            <input type="hidden" name="regenerate" value="1">
+                                                            <button type="submit" class="btn btn-sm btn-warning btn-action">
+                                                                <i class="bi bi-arrow-repeat"></i>
+                                                                Regenerate
+                                                            </button>
+                                                        </form>
+
+                                                        <form method="post" class="d-inline">
+                                                            <input type="hidden" name="employee_id" value="<?php echo $row['id']; ?>">
+                                                            <input type="hidden" name="toggle_status" value="1">
+                                                            <input type="hidden" name="new_status" value="<?php echo $row['is_active'] ? 0 : 1; ?>">
+                                                            <button type="submit" class="btn btn-sm <?php echo $row['is_active'] ? 'btn-danger' : 'btn-success'; ?> btn-action">
+                                                                <?php if ($row['is_active']): ?>
+                                                                    <i class="bi bi-toggle-off"></i>
+                                                                    Deactivate
+                                                                <?php else: ?>
+                                                                    <i class="bi bi-toggle-on"></i>
+                                                                    Activate
+                                                                <?php endif; ?>
+                                                            </button>
+                                                        </form>
+                                                    <?php else: ?>
+                                                        <form method="post">
+                                                            <input type="hidden" name="employee_id" value="<?php echo $row['id']; ?>">
+                                                            <input type="hidden" name="regenerate" value="1">
+                                                            <button type="submit" class="btn btn-sm btn-primary btn-action">
+                                                                <i class="bi bi-qr-code"></i>
+                                                                Generate QR
+                                                            </button>
+                                                        </form>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endwhile; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="6" class="empty-state">
+                                            <i class="bi bi-people empty-icon"></i>
+                                            <p class="mb-1">No employees found</p>
+                                            <small>Add employees first to generate QR codes</small>
+                                        </td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -235,8 +418,10 @@ if (isset($_POST['toggle_status']) && isset($_POST['employee_id'])) {
                         <head>
                             <title>QR Code - ${name}</title>
                             <style>
+                                @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+                                
                                 body {
-                                    font-family: Arial, sans-serif;
+                                    font-family: 'Poppins', Arial, sans-serif;
                                     display: flex;
                                     flex-direction: column;
                                     align-items: center;
@@ -244,19 +429,87 @@ if (isset($_POST['toggle_status']) && isset($_POST['employee_id'])) {
                                     min-height: 100vh;
                                     margin: 0;
                                     padding: 20px;
+                                    background-color: #f8f9fa;
                                 }
-                                .qr-container {
+                                
+                                .qr-card {
+                                    background-color: white;
+                                    border-radius: 12px;
+                                    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+                                    padding: 30px;
                                     text-align: center;
+                                    max-width: 400px;
+                                    width: 100%;
+                                }
+                                
+                                .company-header {
                                     margin-bottom: 20px;
+                                    color: #2c3e50;
                                 }
-                                .qr-info {
+                                
+                                .qr-container {
+                                    background-color: white;
+                                    padding: 15px;
+                                    border-radius: 8px;
+                                    display: inline-block;
+                                    margin-bottom: 20px;
+                                    border: 1px solid #eaeaea;
+                                }
+                                
+                                .qr-container img {
+                                    display: block;
+                                    max-width: 100%;
+                                    height: auto;
+                                }
+                                
+                                .employee-name {
+                                    font-size: 24px;
+                                    font-weight: 600;
+                                    color: #2c3e50;
+                                    margin: 15px 0 5px;
+                                }
+                                
+                                .info-text {
+                                    color: #6c757d;
+                                    margin: 5px 0;
+                                    font-size: 14px;
+                                }
+                                
+                                .date {
+                                    margin-top: 15px;
+                                    font-size: 12px;
+                                    color: #95a5a6;
+                                }
+                                
+                                .print-btn {
+                                    background-color: #3498db;
+                                    color: white;
+                                    border: none;
+                                    padding: 10px 20px;
+                                    border-radius: 5px;
+                                    font-size: 14px;
+                                    cursor: pointer;
                                     margin-top: 20px;
-                                    text-align: center;
+                                    font-weight: bold;
+                                    transition: background-color 0.2s;
                                 }
+                                
+                                .print-btn:hover {
+                                    background-color: #2980b9;
+                                }
+                                
                                 @media print {
                                     body {
+                                        background-color: white;
                                         padding: 0;
                                     }
+                                    
+                                    .qr-card {
+                                        box-shadow: none;
+                                        padding: 0;
+                                        max-width: 100%;
+                                    }
+                                    
                                     .no-print {
                                         display: none;
                                     }
@@ -264,14 +517,22 @@ if (isset($_POST['toggle_status']) && isset($_POST['employee_id'])) {
                             </style>
                         </head>
                         <body>
-                            <div class="qr-container">
-                                <img src="${printQrImage.src}" alt="QR Code" style="max-width: 100%;">
+                            <div class="qr-card">
+                                <div class="company-header">
+                                    <h2>EA-RA Hardware</h2>
+                                    <p class="info-text">Employee Attendance System</p>
+                                </div>
+                                
+                                <div class="qr-container">
+                                    <img src="${printQrImage.src}" alt="QR Code">
+                                </div>
+                                
+                                <h3 class="employee-name">${name}</h3>
+                                <p class="info-text">Scan this QR code for attendance</p>
+                                <p class="date">Generated on: ${currentDate}</p>
+                                
+                                <button class="print-btn no-print" onclick="window.print()">Print QR Code</button>
                             </div>
-                            <div class="qr-info">
-                                <h2>${name}</h2>
-                                <p>Generated on: ${currentDate}</p>
-                            </div>
-                            <button class="no-print" onclick="window.print()">Print</button>
                         </body>
                         </html>
                     `);
