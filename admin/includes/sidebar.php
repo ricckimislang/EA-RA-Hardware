@@ -25,9 +25,24 @@
                 <span>Employees</span>
             </a>
         </li>
+
+        <li>
             <a href="../pages/expenses.php" class="<?php echo (strpos($_SERVER['PHP_SELF'], 'expenses')) ? 'active' : ''; ?>">
                 <i class="fas fa-file-invoice-dollar"></i>
                 <span>Expenses</span>
+            </a>
+        </li>
+
+        <li>
+            <a href="../pages/attendance_reports.php" class="<?php echo (strpos($_SERVER['PHP_SELF'], 'attendance_reports')) ? 'active' : ''; ?>">
+                <i class="fas fa-clock"></i>
+                <span>Attendance Reports</span>
+            </a>
+        </li>
+        <li>
+            <a href="../pages/employee_qr.php" class="<?php echo (strpos($_SERVER['PHP_SELF'], 'employee_qr')) ? 'active' : ''; ?>">
+                <i class="fas fa-clock"></i>
+                <span>Employee Qr Codes</span>
             </a>
         </li>
 
@@ -38,12 +53,12 @@
             </a>
         </li> -->
 
-        <li>
+        <!-- <li>
             <a href="../reports/index.php" class="<?php echo (strpos($_SERVER['PHP_SELF'], 'reports')) ? 'active' : ''; ?>">
                 <i class="fas fa-chart-bar"></i>
                 <span>Reports</span>
             </a>
-        </li>
+        </li> -->
 
         <li>
             <a href="../settings/index.php" class="<?php echo (strpos($_SERVER['PHP_SELF'], 'settings')) ? 'active' : ''; ?>">

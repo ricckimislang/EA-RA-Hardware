@@ -77,7 +77,7 @@
                     <div class="card-body">
                         <h5 class="card-title">Expense Categories</h5>
                         <div class="chart-container">
-                        <canvas id="expensesTreemap"></canvas>
+                            <canvas id="expensesTreemap"></canvas>
                         </div>
                     </div>
                 </div>
@@ -91,7 +91,7 @@
                     <div class="card-body">
                         <h5 class="card-title">Employee Salary Trends</h5>
                         <div class="chart-container">
-                        <canvas id="employeeSalaryChart"></canvas>
+                            <canvas id="employeeSalaryChart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -114,7 +114,7 @@
                     <div class="card-body">
                         <h5 class="card-title">Inventory Summary</h5>
                         <div class="chart-container">
-                        <canvas id="inventoryChart"></canvas>
+                            <canvas id="inventoryChart"></canvas>
                         </div>
                     </div>
                 </div>
