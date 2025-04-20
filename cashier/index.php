@@ -1,6 +1,6 @@
 <?php
 $page_title = "Point of Sale";
-require_once '../admin/includes/head.php';
+require_once 'includes/head.php';
 ?>
 <link rel="stylesheet" href="css/pos.css">
 

@@ -1,3 +1,3 @@
 <?php
-    header("Location: pages/expenses.php");
+    header("Location: pages/dashboard.php");
 ?>
