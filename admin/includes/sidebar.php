@@ -66,6 +66,13 @@
                 <span>Settings</span>
             </a>
         </li>
+        
+        <li>
+            <a href="#">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </li>
     </ul>
 </div>
 

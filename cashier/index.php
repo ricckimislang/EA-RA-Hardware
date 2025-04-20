@@ -24,9 +24,9 @@ require_once 'includes/head.php';
                     <span id="current-date"></span>
                     <span id="current-time"></span>
                 </div>
-                <button class="btn btn-sm btn-primary">
+                <a href="logout.php" class="btn btn-sm btn-primary">
                     <i class="fas fa-sign-out-alt"></i> Logout
-                </button>
+                </a>
             </div>
         </div>
     </header>
