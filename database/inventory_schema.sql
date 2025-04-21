@@ -113,3 +113,34 @@ INSERT INTO `stock_transactions` (`transaction_id`, `product_id`, `transaction_t
 (1, 2, 'stock_in', 20, 0.00, 0.00, NULL, '', '2025-04-21 03:15:04', '2025-04-21 03:15:04'),
 (2, 1, 'stock_in', 20, 0.00, 0.00, NULL, 're-stock', '2025-04-21 03:15:24', '2025-04-21 03:15:24'),
 (3, 2, 'stock_out', 5, 0.00, 0.00, NULL, 'wrong count', '2025-04-21 03:16:18', '2025-04-21 03:16:18');
+
+
+--
+-- Table structure for table `product_sales`
+--
+
+DROP TABLE IF EXISTS `product_sales`;
+CREATE TABLE IF NOT EXISTS `product_sales` (
+  `sale_id` int NOT NULL AUTO_INCREMENT,
+  `transaction_id` varchar(10) NOT NULL,
+  `cashier_name` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `product_id` int NOT NULL,
+  `quantity_sold` int NOT NULL,
+  `discount_applied` decimal(5,2) NOT NULL,
+  `sale_price` decimal(10,2) NOT NULL,
+  `sale_timestamp` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`sale_id`),
+  KEY `product_id` (`product_id`),
+  KEY `idx_transaction_id` (`transaction_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `product_sales`
+--
+
+INSERT INTO `product_sales` (`sale_id`, `transaction_id`, `cashier_name`, `product_id`, `quantity_sold`, `discount_applied`, `sale_price`, `sale_timestamp`) VALUES
+(1, '00001', 'Juan Dela ', 5, 3, 10.19, 40.78, '2025-04-21 11:34:55'),
+(2, '00002', 'Juan Dela ', 5, 1, 3.40, 13.59, '2025-04-21 11:35:34'),
+(3, '00003', 'Juan Dela ', 5, 1, 3.40, 13.59, '2025-04-21 11:35:45'),
+(4, '00004', 'Juan Dela Cruz', 4, 1, 19.00, 75.99, '2025-04-21 11:36:23'),
+(5, '00004', 'Juan Dela Cruz', 10, 1, 19.00, 75.99, '2025-04-21 11:36:23');

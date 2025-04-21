@@ -24,8 +24,8 @@
                 <div class="card">
                     <div class="card-body">
                         <h6>Total Sales</h6>
-                        <h2 id="totalSales">₱0.00</h2>
-                        <p class="trend"><i class="fas fa-arrow-up"></i> 12% vs last period</p>
+                        <h2 id="totalSales"></h2>
+                        <p class="trend"><i class="fas fa-arrow-up"></i></p>
                     </div>
                 </div>
             </div>
@@ -33,8 +33,8 @@
                 <div class="card">
                     <div class="card-body">
                         <h6>Total Expenses</h6>
-                        <h2 id="totalExpenses">₱0.00</h2>
-                        <p class="trend"><i class="fas fa-arrow-down"></i> 5% vs last period</p>
+                        <h2 id="totalExpenses"></h2>
+                        <p class="trend"><i class="fas fa-arrow-down"></i></p>
                     </div>
                 </div>
             </div>
@@ -42,8 +42,8 @@
                 <div class="card">
                     <div class="card-body">
                         <h6>Net Profit</h6>
-                        <h2 id="netProfit">₱0.00</h2>
-                        <p class="trend"><i class="fas fa-arrow-up"></i> 8% vs last period</p>
+                        <h2 id="netProfit"></h2>
+                        <p class="trend"><i class="fas fa-arrow-up"></i></p>
                     </div>
                 </div>
             </div>
@@ -51,8 +51,8 @@
                 <div class="card">
                     <div class="card-body">
                         <h6>Total Orders</h6>
-                        <h2 id="totalOrders">0</h2>
-                        <p class="trend"><i class="fas fa-arrow-up"></i> 15% vs last period</p>
+                        <h2 id="totalOrders"></h2>
+                        <p class="trend"><i class="fas fa-arrow-up"></i></p>
                     </div>
                 </div>
             </div>
@@ -65,9 +65,7 @@
                 <div class="card chart-card">
                     <div class="card-body">
                         <h5 class="card-title">Sales Revenue Trend</h5>
-                        <div class="chart-container">
                             <canvas id="salesTrendChart"></canvas>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -101,7 +99,9 @@
                 <div class="card chart-card">
                     <div class="card-body">
                         <h5 class="card-title">Product Sales Analysis</h5>
-                        <canvas id="productBubbleChart"></canvas>
+                        <div class="chart-container">
+                            <canvas id="productBubbleChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
