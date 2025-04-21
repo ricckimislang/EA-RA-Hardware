@@ -74,21 +74,8 @@
 
         <!-- Row for Employee Salary and Product Sales -->
         <div class="row mb-4">
-            
-            <!-- Employee Salary Chart -->
-            <div class="col-md-12">
-                <div class="card chart-card h-100"> <!-- Changed to full width -->
-                    <div class="card-body d-flex flex-column"> <!-- Flex column for layout -->
-                        <h5 class="card-title">Employee Salary Performance</h5>
-                        <div class="chart-container flex-grow-1" style="min-height: 400px;"> <!-- Added min-height -->
-                            <canvas id="employeeSalaryChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
             <!-- Product Sales Analysis Chart -->
-            <div class="col-md-12">
+            <div class="col-md-6">
                 <div class="card chart-card h-100">
                     <div class="card-body d-flex flex-column">
                         <h5 class="card-title">Product Sales Analysis</h5>
@@ -98,7 +85,16 @@
                     </div>
                 </div>
             </div>
-
+            <div class="col-md-6">
+                <div class="card chart-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Top Selling Products</h5>
+                        <div class="chart-container">
+                            <canvas id="topProductsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Inventory Summary Chart -->
@@ -127,15 +123,17 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Top Selling Products Chart -->
         <div class="row mb-4">
+
+            <!-- Employee Salary Chart -->
             <div class="col-md-12">
-                <div class="card chart-card">
-                    <div class="card-body">
-                        <h5 class="card-title">Top Selling Products</h5>
-                        <div class="chart-container">
-                            <canvas id="topProductsChart"></canvas>
+                <div class="card chart-card h-100"> <!-- Changed to full width -->
+                    <div class="card-body d-flex flex-column"> <!-- Flex column for layout -->
+                        <h5 class="card-title">Employee Salary Performance</h5>
+                        <div class="chart-container flex-grow-1" style="min-height: 400px;"> <!-- Added min-height -->
+                            <canvas id="employeeSalaryChart"></canvas>
                         </div>
                     </div>
                 </div>
