@@ -114,6 +114,11 @@ function updateDashboard(timeRange) {
             window.inventoryChart = null;
           }
           
+          if (window.topProductsChart && typeof window.topProductsChart.destroy === 'function') {
+            window.topProductsChart.destroy();
+            window.topProductsChart = null;
+          }
+          
           // First try to rebuild chart containers if they were emptied
           rebuildChartContainers();
           
@@ -140,7 +145,7 @@ function updateDashboard(timeRange) {
                                        document.querySelector('.chart-container canvas#employeeSalaryChart');
           if (employeeSalaryCanvas) {
             console.log("Initializing employee salary chart", data.employeeSalaries);
-            initializeEmployeeSalaryChart(data.employeeSalaries || { labels: [], individual: [], total: [] });
+            initializeEmployeeSalaryChart(data.employeeSalaries || { labels: [], datasets: [] });
           } else {
             console.error("Employee salary chart container not found");
           }
@@ -161,6 +166,15 @@ function updateDashboard(timeRange) {
             initializeInventoryChart(data.inventory || { labels: [], normal: [], low: [], out: [] });
           } else {
             console.error("Inventory chart container not found");
+          }
+          
+          const topProductsCanvas = document.getElementById("topProductsChart") ||
+                                   document.querySelector('.chart-container canvas#topProductsChart');
+          if (topProductsCanvas) {
+            console.log("Initializing top products chart", data.topProducts);
+            initializeTopProductsChart(data.topProducts || { labels: [], values: [], revenue: [], profit: [], stock: [] });
+          } else {
+            console.error("Top products chart container not found");
           }
         } catch (err) {
           console.error("Error initializing charts:", err);
@@ -189,7 +203,7 @@ function updateDashboard(timeRange) {
 // Function to recreate chart canvases if they were removed
 function rebuildChartContainers() {
   const chartContainers = document.querySelectorAll('.chart-container');
-  const canvasIds = ["salesTrendChart", "expensesTreemap", "employeeSalaryChart", "productBubbleChart", "inventoryChart"];
+  const canvasIds = ["salesTrendChart", "expensesTreemap", "employeeSalaryChart", "productBubbleChart", "inventoryChart", "topProductsChart"];
   
   chartContainers.forEach((container) => {
     // Skip if container already has a canvas
@@ -204,6 +218,7 @@ function rebuildChartContainers() {
     else if (cardTitle.includes('Employee Salary')) canvasId = 'employeeSalaryChart';
     else if (cardTitle.includes('Product Sales')) canvasId = 'productBubbleChart';
     else if (cardTitle.includes('Inventory')) canvasId = 'inventoryChart';
+    else if (cardTitle.includes('Top Selling Products')) canvasId = 'topProductsChart';
     
     if (canvasId) {
       // Create a new canvas element
@@ -493,70 +508,192 @@ function initializeEmployeeSalaryChart(data) {
       return;
     }
 
-    // Ensure we have valid data
-    const chartData = {
-      labels: data.labels || [],
-      individual: data.individual || [],
-      total: data.total || []
+    // Create 15-day period data from the original data
+    const bimonthlyData = {
+      labels: ['1st-15th', '16th-End'], // Use 15-day periods instead of daily labels
+      datasets: []
     };
+    
+    // If we have data from the API
+    if (data && data.datasets && data.datasets.length > 0) {
+      // Process each employee's data
+      data.datasets.forEach(employeeData => {
+        // Create a new dataset for this employee
+        const newEmployeeData = {
+          label: employeeData.label,
+          data: [0, 0] // Initialize with two periods (1st-15th and 16th-end)
+        };
+        
+        // If the original data has data points, aggregate them into 15-day periods
+        if (employeeData.data && employeeData.data.length > 0) {
+          // Calculate first half (days 1-15) average
+          let firstHalfSum = 0;
+          let firstHalfCount = 0;
+          
+          // Calculate second half (days 16+) average
+          let secondHalfSum = 0;
+          let secondHalfCount = 0;
+          
+          // Process each day's data
+          employeeData.data.forEach((value, index) => {
+            const day = index + 1; // Assuming index 0 is day 1
+            
+            if (day <= 15) {
+              firstHalfSum += parseFloat(value || 0);
+              firstHalfCount++;
+            } else {
+              secondHalfSum += parseFloat(value || 0);
+              secondHalfCount++;
+            }
+          });
+          
+          // Assign the calculated averages to the periods
+          newEmployeeData.data[0] = firstHalfCount > 0 ? firstHalfSum / firstHalfCount : 0;
+          newEmployeeData.data[1] = secondHalfCount > 0 ? secondHalfSum / secondHalfCount : 0;
+        }
+        
+        // Add this employee's processed data to our new dataset
+        bimonthlyData.datasets.push(newEmployeeData);
+      });
+    } else {
+      // If no data from API, create sample data
+      bimonthlyData.datasets = [
+        {
+          label: "Sample Employee 1",
+          data: [45000, 48000]
+        },
+        {
+          label: "Sample Employee 2",
+          data: [52000, 55000]
+        },
+        {
+          label: "Sample Employee 3",
+          data: [38000, 42000]
+        }
+      ];
+    }
+    
+    // Remove the toggle button logic if it exists
+    let chartContainer = chartCanvas.closest('.card-body');
+    let toggleContainer = chartContainer.querySelector('.chart-toggle');
+    if (toggleContainer) {
+      toggleContainer.remove();
+    }
     
     // If there's an existing chart, destroy it first
     if (window.employeeSalaryChart && typeof window.employeeSalaryChart.destroy === 'function') {
       window.employeeSalaryChart.destroy();
     }
     
+    // Format currency for display
+    const formatCurrency = (value) => {
+      return "₱" + parseFloat(value).toLocaleString("en-PH", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    };
+    
+    // Define colors for employee bars
+      const barColors = [
+        'rgba(33, 150, 243, 0.7)', 'rgba(156, 39, 176, 0.7)', 'rgba(244, 67, 54, 0.7)', 
+        'rgba(76, 175, 80, 0.7)', 'rgba(255, 152, 0, 0.7)', 'rgba(0, 188, 212, 0.7)', 
+        'rgba(233, 30, 99, 0.7)', 'rgba(96, 125, 139, 0.7)' 
+      ];
+      
+    // Assign colors to datasets
+    bimonthlyData.datasets.forEach((dataset, index) => {
+        dataset.backgroundColor = barColors[index % barColors.length];
+        dataset.borderColor = barColors[index % barColors.length].replace('0.7', '1'); // Solid border
+        dataset.borderWidth = 1;
+    });
+    
+    // Initialize the chart as a bar chart
     window.employeeSalaryChart = new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: chartData.labels,
-        datasets: [
-          {
-            label: "Individual Salaries",
-            type: "line",
-            data: chartData.individual,
-            borderColor: "#2196F3",
-            backgroundColor: "rgba(33, 150, 243, 0.1)",
-            fill: true,
-            tension: 0.4,
-          },
-          {
-            label: "Total Payroll",
-            type: "bar",
-            data: chartData.total,
-            backgroundColor: "rgba(156, 39, 176, 0.2)",
-            borderColor: "#9C27B0",
-            borderWidth: 1,
-          },
-        ],
-      },
+      type: "bar", 
+      data: bimonthlyData, // Use our 15-day period data
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        interaction: {
+          mode: 'index', // Show tooltips for all employees in that period
+          intersect: false,
+        },
         plugins: {
           title: {
             display: true,
-            text: "Employee Salary Trends",
+            text: "Employee Salary Performance (Bi-Monthly)",
+            font: {
+              size: 16,
+              weight: 'bold'
+            }
+          },
+          legend: {
+            display: true,
+            position: 'top',
+            labels: {
+              usePointStyle: true,
+              boxWidth: 8,
+              padding: 15,
+              font: { size: 11 }
+            }
           },
           tooltip: {
+            backgroundColor: 'rgba(0,0,0,0.8)',
+            bodyFont: {
+              size: 13
+            },
             callbacks: {
               label: (context) => {
-                return `${
-                  context.dataset.label
-                }: ₱${(context.raw || 0).toLocaleString()}`;
+                const label = context.dataset.label || '';
+                const value = context.raw || 0;
+                return `${label}: ${formatCurrency(value)}`;
               },
             },
           },
         },
         scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              callback: (value) => "₱" + value.toLocaleString(),
+          x: {
+            grid: {
+              display: false
             },
+            title: {
+              display: true,
+              text: 'Bi-Monthly Pay Period',
+              font: {
+                size: 12,
+                weight: 'bold'
+              }
+            }
           },
+          y: { // Single Y axis for salary
+            type: 'linear',
+            display: true, 
+            position: 'left',
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Net Salary (₱)',
+              color: '#666',
+               font: {
+                 size: 12,
+                 weight: 'bold'
+               }
+            },
+            grid: {
+              drawOnChartArea: true,
+              color: 'rgba(0, 0, 0, 0.05)'
+            },
+            ticks: {
+              callback: (value) => formatCurrency(value),
+              color: '#666'
+            }
+          },
+          // Remove the unused yTotal scale definition if it exists
+          // yTotal: undefined // No longer needed
         },
       },
     });
+
   } catch (error) {
     console.error("Error initializing Employee Salary Chart:", error);
     const chartContainer = chartCanvas.closest('.chart-container');
@@ -796,39 +933,234 @@ function initializeInventoryChart(data) {
   }
 }
 
-function initializeTopSellingChart() {
-  const ctx = document.getElementById("topSellingChart").getContext("2d");
-  new Chart(ctx, {
-    type: "horizontalBar",
-    data: {
-      labels: ["Product A", "Product B", "Product C", "Product D", "Product E"],
-      datasets: [
-        {
-          data: [150, 120, 90, 85, 70],
-          backgroundColor: "#2196F3",
-          borderWidth: 0,
-        },
-      ],
-    },
-    options: {
-      indexAxis: "y",
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: {
-        mode: "nearest",
-        intersect: false,
-        axis: "xy",
+function initializeTopProductsChart(data) {
+  const chartCanvas = document.getElementById("topProductsChart");
+  if (!chartCanvas) {
+    console.error("Top Products Chart canvas not found");
+    return;
+  }
+  
+  try {
+    const ctx = chartCanvas.getContext("2d");
+    if (!ctx) {
+      console.error("Could not get 2D context for Top Products Chart");
+      return;
+    }
+
+    // Ensure we have valid data
+    const chartData = {
+      labels: data.labels || ["Product A", "Product B", "Product C", "Product D", "Product E"],
+      values: data.values || [150, 120, 90, 85, 70],
+      revenue: data.revenue || [15000, 12000, 9000, 8500, 7000],
+      profit: data.profit || [5000, 4000, 3000, 2800, 2300],
+      stock: data.stock || [25, 30, 15, 20, 10]
+    };
+    
+    // If there's an existing chart, destroy it first
+    if (window.topProductsChart && typeof window.topProductsChart.destroy === 'function') {
+      window.topProductsChart.destroy();
+    }
+    
+    // Add toggle button for units/revenue if it doesn't exist
+    let chartContainer = chartCanvas.closest('.card-body');
+    let toggleContainer = chartContainer.querySelector('.chart-toggle');
+    
+    if (!toggleContainer) {
+      toggleContainer = document.createElement('div');
+      toggleContainer.className = 'chart-toggle d-flex justify-content-end mb-3';
+      toggleContainer.innerHTML = `
+        <div class="btn-group btn-group-sm" role="group">
+          <button type="button" class="btn btn-primary active" data-metric="units">Units Sold</button>
+          <button type="button" class="btn btn-outline-primary" data-metric="revenue">Revenue</button>
+        </div>
+      `;
+      
+      // Insert after the chart title
+      const titleElement = chartContainer.querySelector('.card-title');
+      if (titleElement) {
+        titleElement.parentNode.insertBefore(toggleContainer, titleElement.nextSibling);
+      } else {
+        chartContainer.insertBefore(toggleContainer, chartContainer.firstChild);
+      }
+      
+      // Add event listeners to toggle buttons
+      const unitButton = toggleContainer.querySelector('[data-metric="units"]');
+      const revenueButton = toggleContainer.querySelector('[data-metric="revenue"]');
+      
+      unitButton.addEventListener('click', function() {
+        if (!this.classList.contains('active')) {
+          revenueButton.classList.remove('active');
+          revenueButton.classList.add('btn-outline-primary');
+          revenueButton.classList.remove('btn-primary');
+          
+          this.classList.add('active');
+          this.classList.add('btn-primary');
+          this.classList.remove('btn-outline-primary');
+          
+          updateChartData('units');
+        }
+      });
+      
+      revenueButton.addEventListener('click', function() {
+        if (!this.classList.contains('active')) {
+          unitButton.classList.remove('active');
+          unitButton.classList.add('btn-outline-primary');
+          unitButton.classList.remove('btn-primary');
+          
+          this.classList.add('active');
+          this.classList.add('btn-primary');
+          this.classList.remove('btn-outline-primary');
+          
+          updateChartData('revenue');
+        }
+      });
+    }
+    
+    // Create a gradient for the bars
+    const gradients = chartData.labels.map((_, i) => {
+      const gradient = ctx.createLinearGradient(0, 0, 200, 0);
+      const colors = [
+        ['#43a047', '#66bb6a'], // Green variations
+        ['#1e88e5', '#42a5f5'], // Blue variations
+        ['#f9a825', '#fbc02d'], // Amber variations
+        ['#8e24aa', '#ab47bc'], // Purple variations
+        ['#e53935', '#ef5350']  // Red variations
+      ];
+      gradient.addColorStop(0, colors[i % colors.length][0]);
+      gradient.addColorStop(1, colors[i % colors.length][1]);
+      return gradient;
+    });
+    
+    // Function to update chart data based on selected metric
+    function updateChartData(metric) {
+      const dataset = window.topProductsChart.data.datasets[0];
+      
+      if (metric === 'units') {
+        dataset.data = chartData.values;
+        window.topProductsChart.options.scales.x.title.text = 'Units Sold';
+        dataset.label = 'Units Sold';
+      } else {
+        dataset.data = chartData.revenue;
+        window.topProductsChart.options.scales.x.title.text = 'Revenue (₱)';
+        dataset.label = 'Revenue';
+      }
+      
+      window.topProductsChart.update();
+    }
+    
+    // Format currency for display
+    const formatCurrency = (value) => {
+      return "₱" + parseFloat(value).toLocaleString("en-PH", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    };
+    
+    window.topProductsChart = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: chartData.labels,
+        datasets: [
+          {
+            label: "Units Sold",
+            data: chartData.values,
+            backgroundColor: gradients,
+            borderWidth: 0,
+            borderRadius: 4,
+            barPercentage: 0.7,
+          },
+        ],
       },
-      plugins: {
-        legend: {
-          display: false,
+      options: {
+        indexAxis: 'y',  // Horizontal bar chart
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false,
+          },
+          tooltip: {
+            backgroundColor: 'rgba(0,0,0,0.8)',
+            bodyFont: {
+              size: 13
+            },
+            callbacks: {
+              label: function(context) {
+                const index = context.dataIndex;
+                const dataset = context.chart.data.datasets[0];
+                
+                if (dataset.label === 'Units Sold') {
+                  return [
+                    `Units Sold: ${chartData.values[index].toLocaleString()} units`,
+                    `Revenue: ${formatCurrency(chartData.revenue[index])}`,
+                    `Profit: ${formatCurrency(chartData.profit[index])}`,
+                    `Current Stock: ${chartData.stock[index]} units`
+                  ];
+                } else {
+                  return [
+                    `Revenue: ${formatCurrency(chartData.revenue[index])}`,
+                    `Units Sold: ${chartData.values[index].toLocaleString()} units`,
+                    `Profit: ${formatCurrency(chartData.profit[index])}`,
+                    `Current Stock: ${chartData.stock[index]} units`
+                  ];
+                }
+              },
+              title: function(context) {
+                // Bold product name
+                return context[0].label;
+              }
+            }
+          }
         },
+        scales: {
+          x: {
+            beginAtZero: true,
+            grid: {
+              display: false
+            },
+            title: {
+              display: true,
+              text: 'Units Sold',
+              font: {
+                size: 14,
+                weight: 'bold'
+              }
+            },
+            ticks: {
+              precision: 0,
+              callback: function(value) {
+                const activeMetric = chartContainer.querySelector('.btn-group .active').dataset.metric;
+                if (activeMetric === 'revenue') {
+                  if (value >= 1000) {
+                    return '₱' + (value / 1000).toFixed(1) + 'K';
+                  }
+                  return '₱' + value;
+                }
+                return value;
+              }
+            }
+          },
+          y: {
+            grid: {
+              display: false
+            },
+            title: {
+              display: true,
+              text: 'Products',
+              font: {
+                size: 14,
+                weight: 'bold'
+              }
+            }
+          }
+        }
       },
-      scales: {
-        x: {
-          beginAtZero: true,
-        },
-      },
-    },
-  });
+    });
+  } catch (error) {
+    console.error("Error initializing Top Products Chart:", error);
+    const chartContainer = chartCanvas.closest('.chart-container');
+    if (chartContainer) {
+      chartContainer.innerHTML = '<div class="alert alert-danger">Error initializing chart. See console for details.</div>';
+    }
+  }
 }

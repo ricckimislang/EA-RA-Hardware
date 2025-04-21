@@ -1,7 +1,7 @@
 <?php session_start();
 
 if (!isset($_SESSION["username"]) || (!isset($_SESSION["usertype"]) || ($_SESSION["usertype"] !== '3' && $_SESSION["usertype"] !== '1'))) {
-    header("location:../login.php");
+    header("location:../index.php");
     exit();
 }
 $userId = $_SESSION["user_id"];
