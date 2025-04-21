@@ -41,7 +41,6 @@ if (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'applica
         'fullName' => $_POST['edit_full_name'] ?? '',
         'positionId' => $_POST['edit_position_id'] ?? '',
         'employmentType' => $_POST['edit_employment_type'] ?? '',
-        'salaryRateType' => $_POST['edit_salary_rate_type'] ?? '',
         'dateHired' => $_POST['edit_date_hired'] ?? '',
         'overtimeRate' => $_POST['edit_overtime_rate'] ?? '',
         'contactNumber' => $_POST['edit_contact_number'] ?? '',
@@ -74,7 +73,7 @@ if (isset($input['dateHired']) && !empty($input['dateHired'])) {
 $debug['processed_input'] = $input;
 
 // Validate required fields
-$requiredFields = ['employeeId', 'fullName', 'positionId', 'employmentType', 'salaryRateType', 'dateHired', 'overtimeRate', 'contactNumber'];
+$requiredFields = ['employeeId', 'fullName', 'positionId', 'employmentType', 'dateHired', 'overtimeRate', 'contactNumber'];
 foreach ($requiredFields as $field) {
     if (!isset($input[$field]) || empty($input[$field])) {
         echo json_encode([
@@ -126,18 +125,17 @@ try {
 
     // Update employee information
     $sql = "UPDATE employees 
-            SET full_name = ?, position_id = ?, employment_type = ?, salary_rate_type = ?, date_hired = ?, overtime_rate = ?, contact_number = ?, email_address = ? 
+            SET full_name = ?, position_id = ?, employment_type = ?, date_hired = ?, overtime_rate = ?, contact_number = ?, email_address = ? 
             WHERE id = ?";
 
     $debug['sql'] = $sql;
     $stmt = $conn->prepare($sql);
 
     $stmt->bind_param(
-        'sissssssi',
+        'sisssssi',
         $input['fullName'],
         $positionId,
         $input['employmentType'],
-        $input['salaryRateType'],
         $input['dateHired'],
         $input['overtimeRate'],
         $input['contactNumber'],

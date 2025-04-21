@@ -40,7 +40,7 @@
                     </div>
 
                     <div class="row mb-3">
-                        <div class="col-md-6">
+                        <!-- <div class="col-md-6">
                             <label class="form-label">Salary Rate Type</label>
                             <div class="d-flex gap-3 mt-2">
                                 <div class="form-check">
@@ -56,7 +56,7 @@
                                     <label class="form-check-label" for="hourly">Hourly</label>
                                 </div>
                             </div>
-                        </div>
+                        </div> -->
 
                         <div class="col-md-6">
                             <label for="date_hired" class="form-label">Date Hired</label>
@@ -179,7 +179,7 @@
                     </div>
 
                     <div class="row mb-3">
-                        <div class="col-md-6">
+                        <!-- <div class="col-md-6">
                             <label class="form-label">Salary Rate Type</label>
                             <div class="d-flex gap-3 mt-2">
                                 <div class="form-check">
@@ -195,7 +195,7 @@
                                     <label class="form-check-label" for="edit_hourly">Hourly</label>
                                 </div>
                             </div>
-                        </div>
+                        </div> -->
                         <div class="col-md-6">
                             <label for="edit_date_hired" class="form-label">Date Hired</label>
                             <input type="date" class="form-control" id="edit_date_hired" name="edit_date_hired" required>
@@ -305,10 +305,10 @@
                                             <th width="40%">Date Hired</th>
                                             <td id="view_date_hired"></td>
                                         </tr>
-                                        <tr>
+                                        <!-- <tr>
                                             <th>Salary Rate</th>
                                             <td id="view_salary_rate"></td>
-                                        </tr>
+                                        </tr> -->
                                         <tr>
                                             <th>Overtime Rate</th>
                                             <td id="view_overtime_rate"></td>

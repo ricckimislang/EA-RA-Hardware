@@ -124,7 +124,7 @@ function initEmployeesTable() {
       { data: "full_name" },
       { data: "position_title" },
       { data: "employment_type" },
-      { data: "salary_rate_type" },
+      // { data: "salary_rate_type" },
       { data: "date_hired" },
       { data: "contact_number" },
       {
@@ -202,7 +202,7 @@ function viewEmployee(employeeId) {
         $("#view_position").text(employee.position_title);
         $("#view_employment_type").text(employee.employment_type);
         $("#view_date_hired").text(formatDate(employee.date_hired));
-        $("#view_salary_rate").text(employee.salary_rate_type);
+        // $("#view_salary_rate").text(employee.salary_rate_type);
         $("#view_overtime_rate").text(
           "₱" + parseFloat(employee.overtime_rate).toFixed(2) + "/hour"
         );
@@ -337,13 +337,13 @@ function registerEmployee() {
   console.log("Form data being submitted:");
   
   // Check form fields
-  const fields = ['full_name', 'position_id', 'employment_type', 'salary_rate_type', 'date_hired', 
+  const fields = ['full_name', 'position_id', 'employment_type', 'date_hired', 
     'overtime_rate', 'contact_number', 'email_address'];
     
   fields.forEach(field => {
     console.log(`${field}: ${formData.get(field)}`);
     // Make sure the field is properly added to formData
-    if (field === 'employment_type' || field === 'salary_rate_type') {
+    if (field === 'employment_type') {
       // For radio buttons, get the checked value
       const checkedRadio = document.querySelector(`input[name="${field}"]:checked`);
       if (checkedRadio) {
@@ -552,10 +552,10 @@ function editEmployee(employeeId) {
         $(
           `input[name='edit_employment_type'][value='${employee.employment_type}']`
         ).prop("checked", true);
-        // Set salary rate type radio
-        $(
-          `input[name='edit_salary_rate_type'][value='${employee.salary_rate_type}']`
-        ).prop("checked", true);
+        // // Set salary rate type radio
+        // $(
+        //   `input[name='edit_salary_rate_type'][value='${employee.salary_rate_type}']`
+        // ).prop("checked", true);
         // Set government IDs
         if (employee.government_ids) {
           $("#edit_sss_number").val(employee.government_ids.sss_number || "");

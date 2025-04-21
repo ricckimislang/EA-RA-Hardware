@@ -27,7 +27,7 @@ require_once '../../database/config.php';
                                         <th>Name</th>
                                         <th>Position</th>
                                         <th>Employment Type</th>
-                                        <th>Salary Rate</th>
+                                        <!-- <th>Salary Rate</th> -->
                                         <th>Date Hired</th>
                                         <th>Contact</th>
                                         <th>Actions</th>

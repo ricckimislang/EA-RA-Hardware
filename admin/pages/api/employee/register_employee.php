@@ -108,7 +108,7 @@ function handleFileUpload($file_data, $employee_id, $document_type, $employee_na
 
     $move_result = move_uploaded_file($file_data['tmp_name'], $target_path);
     $debug['move_result_' . $document_type] = $move_result;
-    
+
     if ($move_result) {
         return 'uploads/employee_documents/' . $new_filename;
     } else {
@@ -119,7 +119,8 @@ function handleFileUpload($file_data, $employee_id, $document_type, $employee_na
 }
 
 // Function to get file upload error message
-function getFileUploadErrorMessage($error_code) {
+function getFileUploadErrorMessage($error_code)
+{
     switch ($error_code) {
         case UPLOAD_ERR_INI_SIZE:
             return 'The uploaded file exceeds the upload_max_filesize directive in php.ini';
@@ -140,6 +141,29 @@ function getFileUploadErrorMessage($error_code) {
     }
 }
 
+function createrUserAccount($employee_id)
+{
+    global $conn;
+    $employeeId = $employee_id;
+
+    $stmt = $conn->prepare('SELECT full_name FROM employees WHERE id = ?');
+    $stmt->bind_param('i', $employeeId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    $username = explode('_', $row['full_name'])[0];
+
+    $password = 'cashier';
+    $password = md5($password);
+
+    $addUser = $conn->query("INSERT INTO users (employee_id, username, password, usertype) VALUES ('$employeeId', '$username', '$password', '3')");
+    if ($addUser) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 // Check if the form is submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
@@ -151,7 +175,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $debug = [];
         $debug['post_data'] = $_POST;
         $debug['files_data'] = $_FILES;
-        
+
         // Basic employee information - use null coalescing operator to handle missing values
         $full_name = isset($_POST['full_name']) ? $conn->real_escape_string($_POST['full_name']) : '';
         $position_id = isset($_POST['position_id']) ? intval($_POST['position_id']) : 0;
@@ -183,6 +207,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($stmt->execute()) {
             $employee_id = $conn->insert_id;
+
+            $createUserAccount = createrUserAccount($employee_id);
 
             // Handle file uploads
             $sss_file_path = isset($_FILES['sss_file']) ? handleFileUpload($_FILES['sss_file'], $employee_id, 'sss') : null;
