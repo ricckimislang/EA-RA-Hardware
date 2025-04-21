@@ -68,7 +68,7 @@
         </li>
         
         <li>
-            <a href="#">
+            <a href="logout.php">
                 <i class="fas fa-sign-out-alt"></i>
                 <span>Logout</span>
             </a>

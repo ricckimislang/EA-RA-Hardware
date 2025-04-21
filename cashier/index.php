@@ -13,7 +13,8 @@ require_once 'includes/head.php';
             </div>
             <div class="transaction-info">
                 <div class="cashier-info">
-                    <span>Cashier: <strong id="cashier-name">User</strong></span>
+                    <input type="hidden" id="cashier-id" value="<?php echo $userId; ?>">
+                    <span>Cashier: <strong id="cashier-name"></strong></span>
                 </div>
 
                 <div class="transaction-number">

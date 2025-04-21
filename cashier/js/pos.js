@@ -14,6 +14,7 @@ const totalElement = document.getElementById("total");
 const checkoutBtn = document.getElementById("checkout-btn");
 const receiptPreview = document.getElementById("receipt-preview");
 const categoryFilter = document.getElementById("category-filter");
+const cashierId = document.getElementById("cashier-id");
 const cashierName = document.getElementById("cashier-name");
 const transactionId = document.getElementById("transaction-id");
 const currentDate = document.getElementById("current-date");
@@ -42,10 +43,9 @@ updateDateTime();
 // Load products on page load
 document.addEventListener("DOMContentLoaded", async function () {
   loadProductsByCategory();
-  // Set cashier name (would come from login session in a real app)
-  cashierName.textContent = "Cashier";
   // Set transaction ID (would be generated from database in a real app)
   transactionId.textContent = await generateTransactionId();
+  getCashierName(cashierId.value);
 });
 
 // Handle checkout process
@@ -565,4 +565,23 @@ function generateReceipt() {
       </div>
     </div>
   `;
+}
+
+async function getCashierName(user_id) {
+  const cashierId = user_id;
+
+  try {
+    const response = await fetch(
+      `api/get_cashiername.php?user_id=${cashierId}`
+    );
+    const data = await response.json();
+
+    if (data.success) {
+      cashierName.textContent = data.cashier_name;
+    } else {
+      console.error("Error getting cashier name:", data.message);
+    }
+  } catch (error) {
+    console.error("Error getting cashier name:", error);
+  }
 }
