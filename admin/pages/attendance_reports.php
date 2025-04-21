@@ -1,5 +1,4 @@
 <?php
-session_start();
 include_once '../../database/config.php';
 
 // Set the correct timezone

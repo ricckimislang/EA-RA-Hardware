@@ -198,12 +198,12 @@ function saveStockAdjustment() {
     $("#stockAdjustmentForm")[0].reportValidity();
     return;
   }
-
+  const reasonValue = $("#adjustmentReason").val();
   const adjustmentData = {
     productId: parseInt($("#adjustmentProductId").val()),
     adjustmentType: $("#adjustmentType").val(),
     quantity: parseInt($("#adjustmentQuantity").val()),
-    notes: $("#adjustmentNotes").val().trim(),
+    notes: reasonValue.trim(),
   };
 
   $("#saveAdjustment")
