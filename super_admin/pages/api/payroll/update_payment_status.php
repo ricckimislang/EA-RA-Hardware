@@ -22,6 +22,34 @@ try {
         throw new Exception("Invalid status value. Must be 'pending' or 'paid'");
     }
     
+    // First check if the pay period is closed
+    $checkSql = "SELECT pp.status as period_status
+                FROM payroll p
+                JOIN pay_periods pp ON p.pay_period_id = pp.id
+                WHERE p.id = ?";
+                
+    $checkStmt = $conn->prepare($checkSql);
+    
+    if (!$checkStmt) {
+        throw new Exception("Error preparing statement: " . $conn->error);
+    }
+    
+    $checkStmt->bind_param('i', $payrollId);
+    $checkStmt->execute();
+    $result = $checkStmt->get_result();
+    
+    if ($result->num_rows === 0) {
+        throw new Exception("No payroll record found with ID: $payrollId");
+    }
+    
+    $row = $result->fetch_assoc();
+    $checkStmt->close();
+    
+    // If period is closed, prevent updates
+    if ($row['period_status'] === 'processed') {
+        throw new Exception("Cannot update payment status: This payroll period is already closed");
+    }
+    
     // Update the payment status
     $sql = "UPDATE payroll SET payment_status = ? WHERE id = ?";
     $stmt = $conn->prepare($sql);

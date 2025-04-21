@@ -61,25 +61,15 @@
         <!-- Charts Section -->
         <div class="row mb-4">
             <!-- Sales Trend Chart -->
-            <div class="col-md-8">
+            <div class="col-md-12">
                 <div class="card chart-card">
                     <div class="card-body">
                         <h5 class="card-title">Sales Revenue Trend</h5>
-                            <canvas id="salesTrendChart"></canvas>
+                        <canvas id="salesTrendChart"></canvas>
                     </div>
                 </div>
             </div>
-            <!-- Expenses Treemap Chart -->
-            <div class="col-md-4">
-                <div class="card chart-card">
-                    <div class="card-body">
-                        <h5 class="card-title">Expense Categories</h5>
-                        <div class="chart-container">
-                            <canvas id="expensesTreemap"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
+
         </div>
 
         <div class="row mb-4">
@@ -115,6 +105,19 @@
                         <h5 class="card-title">Inventory Summary</h5>
                         <div class="chart-container">
                             <canvas id="inventoryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mb-4">
+            <!-- Expenses Treemap Chart -->
+            <div class="col-md-12">
+                <div class="card chart-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Expense Categories</h5>
+                        <div class="chart-container">
+                            <canvas id="expensesTreemap"></canvas>
                         </div>
                     </div>
                 </div>

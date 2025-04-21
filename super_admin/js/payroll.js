@@ -36,6 +36,37 @@ document.addEventListener('DOMContentLoaded', function() {
             exportPayrollToExcel();
         });
     }
+    
+    // Close Payroll Button Click
+    const closePayrollBtn = document.getElementById('close-payroll-btn');
+    if (closePayrollBtn) {
+        closePayrollBtn.addEventListener('click', function() {
+            const closePayrollModal = new bootstrap.Modal(document.getElementById('closePayrollModal'));
+            closePayrollModal.show();
+        });
+    }
+    
+    // Confirm Close Payroll Button Click
+    const confirmCloseBtn = document.getElementById('confirm-close-payroll');
+    if (confirmCloseBtn) {
+        confirmCloseBtn.addEventListener('click', function() {
+            closePayroll();
+        });
+    }
+    
+    // Show warning when hovering over close button
+    const closeBtn = document.getElementById('close-payroll-btn');
+    const closeWarning = document.getElementById('close-warning');
+    
+    if (closeBtn && closeWarning) {
+        closeBtn.addEventListener('mouseenter', function() {
+            closeWarning.style.display = 'block';
+        });
+        
+        closeBtn.addEventListener('mouseleave', function() {
+            closeWarning.style.display = 'none';
+        });
+    }
 });
 
 /**
@@ -112,7 +143,9 @@ function getPayrollReport() {
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success' && data.data.length > 0) {
-            displayPayrollReport(data.data);
+            // Get period status from the first employee record
+            const isPeriodClosed = data.data[0].period_status === 'processed';
+            displayPayrollReport(data.data, isPeriodClosed);
         } else if (data.status === 'success' && data.data.length === 0) {
             tableBody.innerHTML = '<tr><td colspan="7" class="text-center">No payroll data found for this period</td></tr>';
         } else {
@@ -127,7 +160,7 @@ function getPayrollReport() {
 /**
  * Display payroll report in the table
  */
-function displayPayrollReport(reportData) {
+function displayPayrollReport(reportData, isPeriodClosed = false) {
     const tableBody = document.getElementById('payroll-report-body');
     
     // Clear existing content
@@ -135,6 +168,24 @@ function displayPayrollReport(reportData) {
     
     // Show the report action buttons when data is available
     document.querySelector('.report-actions').style.display = 'block';
+    
+    // Check if all employees are paid
+    const allPaid = reportData.every(employee => employee.payment_status === 'paid');
+    
+    // Enable or disable close button based on payment status and period status
+    const closeBtn = document.getElementById('close-payroll-btn');
+    if (closeBtn) {
+        if (isPeriodClosed) {
+            closeBtn.disabled = true;
+            closeBtn.title = "Payroll period is already closed";
+        } else if (allPaid) {
+            closeBtn.disabled = false;
+            closeBtn.title = "Close this payroll period";
+        } else {
+            closeBtn.disabled = true;
+            closeBtn.title = "All employees must be paid before closing";
+        }
+    }
     
     // Add each employee to the table
     reportData.forEach(employee => {
@@ -147,6 +198,24 @@ function displayPayrollReport(reportData) {
         const toggleClass = employee.payment_status === 'paid' ? 'danger' : 'success';
         
         // Format the row data - ensure hours is displayed as an integer
+        let actionButtons = `
+            <button class="btn btn-sm btn-info view-details" data-id="${employee.payroll_id}">
+                Details
+            </button>
+            <button class="btn btn-sm btn-primary print-slip" data-id="${employee.payroll_id}">
+                Print Slip
+            </button>
+        `;
+        
+        // Only show toggle button if period is not closed
+        if (!isPeriodClosed) {
+            actionButtons += `
+                <button class="btn btn-sm btn-${toggleClass} toggle-status" data-id="${employee.payroll_id}" data-status="${employee.payment_status}">
+                    ${toggleText}
+                </button>
+            `;
+        }
+        
         row.innerHTML = `
             <td>${employee.full_name}</td>
             <td>${employee.position}</td>
@@ -158,15 +227,7 @@ function displayPayrollReport(reportData) {
                 <span class="text-black badge badge-${statusClass}">${statusText}</span>
             </td>
             <td class="action-buttons">
-                <button class="btn btn-sm btn-info view-details" data-id="${employee.payroll_id}">
-                    Details
-                </button>
-                <button class="btn btn-sm btn-primary print-slip" data-id="${employee.payroll_id}">
-                    Print Slip
-                </button>
-                <button class="btn btn-sm btn-${toggleClass} toggle-status" data-id="${employee.payroll_id}" data-status="${employee.payment_status}">
-                    ${toggleText}
-                </button>
+                ${actionButtons}
             </td>
         `;
         
@@ -219,6 +280,32 @@ function addPayrollButtonListeners() {
  * Update payment status for an employee
  */
 function updatePaymentStatus(payrollId, newStatus, buttonElement) {
+    // Check if we should first verify that the period is still open
+    fetch(`../pages/api/payroll/check_period_status.php?payroll_id=${payrollId}`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // Check if period is closed
+            if (data.data.period_status === 'processed') {
+                alert('Cannot update payment status: This payroll period is already closed.');
+                return;
+            }
+            
+            // If it's open, proceed with the status update
+            proceedWithStatusUpdate(payrollId, newStatus, buttonElement);
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Error checking period status: ' + error);
+    });
+}
+
+/**
+ * Proceed with updating payment status after verification
+ */
+function proceedWithStatusUpdate(payrollId, newStatus, buttonElement) {
     // Show loading state
     buttonElement.disabled = true;
     buttonElement.innerHTML = 'Updating...';
@@ -238,6 +325,9 @@ function updatePaymentStatus(payrollId, newStatus, buttonElement) {
         if (data.status === 'success') {
             // Refresh the report to show updated status
             getPayrollReport();
+            
+            // Check if all employees are now paid to update close button state
+            checkAllEmployeesPaid();
         } else {
             alert('Error: ' + data.message);
             // Reset button state
@@ -255,6 +345,27 @@ function updatePaymentStatus(payrollId, newStatus, buttonElement) {
         alert('Error updating payment status: ' + error);
         buttonElement.disabled = false;
     });
+}
+
+/**
+ * Check if all employees are paid and update close button accordingly
+ */
+function checkAllEmployeesPaid() {
+    const tableRows = document.querySelectorAll('#payroll-report-body tr');
+    let allPaid = true;
+    
+    tableRows.forEach(row => {
+        const statusCell = row.querySelector('td:nth-child(7)');
+        if (statusCell && !statusCell.textContent.includes('Paid')) {
+            allPaid = false;
+        }
+    });
+    
+    const closeBtn = document.getElementById('close-payroll-btn');
+    if (closeBtn) {
+        closeBtn.disabled = !allPaid;
+        closeBtn.title = allPaid ? "Close this payroll period" : "All employees must be paid before closing";
+    }
 }
 
 /**
@@ -583,4 +694,42 @@ function exportPayrollToExcel() {
     
     // Redirect to the export endpoint
     window.location.href = `../pages/api/payroll/export_excel.php?pay_period_id=${payPeriodId}`;
+}
+
+/**
+ * Close the current payroll period
+ */
+function closePayroll() {
+    const payPeriodSelect = document.getElementById('pay_period_select');
+    const payPeriodId = payPeriodSelect.value;
+    
+    if (!payPeriodId) {
+        alert('Please select a pay period to close');
+        return;
+    }
+    
+    // Create form data
+    const formData = new FormData();
+    formData.append('pay_period_id', payPeriodId);
+    
+    // Send request to close payroll
+    fetch('../pages/api/payroll/close_payroll.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            const closePayrollModal = bootstrap.Modal.getInstance(document.getElementById('closePayrollModal'));
+            closePayrollModal.hide();
+            alert('Payroll period has been successfully closed.');
+            // Reload the page to update the pay periods dropdown
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Error closing payroll: ' + error);
+    });
 } 

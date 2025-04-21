@@ -116,6 +116,9 @@ $debug = false; // Set to true to show debug info
                                 </select>
                             </div>
                             <button id="view-report-btn" class="btn btn-success">View Report</button>
+                            <div id="close-warning" class="mt-2 small text-danger" style="display: none;">
+                                <i class="fas fa-exclamation-triangle"></i> Warning: Closing a payroll makes it permanent and it cannot be reopened or modified.
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -131,8 +134,11 @@ $debug = false; // Set to true to show debug info
                                 <button id="print-report-btn" class="btn btn-sm btn-info mr-2">
                                     <i class="fas fa-print"></i> Print Report
                                 </button>
-                                <button id="export-excel-btn" class="btn btn-sm btn-success">
+                                <button id="export-excel-btn" class="btn btn-sm btn-success mr-2">
                                     <i class="fas fa-file-excel"></i> Export to Excel
+                                </button>
+                                <button id="close-payroll-btn" class="btn btn-sm btn-danger" disabled title="All employees must be paid before closing">
+                                    <i class="fas fa-lock"></i> Close Payroll
                                 </button>
                             </div>
                         </div>
@@ -160,6 +166,34 @@ $debug = false; // Set to true to show debug info
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for confirming payroll closure -->
+    <div class="modal fade" id="closePayrollModal" tabindex="-1" aria-labelledby="closePayrollModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="closePayrollModalLabel">Confirm Payroll Closure</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> <strong>Warning!</strong>
+                    </div>
+                    <p>You are about to permanently close this payroll period. This action:</p>
+                    <ul>
+                        <li>Cannot be undone</li>
+                        <li>Will finalize all payments</li>
+                        <li>Will prevent any future modifications</li>
+                    </ul>
+                    <p>Are you absolutely sure you want to continue?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirm-close-payroll">Yes, Close Payroll</button>
                 </div>
             </div>
         </div>
