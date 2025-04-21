@@ -6,13 +6,13 @@ include_once '../database/config.php';
 date_default_timezone_set('Asia/Manila');
 
 // Check if request is POST and contains necessary data
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['qr_hash']) && isset($_POST['mode'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['qr_hash'])) {
     $qrHash = $_POST['qr_hash'];
-    $mode = $_POST['mode'];
     $response = [];
     
     // Get the current datetime from server
     $currentDatetime = date('Y-m-d H:i:s');
+    $currentDate = date('Y-m-d');
     
     // Connect to database
     $conn = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
@@ -57,103 +57,96 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['qr_hash']) && isset($
             $settings[$row['setting_name']] = $row['setting_value'];
         }
         
-        // Process based on mode (time-in or time-out)
-        if ($mode === 'time-in') {
-            // Check if employee already has an open attendance record for today
-            $todayStart = date('Y-m-d 00:00:00');
-            $todayEnd = date('Y-m-d 23:59:59');
+        // Check if employee already has an open attendance record for today
+        $todayStart = date('Y-m-d 00:00:00');
+        $todayEnd = date('Y-m-d 23:59:59');
+        
+        $checkQuery = "SELECT id, time_in FROM attendance_records 
+                      WHERE employee_id = ? AND time_in BETWEEN ? AND ? 
+                      AND time_out IS NULL";
+        $checkStmt = $conn->prepare($checkQuery);
+        $checkStmt->bind_param("iss", $employeeId, $todayStart, $todayEnd);
+        $checkStmt->execute();
+        $checkResult = $checkStmt->get_result();
+        
+        if ($checkResult->num_rows > 0) {
+            // Employee has timed in but not timed out - proceed with time-out logic
+            $record = $checkResult->fetch_assoc();
+            $recordId = $record['id'];
+            $timeIn = new DateTime($record['time_in']);
+            $now = new DateTime($currentDatetime);
             
-            $checkQuery = "SELECT id FROM attendance_records 
-                          WHERE employee_id = ? AND time_in BETWEEN ? AND ? 
-                          AND time_out IS NULL";
-            $checkStmt = $conn->prepare($checkQuery);
-            $checkStmt->bind_param("iss", $employeeId, $todayStart, $todayEnd);
-            $checkStmt->execute();
-            $checkResult = $checkStmt->get_result();
+            // Check if at least 1 hour has passed since time-in
+            $hourDiff = $now->diff($timeIn)->h + ($now->diff($timeIn)->days * 24);
             
-            if ($checkResult->num_rows > 0) {
+            if ($hourDiff < 1) {
                 $response = [
                     'status' => 'error',
-                    'message' => 'You have already timed in today and not yet timed out.'
+                    'message' => 'You must wait at least 1 hour after time-in before you can time-out.'
                 ];
             } else {
-                // Determine status (on time or late)
-                $status = 'present';
-                $workStartTime = $settings['work_start_time'] ?? '08:00:00';
-                $lateThreshold = $settings['late_threshold_minutes'] ?? 15;
+                // Check if it's still the same day
+                $timeInDate = date('Y-m-d', strtotime($record['time_in']));
                 
-                $currentTime = date('H:i:s');
-                $lateTime = date('H:i:s', strtotime($workStartTime . ' + ' . $lateThreshold . ' minutes'));
-                
-                if ($currentTime > $lateTime) {
-                    $status = 'late';
-                }
-                
-                // Record time-in
-                $insertQuery = "INSERT INTO attendance_records (employee_id, time_in, status) VALUES (?, ?, ?)";
-                $insertStmt = $conn->prepare($insertQuery);
-                $insertStmt->bind_param("iss", $employeeId, $currentDatetime, $status);
-                
-                if ($insertStmt->execute()) {
-                    $response = [
-                        'status' => 'success',
-                        'message' => "Time in recorded for $employeeName at " . date('h:i A', strtotime($currentDatetime))
-                    ];
-                } else {
+                if ($timeInDate != $currentDate) {
                     $response = [
                         'status' => 'error',
-                        'message' => 'Failed to record time in. Please try again.'
-                    ];
-                }
-            }
-        } else if ($mode === 'time-out') {
-            // Find the most recent open attendance record for the employee
-            $findQuery = "SELECT id, time_in FROM attendance_records 
-                         WHERE employee_id = ? AND time_out IS NULL 
-                         ORDER BY time_in DESC LIMIT 1";
-            $findStmt = $conn->prepare($findQuery);
-            $findStmt->bind_param("i", $employeeId);
-            $findStmt->execute();
-            $findResult = $findStmt->get_result();
-            
-            if ($findResult->num_rows === 0) {
-                $response = [
-                    'status' => 'error',
-                    'message' => 'No open attendance record found. Please time in first.'
-                ];
-            } else {
-                $record = $findResult->fetch_assoc();
-                $recordId = $record['id'];
-                $timeIn = new DateTime($record['time_in']);
-                $timeOut = new DateTime($currentDatetime);
-                
-                // Calculate hours worked
-                $interval = $timeIn->diff($timeOut);
-                $totalWholeHours = ($interval->days * 24) + $interval->h;
-                
-                // Update attendance record with time out and hours worked
-                $updateQuery = "UPDATE attendance_records SET time_out = ?, total_hours = ? WHERE id = ?";
-                $updateStmt = $conn->prepare($updateQuery);
-                $updateStmt->bind_param("sii", $currentDatetime, $totalWholeHours, $recordId);
-                
-                if ($updateStmt->execute()) {
-                    $response = [
-                        'status' => 'success',
-                        'message' => "Time out recorded for $employeeName at " . date('h:i A', strtotime($currentDatetime)) . 
-                                     ". Total hours: " . number_format($hoursWorked, 2)
+                        'message' => 'You can only time-out on the same day as your time-in.'
                     ];
                 } else {
-                    $response = [
-                        'status' => 'error',
-                        'message' => 'Failed to record time out. Please try again.'
-                    ];
+                    // Calculate hours worked
+                    $interval = $timeIn->diff($now);
+                    $totalWholeHours = ($interval->days * 24) + $interval->h;
+                    
+                    // Update attendance record with time out and hours worked
+                    $updateQuery = "UPDATE attendance_records SET time_out = ?, total_hours = ? WHERE id = ?";
+                    $updateStmt = $conn->prepare($updateQuery);
+                    $updateStmt->bind_param("sdi", $currentDatetime, $totalWholeHours, $recordId);
+                    
+                    if ($updateStmt->execute()) {
+                        $response = [
+                            'status' => 'success',
+                            'message' => "Time out recorded for $employeeName at " . date('h:i A', strtotime($currentDatetime)) . 
+                                         ". Total hours: " . $totalWholeHours
+                        ];
+                    } else {
+                        $response = [
+                            'status' => 'error',
+                            'message' => 'Failed to record time out. Please try again.'
+                        ];
+                    }
                 }
             }
         } else {
-            $response = [
-                'status' => 'error',
-                'message' => 'Invalid mode. Please select time in or time out.'
-            ];
+            // No open attendance record - proceed with time-in logic
+            // Determine status (on time or late)
+            $status = 'present';
+            $workStartTime = $settings['work_start_time'] ?? '08:00:00';
+            $lateThreshold = $settings['late_threshold_minutes'] ?? 15;
+            
+            $currentTime = date('H:i:s');
+            $lateTime = date('H:i:s', strtotime($workStartTime . ' + ' . $lateThreshold . ' minutes'));
+            
+            if ($currentTime > $lateTime) {
+                $status = 'late';
+            }
+            
+            // Record time-in
+            $insertQuery = "INSERT INTO attendance_records (employee_id, time_in, status) VALUES (?, ?, ?)";
+            $insertStmt = $conn->prepare($insertQuery);
+            $insertStmt->bind_param("iss", $employeeId, $currentDatetime, $status);
+            
+            if ($insertStmt->execute()) {
+                $response = [
+                    'status' => 'success',
+                    'message' => "Time in recorded for $employeeName at " . date('h:i A', strtotime($currentDatetime))
+                ];
+            } else {
+                $response = [
+                    'status' => 'error',
+                    'message' => 'Failed to record time in. Please try again.'
+                ];
+            }
         }
     }
     

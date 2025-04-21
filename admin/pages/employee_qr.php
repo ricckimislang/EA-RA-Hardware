@@ -25,15 +25,31 @@ if (isset($_POST['regenerate']) && isset($_POST['employee_id'])) {
     // Generate a shorter QR code hash (25 chars)
     $newHash = substr(md5($employeeId . rand() . time()), 0, 25);
 
-    $updateSql = "UPDATE employee_qr_codes SET qr_code_hash = ?, updated_at = NOW() WHERE employee_id = ?";
-    $stmt = $conn->prepare($updateSql);
-    $stmt->bind_param("si", $newHash, $employeeId);
+    // First check if a QR code already exists for this employee
+    $checkSql = "SELECT id FROM employee_qr_codes WHERE employee_id = ?";
+    $checkStmt = $conn->prepare($checkSql);
+    $checkStmt->bind_param("i", $employeeId);
+    $checkStmt->execute();
+    $checkResult = $checkStmt->get_result();
+    
+    if ($checkResult->num_rows > 0) {
+        // Update existing QR code
+        $updateSql = "UPDATE employee_qr_codes SET qr_code_hash = ?, updated_at = NOW() WHERE employee_id = ?";
+        $stmt = $conn->prepare($updateSql);
+        $stmt->bind_param("si", $newHash, $employeeId);
+    } else {
+        // Insert new QR code record
+        $insertSql = "INSERT INTO employee_qr_codes (employee_id, qr_code_hash, is_active, created_at, updated_at) 
+                      VALUES (?, ?, 1, NOW(), NOW())";
+        $stmt = $conn->prepare($insertSql);
+        $stmt->bind_param("is", $employeeId, $newHash);
+    }
 
     if ($stmt->execute()) {
-        header("Location: employee_qr.php?success=QR code regenerated successfully.");
+        header("Location: employee_qr.php?success=QR code generated successfully.");
         exit;
     } else {
-        header("Location: employee_qr.php?error=Failed to regenerate QR code.");
+        header("Location: employee_qr.php?error=Failed to generate QR code: " . $stmt->error);
         exit;
     }
 }
@@ -60,6 +76,7 @@ if (isset($_POST['toggle_status']) && isset($_POST['employee_id'])) {
 
 <?php include_once '../includes/head.php' ?>
 <!-- Add Bootstrap Icons -->
+<link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 <style>
     .card {

@@ -65,10 +65,6 @@ $serverTime = date('H:i:s');
             <div class="clock" id="current-time"><?php echo $serverTime; ?></div>
             <div class="text-center mb-4">
                 <h3>Scan your QR code to log attendance</h3>
-                <div class="btn-group mb-3" role="group">
-                    <button type="button" class="btn btn-success me-2" id="time-in-btn">Time In</button>
-                    <button type="button" class="btn btn-danger" id="time-out-btn">Time Out</button>
-                </div>
             </div>
 
             <div id="qr-reader"></div>
@@ -108,21 +104,6 @@ $serverTime = date('H:i:s');
         // Initial update
         updateClockFromServer();
 
-        // Mode selection (time in or time out)
-        let mode = 'time-in';
-
-        document.getElementById('time-in-btn').addEventListener('click', function() {
-            mode = 'time-in';
-            this.classList.add('active');
-            document.getElementById('time-out-btn').classList.remove('active');
-        });
-
-        document.getElementById('time-out-btn').addEventListener('click', function() {
-            mode = 'time-out';
-            this.classList.add('active');
-            document.getElementById('time-in-btn').classList.remove('active');
-        });
-
         // QR Code Scanner
         const html5QrCode = new Html5Qrcode("qr-reader");
         const qrCodeSuccessCallback = (decodedText, decodedResult) => {
@@ -155,8 +136,7 @@ $serverTime = date('H:i:s');
                 url: 'process_attendance.php',
                 type: 'POST',
                 data: {
-                    qr_hash: qrHash,
-                    mode: mode
+                    qr_hash: qrHash
                 },
                 success: function(response) {
                     const data = JSON.parse(response);
