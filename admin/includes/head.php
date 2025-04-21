@@ -1,9 +1,11 @@
 <?php
 session_start();
-if (!isset($_SESSION["username"])) {
-    header("location: ../../login.php");
+if (!isset($_SESSION["usertype"]) || ($_SESSION["usertype"] !== '1' && $_SESSION["usertype"] !== '2')) {
+    header("location: ../../index.php");
+    exit();
 }
 ?>
+<script>console.log("<?php echo $_SESSION["usertype"]; ?>");</script>
 
 <head>
     <meta charset="UTF-8">

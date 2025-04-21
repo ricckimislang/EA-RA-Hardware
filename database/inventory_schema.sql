@@ -1,110 +1,115 @@
--- Create database if not exists
-CREATE DATABASE IF NOT EXISTS ea_ra_hardware;
-USE ea_ra_hardware;
+--
+-- Table structure for table `brands`
+--
 
--- Categories table
-CREATE TABLE categories (
-    category_id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(50) NOT NULL,
-    description TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+DROP TABLE IF EXISTS `brands`;
+CREATE TABLE IF NOT EXISTS `brands` (
+  `brand_id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `description` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`brand_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Brands table
-CREATE TABLE brands (
-    brand_id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(50) NOT NULL,
-    description TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+--
+-- Dumping data for table `brands`
+--
 
--- Supplier Contacts table
-CREATE TABLE supplier_contacts (
-    contact_id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(100) NOT NULL,
-    contact_person VARCHAR(100),
-    phone VARCHAR(20),
-    email VARCHAR(100),
-    address TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+INSERT INTO `brands` (`brand_id`, `name`, `description`, `created_at`, `updated_at`) VALUES
+(1, 'Stanley', 'Quality hand tools and storage solutions', '2025-04-18 04:51:27', '2025-04-18 04:51:27'),
+(2, 'DeWalt', 'Professional-grade power tools and equipment', '2025-04-18 04:51:27', '2025-04-18 04:51:27'),
+(3, 'Makita', 'Innovative power tools and outdoor equipment', '2025-04-18 04:51:27', '2025-04-18 04:51:27'),
+(4, 'Bosch', 'High-performance tools and accessories', '2025-04-18 04:51:27', '2025-04-18 04:51:27'),
+(5, '3M', 'Industrial and consumer products', '2025-04-18 04:51:27', '2025-04-18 04:51:27'),
+(6, 'Sanrio', NULL, '2025-04-18 05:16:17', '2025-04-18 05:16:17');
 
--- Products table
-CREATE TABLE products (
-    product_id INT PRIMARY KEY AUTO_INCREMENT,
-    sku VARCHAR(50) UNIQUE NOT NULL,
-    barcode VARCHAR(50) UNIQUE,
-    name VARCHAR(100) NOT NULL,
-    description TEXT,
-    category_id INT,
-    brand_id INT,
-    unit VARCHAR(20) NOT NULL,
-    cost_price DECIMAL(10,2) NOT NULL,
-    selling_price DECIMAL(10,2) NOT NULL,
-    stock_level INT DEFAULT 0,
-    reorder_point INT DEFAULT 10,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (category_id) REFERENCES categories(category_id),
-    FOREIGN KEY (brand_id) REFERENCES brands(brand_id)
-);
+DROP TABLE IF EXISTS `categories`;
+CREATE TABLE IF NOT EXISTS `categories` (
+  `category_id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `description` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`category_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Stock transactions table
-CREATE TABLE stock_transactions (
-    transaction_id INT PRIMARY KEY AUTO_INCREMENT,
-    product_id INT NOT NULL,
-    transaction_type TEXT NOT NULL,
-    quantity INT NOT NULL,
-    unit_price DECIMAL(10,2) NOT NULL,
-    total_amount DECIMAL(10,2) NOT NULL,
-    reference_no VARCHAR(50),
-    notes TEXT,
-    transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (product_id) REFERENCES products(product_id)
-);
+--
+-- Dumping data for table `categories`
+--
 
--- Insert sample categories
-INSERT INTO categories (name, description) VALUES
-('Tools', 'Hand tools and power tools for construction and repairs'),
-('Hardware', 'General hardware items including fasteners and fittings'),
-('Electrical', 'Electrical supplies, wiring, and components'),
-('Plumbing', 'Plumbing supplies, pipes, and fixtures'),
-('Paint', 'Paint, primers, and painting supplies');
+INSERT INTO `categories` (`category_id`, `name`, `description`, `created_at`, `updated_at`) VALUES
+(1, 'Tools', 'Hand tools and power tools for construction and repairs', '2025-04-18 04:51:27', '2025-04-18 04:51:27'),
+(2, 'Hardware', 'General hardware items including fasteners and fittings', '2025-04-18 04:51:27', '2025-04-18 04:51:27'),
+(3, 'Electrical', 'Electrical supplies, wiring, and components', '2025-04-18 04:51:27', '2025-04-18 04:51:27'),
+(4, 'Plumbing', 'Plumbing supplies, pipes, and fixtures', '2025-04-18 04:51:27', '2025-04-18 04:51:27'),
+(5, 'Paint', 'Paint, primers, and painting supplies', '2025-04-18 04:51:27', '2025-04-18 04:51:27');
 
--- Insert sample brands
-INSERT INTO brands (name, description) VALUES
-('Stanley', 'Quality hand tools and storage solutions'),
-('DeWalt', 'Professional-grade power tools and equipment'),
-('Makita', 'Innovative power tools and outdoor equipment'),
-('Bosch', 'High-performance tools and accessories'),
-('3M', 'Industrial and consumer products');
 
--- Insert sample supplier contacts
-INSERT INTO supplier_contacts (name, contact_person, phone, email, address) VALUES
-('Hardware Wholesale Co.', 'John Smith', '555-0101', 'john@hwwholesale.com', '123 Supply St, Industry City'),
-('Tools Direct', 'Mary Johnson', '555-0102', 'mary@toolsdirect.com', '456 Warehouse Ave, Commerce Town'),
-('Building Supply Inc.', 'Robert Brown', '555-0103', 'robert@bsupply.com', '789 Industrial Rd, Trade City');
 
--- Insert sample products
-INSERT INTO products (sku, barcode, name, description, category_id, brand_id, unit, cost_price, selling_price, stock_level, reorder_point) VALUES
-('HMR-001', '1234567890', 'Claw Hammer', '16oz steel claw hammer with rubber grip', 1, 1, 'piece', 12.50, 24.99, 50, 15),
-('DRL-001', '2345678901', 'Cordless Drill', '20V max lithium-ion cordless drill', 1, 2, 'piece', 89.99, 149.99, 25, 8),
-('SCW-001', '3456789012', 'Screwdriver Set', '6-piece precision screwdriver set', 1, 1, 'set', 15.99, 29.99, 35, 10),
-('PLR-001', '4567890123', 'Pliers Set', '3-piece pliers set with wire cutter', 1, 4, 'set', 24.99, 44.99, 30, 12),
-('NLS-001', '5678901234', 'Nails Assorted', 'Box of 500 assorted nails', 2, 1, 'box', 8.99, 16.99, 100, 25),
-('WRE-001', '6789012345', 'Wire 14AWG', '100ft 14AWG electrical wire', 3, 3, 'roll', 35.99, 59.99, 15, 5),
-('PVC-001', '7890123456', 'PVC Pipe 2"', '10ft PVC pipe 2-inch diameter', 4, 4, 'piece', 9.99, 18.99, 40, 15),
-('PNT-001', '8901234567', 'White Paint', '1-gallon interior white paint', 5, 5, 'gallon', 19.99, 34.99, 20, 8);
+CREATE TABLE IF NOT EXISTS `products` (
+  `product_id` int NOT NULL AUTO_INCREMENT,
+  `sku` varchar(50) NOT NULL,
+  `barcode` varchar(50) DEFAULT NULL,
+  `name` varchar(100) NOT NULL,
+  `description` text,
+  `category_id` int DEFAULT NULL,
+  `brand_id` int DEFAULT NULL,
+  `unit` varchar(20) NOT NULL,
+  `cost_price` decimal(10,2) NOT NULL,
+  `selling_price` decimal(10,2) NOT NULL,
+  `stock_level` int DEFAULT '0',
+  `reorder_point` int DEFAULT '10',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`product_id`),
+  UNIQUE KEY `sku` (`sku`),
+  UNIQUE KEY `barcode` (`barcode`),
+  KEY `category_id` (`category_id`),
+  KEY `brand_id` (`brand_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Insert sample stock transactions
-INSERT INTO stock_transactions (product_id, transaction_type, quantity, unit_price, total_amount, reference_no, notes) VALUES
-(1, 'purchase', 25, 12.50, 312.50, 'PO-001', 'Initial stock purchase'),
-(2, 'purchase', 15, 89.99, 1349.85, 'PO-002', 'Restocking power tools'),
-(3, 'purchase', 20, 15.99, 319.80, 'PO-003', 'Regular inventory update'),
-(1, 'sale', -2, 24.99, 49.98, 'SO-001', 'Customer purchase'),
-(4, 'purchase', 18, 24.99, 449.82, 'PO-004', 'New product line addition'),
-(2, 'sale', -3, 149.99, 449.97, 'SO-002', 'Bulk sale to contractor');
+--
+-- Dumping data for table `products`
+--
+
+INSERT INTO `products` (`product_id`, `sku`, `barcode`, `name`, `description`, `category_id`, `brand_id`, `unit`, `cost_price`, `selling_price`, `stock_level`, `reorder_point`, `created_at`, `updated_at`) VALUES
+(1, 'HMR-001', '1234567890', 'Claw Hammers', '16oz steel claw hammer with rubber grip', 1, 1, 'piece', 12.50, 24.99, 25, 10, '2025-04-18 04:51:27', '2025-04-21 03:15:24'),
+(2, 'DRL-001', '2345678901', 'Cordless Drill', '20V max lithium-ion cordless drill', 1, 2, 'piece', 89.99, 149.99, 23, 8, '2025-04-18 04:51:27', '2025-04-21 03:16:18'),
+(3, 'SCW-001', '3456789012', 'Screwdriver Set', '6-piece precision screwdriver set', 1, 1, 'set', 15.99, 29.99, 11, 10, '2025-04-18 04:51:27', '2025-04-20 05:17:45'),
+(4, 'PLR-001', '4567890123', 'Pliers Set', '3-piece pliers set with wire cutter', 1, 4, 'set', 24.99, 44.99, 29, 12, '2025-04-18 04:51:27', '2025-04-21 03:36:23'),
+(5, 'NLS-001', '5678901234', 'Nails Assorted', 'Box of 500 assorted nails', 2, 1, 'box', 8.99, 16.99, 95, 25, '2025-04-18 04:51:27', '2025-04-21 03:35:45'),
+(7, 'PVC-001', '7890123456', 'PVC Pipe 2\"', '10ft PVC pipe 2-inch diameter', 4, 4, 'piece', 9.99, 18.99, 40, 15, '2025-04-18 04:51:27', '2025-04-18 04:51:27'),
+(8, 'PNT-001', '8901234567', 'White Paint', '1-gallon interior white paint', 5, 5, 'gallon', 19.99, 34.99, 20, 8, '2025-04-18 04:51:27', '2025-04-18 04:51:27'),
+(9, 'TP-001', '56487215', 'Electrical Tapes', 'Electrical tapes 6 meters 50pcs/box.', 3, 1, 'piece', 70.00, 150.00, 50, 10, '2025-04-18 05:31:18', '2025-04-18 06:01:22'),
+(10, 'SPL-001', '09932323', 'sample', 'sample lang ni', 5, 6, 'piece', 20.00, 50.00, 59, 15, '2025-04-18 10:01:54', '2025-04-21 03:36:23');
+
+
+--
+-- Table structure for table `stock_transactions`
+--
+
+DROP TABLE IF EXISTS `stock_transactions`;
+CREATE TABLE IF NOT EXISTS `stock_transactions` (
+  `transaction_id` int NOT NULL AUTO_INCREMENT,
+  `product_id` int NOT NULL,
+  `transaction_type` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `quantity` int NOT NULL,
+  `unit_price` decimal(10,2) NOT NULL,
+  `total_amount` decimal(10,2) NOT NULL,
+  `reference_no` varchar(50) DEFAULT NULL,
+  `notes` text,
+  `transaction_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`transaction_id`),
+  KEY `product_id` (`product_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `stock_transactions`
+--
+
+INSERT INTO `stock_transactions` (`transaction_id`, `product_id`, `transaction_type`, `quantity`, `unit_price`, `total_amount`, `reference_no`, `notes`, `transaction_date`, `created_at`) VALUES
+(1, 2, 'stock_in', 20, 0.00, 0.00, NULL, '', '2025-04-21 03:15:04', '2025-04-21 03:15:04'),
+(2, 1, 'stock_in', 20, 0.00, 0.00, NULL, 're-stock', '2025-04-21 03:15:24', '2025-04-21 03:15:24'),
+(3, 2, 'stock_out', 5, 0.00, 0.00, NULL, 'wrong count', '2025-04-21 03:16:18', '2025-04-21 03:16:18');

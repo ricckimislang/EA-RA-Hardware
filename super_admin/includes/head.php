@@ -1,17 +1,19 @@
-<?php session_start();
-
-if (!isset($_SESSION["username"]) || (!isset($_SESSION["usertype"]) || ($_SESSION["usertype"] !== '3' && $_SESSION["usertype"] !== '1'))) {
-    header("location:../login.php");
+<?php
+session_start();
+if (!isset($_SESSION["usertype"]) || $_SESSION["usertype"] !== '1') {
+    header("location: ../../index.php");
     exit();
 }
-$userId = $_SESSION["user_id"];
 ?>
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Point of Sale - EA RA</title>
+    <title>Hardware System - Admin</title>
 
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/sidebar.css">
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -34,5 +36,4 @@ $userId = $_SESSION["user_id"];
     <script src="https://cdn.datatables.net/buttons/2.3.2/js/buttons.html5.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.3.2/js/buttons.print.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>

@@ -166,7 +166,7 @@
                             }).then(() => {
                                 switch (data.usertype) {
                                     case 1: //superadmin
-                                        window.location.href = 'superadmin/index.php';
+                                        window.location.href = 'super_admin/index.php';
                                         break;
                                     case 2: //admin
                                         window.location.href = 'admin/index.php';

@@ -129,12 +129,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['qr_hash']) && isset($
                 
                 // Calculate hours worked
                 $interval = $timeIn->diff($timeOut);
-                $hoursWorked = $interval->h + ($interval->i / 60);
+                $totalWholeHours = ($interval->days * 24) + $interval->h;
                 
                 // Update attendance record with time out and hours worked
                 $updateQuery = "UPDATE attendance_records SET time_out = ?, total_hours = ? WHERE id = ?";
                 $updateStmt = $conn->prepare($updateQuery);
-                $updateStmt->bind_param("sdi", $currentDatetime, $hoursWorked, $recordId);
+                $updateStmt->bind_param("sii", $currentDatetime, $totalWholeHours, $recordId);
                 
                 if ($updateStmt->execute()) {
                     $response = [
