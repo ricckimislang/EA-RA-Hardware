@@ -51,10 +51,10 @@ require_once '../includes/head.php';
         <!-- Expense Filter Section -->
         <div class="filter-section">
             <div class="row mb-2">
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <input type="date" class="form-control" id="startDate" max="<?php echo date('Y-m-d'); ?>">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <input type="date" class="form-control" id="endDate" max="<?php echo date('Y-m-d'); ?>">
                 </div>
                 <div class="col-md-3">
@@ -66,6 +66,11 @@ require_once '../includes/head.php';
                     <button class="btn btn-primary" id="applyFilter">
                         <i class="fas fa-filter"></i> Apply Filter
                     </button>
+                </div>
+                <div class="col-md-2">
+                    <a href="expenses.php" class="btn btn-secondary" id="resetFilter">
+                        <i class="fas fa-filter"></i> Reset Filter
+                    </a>
                 </div>
             </div>
         </div>
