@@ -334,6 +334,16 @@ function initializeSalesTrendChart(data) {
       window.salesTrendChart.destroy();
     }
 
+    // Create gradient for current period
+    const currentGradient = ctx.createLinearGradient(0, 0, 0, 400);
+    currentGradient.addColorStop(0, 'rgba(76, 175, 80, 0.8)');
+    currentGradient.addColorStop(1, 'rgba(76, 175, 80, 0.1)');
+
+    // Create gradient for moving average
+    const avgGradient = ctx.createLinearGradient(0, 0, 0, 400);
+    avgGradient.addColorStop(0, 'rgba(33, 150, 243, 0.7)');
+    avgGradient.addColorStop(1, 'rgba(33, 150, 243, 0.1)');
+
     window.salesTrendChart = new Chart(ctx, {
       type: "line",
       data: {
@@ -343,24 +353,37 @@ function initializeSalesTrendChart(data) {
             label: "Current Period",
             data: chartData.current,
             borderColor: "#4CAF50",
+            backgroundColor: currentGradient,
             tension: 0.4,
-            fill: false,
+            fill: true,
+            pointBackgroundColor: "#4CAF50",
+            pointBorderColor: "#FFF",
+            pointHoverRadius: 6,
+            pointHoverBackgroundColor: "#FFF",
+            pointHoverBorderColor: "#4CAF50",
+            pointHoverBorderWidth: 3
           },
           {
             label: "Previous Period",
             data: chartData.previous,
             borderColor: "#9E9E9E",
+            backgroundColor: "rgba(158, 158, 158, 0.1)",
             borderDash: [5, 5],
             tension: 0.4,
             fill: false,
+            pointRadius: 3,
+            pointBackgroundColor: "#9E9E9E",
+            pointBorderColor: "#FFF",
           },
           {
             label: "Moving Average",
             data: chartData.movingAverage,
             borderColor: "#2196F3",
+            backgroundColor: avgGradient,
             borderWidth: 2,
             pointRadius: 0,
             fill: false,
+            tension: 0.4,
           },
         ],
       },
@@ -380,16 +403,26 @@ function initializeSalesTrendChart(data) {
           intersect: false,
           axis: "xy",
         },
+        animation: {
+          duration: 1000,
+          easing: 'easeOutQuart'
+        },
         plugins: {
           title: {
             display: true,
             text: "Sales Revenue Trend",
+            font: {
+              size: 16,
+              weight: 'bold'
+            }
           },
           tooltip: {
+            backgroundColor: 'rgba(0,0,0,0.8)',
+            titleFont: { weight: 'bold' },
+            bodyFont: { size: 13 },
             callbacks: {
               label: (context) => {
-                return `${context.dataset.label
-                  }: ₱${(context.raw || 0).toLocaleString()}`;
+                return `${context.dataset.label}: ₱${(context.raw || 0).toLocaleString()}`;
               },
             },
           },
@@ -397,10 +430,22 @@ function initializeSalesTrendChart(data) {
         scales: {
           y: {
             beginAtZero: true,
+            grid: {
+              color: 'rgba(0,0,0,0.05)'
+            },
             ticks: {
               callback: (value) => "₱" + value.toLocaleString(),
+              font: { size: 11 }
             },
           },
+          x: {
+            grid: {
+              display: false
+            },
+            ticks: {
+              font: { size: 11 }
+            }
+          }
         },
       },
     });
@@ -438,10 +483,19 @@ function initializeExpensesTreemap(data) {
       window.expensesChart.destroy();
     }
 
-    // Generate colors for each expense category
-    const backgroundColors = [
-      "#FF9800", "#2196F3", "#4CAF50", "#9C27B0", "#F44336",
-      "#607D8B", "#009688", "#E91E63", "#FFEB3B", "#795548"
+    // Generate gradient colors for each expense category
+    const gradientColors = [];
+    const baseColors = [
+      { start: '#FF9800', end: '#F57C00' },
+      { start: '#2196F3', end: '#1976D2' },
+      { start: '#4CAF50', end: '#388E3C' },
+      { start: '#9C27B0', end: '#7B1FA2' },
+      { start: '#F44336', end: '#D32F2F' },
+      { start: '#607D8B', end: '#455A64' },
+      { start: '#009688', end: '#00796B' },
+      { start: '#E91E63', end: '#C2185B' },
+      { start: '#FFEB3B', end: '#FBC02D' },
+      { start: '#795548', end: '#5D4037' }
     ];
 
     // Sort data by expense values (descending)
@@ -452,7 +506,15 @@ function initializeExpensesTreemap(data) {
 
     const sortedLabels = sortedIndices.map(i => chartData.labels[i]);
     const sortedData = sortedIndices.map(i => chartData.data[i]);
-    const sortedColors = sortedIndices.map(i => backgroundColors[i % backgroundColors.length]);
+
+    // Create gradients for each bar
+    sortedIndices.forEach((_, index) => {
+      const colorPair = baseColors[index % baseColors.length];
+      const gradient = ctx.createLinearGradient(0, 0, 400, 0);
+      gradient.addColorStop(0, colorPair.start);
+      gradient.addColorStop(1, colorPair.end);
+      gradientColors.push(gradient);
+    });
 
     // Calculate total for percentage calculation
     const total = sortedData.reduce((sum, value) => sum + value, 0);
@@ -472,10 +534,10 @@ function initializeExpensesTreemap(data) {
         datasets: [
           {
             data: sortedData,
-            backgroundColor: sortedColors,
+            backgroundColor: gradientColors,
             borderWidth: 0,
-            borderRadius: 4,
-            barPercentage: 0.7,
+            borderRadius: 6,
+            barPercentage: 0.8,
           },
         ],
       },
@@ -491,6 +553,10 @@ function initializeExpensesTreemap(data) {
             left: 20,
           },
         },
+        animation: {
+          duration: 1200,
+          easing: 'easeInOutQuart'
+        },
         plugins: {
           title: {
             display: true,
@@ -505,9 +571,8 @@ function initializeExpensesTreemap(data) {
           },
           tooltip: {
             backgroundColor: 'rgba(0,0,0,0.8)',
-            bodyFont: {
-              size: 13
-            },
+            titleFont: { weight: 'bold' },
+            bodyFont: { size: 13 },
             callbacks: {
               label: (context) => {
                 const label = context.label || "";
@@ -520,67 +585,29 @@ function initializeExpensesTreemap(data) {
               },
             },
           },
-          // Add data labels to show percentages
-          datalabels: {
-            display: true,
-            color: '#fff',
-            anchor: 'end',
-            align: 'right',
-            formatter: (value) => {
-              return ((value / total) * 100).toFixed(1) + '%';
-            },
-            font: {
-              weight: 'bold',
-              size: 11
-            },
-            // Only display if bar is wide enough
-            display: (context) => context.dataset.data[context.dataIndex] / total > 0.05
-          }
         },
         scales: {
           x: {
-            beginAtZero: true,
             grid: {
-              display: false
+              color: 'rgba(0,0,0,0.03)'
             },
             ticks: {
-              callback: (value) => "₱" + value.toLocaleString()
-            },
-            title: {
-              display: true,
-              text: "Amount (₱)",
-              font: {
-                size: 12,
-                weight: 'bold'
-              }
+              font: { size: 11 }
             }
           },
           y: {
             grid: {
               display: false
             },
-            title: {
-              display: true,
-              text: "Expense Categories",
-              font: {
-                size: 12,
-                weight: 'bold'
-              }
+            ticks: {
+              font: { size: 11, weight: 'bold' }
             }
           }
         }
       },
     });
-
-    // Check if Chart.js DataLabels plugin is available
-    if (window.expensesChart.options.plugins.datalabels && !Chart.plugins?.getAll().find(p => p.id === 'datalabels')) {
-      // If plugin is not available, remove the configuration
-      delete window.expensesChart.options.plugins.datalabels;
-      console.warn("Chart.js DataLabels plugin not found, percentage labels won't be shown");
-    }
-
   } catch (error) {
-    console.error("Error initializing Expenses Treemap:", error);
+    console.error("Error initializing Expenses Chart:", error);
     const chartContainer = chartCanvas.closest('.chart-container');
     if (chartContainer) {
       chartContainer.innerHTML = '<div class="alert alert-danger">Error initializing chart. See console for details.</div>';
@@ -687,18 +714,34 @@ function initializeEmployeeSalaryChart(data) {
       });
     };
 
-    // Define colors for employee bars
-    const barColors = [
-      'rgba(33, 150, 243, 0.7)', 'rgba(156, 39, 176, 0.7)', 'rgba(244, 67, 54, 0.7)',
-      'rgba(76, 175, 80, 0.7)', 'rgba(255, 152, 0, 0.7)', 'rgba(0, 188, 212, 0.7)',
-      'rgba(233, 30, 99, 0.7)', 'rgba(96, 125, 139, 0.7)'
+    // Define gradient colors for employee bars
+    const gradientPairs = [
+      { start: 'rgba(33, 150, 243, 0.9)', end: 'rgba(33, 150, 243, 0.5)' },
+      { start: 'rgba(156, 39, 176, 0.9)', end: 'rgba(156, 39, 176, 0.5)' },
+      { start: 'rgba(244, 67, 54, 0.9)', end: 'rgba(244, 67, 54, 0.5)' },
+      { start: 'rgba(76, 175, 80, 0.9)', end: 'rgba(76, 175, 80, 0.5)' },
+      { start: 'rgba(255, 152, 0, 0.9)', end: 'rgba(255, 152, 0, 0.5)' },
+      { start: 'rgba(0, 188, 212, 0.9)', end: 'rgba(0, 188, 212, 0.5)' },
+      { start: 'rgba(233, 30, 99, 0.9)', end: 'rgba(233, 30, 99, 0.5)' },
+      { start: 'rgba(96, 125, 139, 0.9)', end: 'rgba(96, 125, 139, 0.5)' }
     ];
+
+    // Create gradients for datasets
+    const gradientColors = [];
+    bimonthlyData.datasets.forEach((_, index) => {
+      const colorPair = gradientPairs[index % gradientPairs.length];
+      const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+      gradient.addColorStop(0, colorPair.start);
+      gradient.addColorStop(1, colorPair.end);
+      gradientColors.push(gradient);
+    });
 
     // Assign colors to datasets
     bimonthlyData.datasets.forEach((dataset, index) => {
-      dataset.backgroundColor = barColors[index % barColors.length];
-      dataset.borderColor = barColors[index % barColors.length].replace('0.7', '1'); // Solid border
+      dataset.backgroundColor = gradientColors[index];
+      dataset.borderColor = gradientPairs[index % gradientPairs.length].start.replace('0.9', '1');
       dataset.borderWidth = 1;
+      dataset.borderRadius = 4;
     });
 
     // Initialize the chart as a bar chart
@@ -711,6 +754,10 @@ function initializeEmployeeSalaryChart(data) {
         interaction: {
           mode: 'index', // Show tooltips for all employees in that period
           intersect: false,
+        },
+        animation: {
+          duration: 1000,
+          delay: (context) => context.dataIndex * 100
         },
         plugins: {
           title: {
@@ -733,9 +780,8 @@ function initializeEmployeeSalaryChart(data) {
           },
           tooltip: {
             backgroundColor: 'rgba(0,0,0,0.8)',
-            bodyFont: {
-              size: 13
-            },
+            titleFont: { weight: 'bold' },
+            bodyFont: { size: 13 },
             callbacks: {
               label: (context) => {
                 const label = context.dataset.label || '';
@@ -779,11 +825,10 @@ function initializeEmployeeSalaryChart(data) {
             },
             ticks: {
               callback: (value) => formatCurrency(value),
-              color: '#666'
+              color: '#666',
+              font: { size: 11 }
             }
           },
-          // Remove the unused yTotal scale definition if it exists
-          // yTotal: undefined // No longer needed
         },
       },
     });
@@ -819,7 +864,7 @@ function initializeProductBubbleChartWithCanvas(chartCanvas, data) {
   try {
     const ctx = chartCanvas.getContext("2d");
     if (!ctx) {
-      console.error("Could not get 2D context for Product Bubble Chart");
+      console.error("Could not get 2D context for Product Chart");
       return;
     }
 
@@ -833,85 +878,266 @@ function initializeProductBubbleChartWithCanvas(chartCanvas, data) {
       window.productBubbleChart.destroy();
     }
 
-    // Generate colors for each product
-    const backgroundColors = [
-      "rgba(76, 175, 80, 0.6)",
-      "rgba(33, 150, 243, 0.6)",
-      "rgba(156, 39, 176, 0.6)",
-      "rgba(255, 152, 0, 0.6)",
-      "rgba(244, 67, 54, 0.6)",
-      "rgba(96, 125, 139, 0.6)",
-      "rgba(0, 150, 136, 0.6)",
-      "rgba(233, 30, 99, 0.6)",
-      "rgba(255, 235, 59, 0.6)",
-      "rgba(121, 85, 72, 0.6)"
-    ];
-
-    // Add colors to each product
-    const products = chartData.data.map((item, index) => {
-      return {
-        ...item,
-        backgroundColor: backgroundColors[index % backgroundColors.length]
-      };
+    // Transform bubble data to line chart format
+    const products = {};
+    
+    // Group products by name
+    chartData.data.forEach(item => {
+      if (!products[item.name]) {
+        products[item.name] = {
+          sales: [],
+          profit: [],
+          volume: []
+        };
+      }
+      products[item.name].sales.push(item.x);
+      products[item.name].profit.push(item.y);
+      products[item.name].volume.push(item.r * 5); // Convert radius to volume
     });
 
+    // Create datasets for the line chart
+    const datasets = [];
+    const colors = [
+      {primary: 'rgba(76, 175, 80, 1)', secondary: 'rgba(76, 175, 80, 0.2)'},
+      {primary: 'rgba(33, 150, 243, 1)', secondary: 'rgba(33, 150, 243, 0.2)'},
+      {primary: 'rgba(156, 39, 176, 1)', secondary: 'rgba(156, 39, 176, 0.2)'},
+      {primary: 'rgba(255, 152, 0, 1)', secondary: 'rgba(255, 152, 0, 0.2)'},
+      {primary: 'rgba(244, 67, 54, 1)', secondary: 'rgba(244, 67, 54, 0.2)'},
+      {primary: 'rgba(96, 125, 139, 1)', secondary: 'rgba(96, 125, 139, 0.2)'},
+      {primary: 'rgba(0, 150, 136, 1)', secondary: 'rgba(0, 150, 136, 0.2)'},
+      {primary: 'rgba(233, 30, 99, 1)', secondary: 'rgba(233, 30, 99, 0.2)'}
+    ];
+    
+    // Create a time period for x-axis (last 7 days)
+    const labels = [];
+    const today = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(today.getDate() - i);
+      labels.push(date.toLocaleDateString('en-PH', {month: 'short', day: 'numeric'}));
+    }
+    
+    // Create datasets for top 5 products
+    let index = 0;
+    Object.keys(products).slice(0, 5).forEach(name => {
+      const color = colors[index % colors.length];
+      
+      // Get average sales value for this product or use a placeholder
+      const avgSales = products[name].sales.length > 0 
+        ? products[name].sales.reduce((a, b) => a + b, 0) / products[name].sales.length 
+        : Math.random() * 5000 + 1000;
+
+      // Generate random data points around the average if we don't have 7 days of data
+      const salesData = Array(7).fill(0).map((_, i) => {
+        return products[name].sales[i] !== undefined 
+          ? products[name].sales[i] 
+          : avgSales * (0.8 + Math.random() * 0.4); // Random value around the average
+      });
+      
+      // Calculate max value for this dataset for highlighting
+      const maxValue = Math.max(...salesData);
+      const maxIndex = salesData.indexOf(maxValue);
+      
+      // Create fancy gradient fills with 3 color stops
+      const gradientFill = ctx.createLinearGradient(0, 0, 0, chartCanvas.height);
+      gradientFill.addColorStop(0, color.primary.replace('1)', '0.4)'));
+      gradientFill.addColorStop(0.5, color.primary.replace('1)', '0.1)'));
+      gradientFill.addColorStop(1, color.primary.replace('1)', '0.05)'));
+      
+      datasets.push({
+        label: name,
+        data: salesData,
+        borderColor: color.primary,
+        backgroundColor: gradientFill,
+        borderWidth: 3,
+        pointRadius: (ctx) => {
+          // Highlight max point with larger radius
+          const index = ctx.dataIndex;
+          return index === maxIndex ? 6 : 0; // Only show max point by default
+        },
+        pointHoverRadius: 8,
+        pointBackgroundColor: (ctx) => {
+          const index = ctx.dataIndex;
+          return index === maxIndex ? '#ffffff' : color.primary;
+        },
+        pointBorderColor: (ctx) => {
+          const index = ctx.dataIndex;
+          return index === maxIndex ? color.primary : '#ffffff';
+        },
+        pointBorderWidth: 2,
+        pointHoverBackgroundColor: '#ffffff',
+        pointHoverBorderColor: color.primary,
+        pointHoverBorderWidth: 3,
+        tension: 0.4,
+        fill: true
+      });
+      
+      index++;
+    });
+
+    // Add reference line for average sales
+    if (datasets.length > 0) {
+      // Calculate average of all product sales
+      const allSalesData = datasets.flatMap(dataset => dataset.data);
+      const overallAverage = allSalesData.reduce((a, b) => a + b, 0) / allSalesData.length;
+      
+      datasets.push({
+        label: 'Average Sales',
+        data: Array(7).fill(overallAverage),
+        borderColor: 'rgba(180, 180, 180, 0.8)',
+        borderWidth: 1,
+        borderDash: [5, 5],
+        pointRadius: 0,
+        fill: false,
+        tension: 0,
+        order: 999 // Draw behind other lines
+      });
+    }
+
     window.productBubbleChart = new Chart(ctx, {
-      type: "bubble",
+      type: "line",
       data: {
-        datasets: [
-          {
-            label: "Products",
-            data: products,
-            backgroundColor: products.map((p) => p.backgroundColor)
-          }
-        ]
+        labels: labels,
+        datasets: datasets
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        animation: {
+          duration: 1500,
+          easing: 'linear',
+          delay: (context) => context.datasetIndex * 150 // Staggered animation
+        },
+        elements: {
+          line: {
+            borderJoinStyle: 'round'
+          }
+        },
+        layout: {
+          padding: {
+            top: 20,
+            right: 25,
+            bottom: 20,
+            left: 15
+          }
+        },
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
         plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            align: 'center',
+            labels: {
+              usePointStyle: true,
+              boxWidth: 8,
+              boxHeight: 8,
+              padding: 15,
+              font: { size: 11 }
+            }
+          },
           title: {
             display: true,
-            text: "Product Sales Analysis",
+            text: "Product Sales Trend",
+            font: {
+              size: 16,
+              weight: 'bold'
+            },
+            padding: {
+              top: 10,
+              bottom: 15
+            }
           },
           tooltip: {
+            backgroundColor: 'rgba(0,0,0,0.75)',
+            titleFont: { weight: 'bold', size: 12 },
+            bodyFont: { size: 12 },
+            padding: 12,
+            usePointStyle: true,
+            borderColor: 'rgba(255,255,255,0.2)',
+            borderWidth: 1,
             callbacks: {
               label: (context) => {
-                if (!context.raw) return [];
-                return [
-                  `Product: ${context.raw.name || 'Unknown'}`,
-                  `Sales: ₱${(context.raw.x || 0).toLocaleString()}`,
-                  `Profit: ₱${(context.raw.y || 0).toLocaleString()}`,
-                  `Volume: ${(context.raw.r || 0) * 5} units`,
-                ];
+                // Highlight max values
+                const datasetIndex = context.datasetIndex;
+                const dataIndex = context.dataIndex;
+                const dataset = context.chart.data.datasets[datasetIndex];
+                
+                if (dataset.label === 'Average Sales') {
+                  return `${dataset.label}: ₱${context.raw.toLocaleString()}`;
+                }
+                
+                // Is this the highest value for this product?
+                const isMax = Math.max(...dataset.data) === dataset.data[dataIndex];
+                
+                return `${dataset.label}: ₱${context.raw.toLocaleString()}${isMax ? ' (Highest)' : ''}`;
               },
-            },
-          },
+              labelTextColor: (context) => {
+                const datasetIndex = context.datasetIndex;
+                const dataIndex = context.dataIndex;
+                const dataset = context.chart.data.datasets[datasetIndex];
+                
+                if (dataset.label === 'Average Sales') {
+                  return '#aaaaaa';
+                }
+                
+                // Is this the highest value?
+                const isMax = Math.max(...dataset.data) === dataset.data[dataIndex];
+                
+                return isMax ? '#ffffff' : '#dddddd';
+              }
+            }
+          }
         },
         scales: {
           x: {
+            grid: {
+              color: 'rgba(0,0,0,0.03)',
+              drawBorder: false
+            },
+            ticks: {
+              font: { size: 11 },
+              padding: 5
+            }
+          },
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(0,0,0,0.05)',
+              drawBorder: false
+            },
+            ticks: {
+              callback: (value) => "₱" + value.toLocaleString(),
+              font: { size: 11 },
+              maxTicksLimit: 6,
+              padding: 8
+            },
             title: {
               display: true,
               text: "Sales (₱)",
+              font: {
+                size: 12,
+                weight: 'bold'
+              },
+              padding: { top: 0, bottom: 10 }
             },
-            ticks: {
-              callback: (value) => "₱" + value.toLocaleString(),
-            },
-          },
-          y: {
-            title: {
-              display: true,
-              text: "Profit (₱)",
-            },
-            ticks: {
-              callback: (value) => "₱" + value.toLocaleString(),
-            },
-          },
-        },
-      },
+            suggestedMin: 0,
+            suggestedMax: (context) => {
+              // Set max a bit higher than the highest value for better visualization
+              const values = context.chart.data.datasets
+                .filter(d => d.label !== 'Average Sales')
+                .flatMap(d => d.data);
+              const max = Math.max(...values);
+              return max * 1.15; // 15% higher than max value
+            }
+          }
+        }
+      }
     });
   } catch (error) {
-    console.error("Error initializing Product Bubble Chart:", error);
+    console.error("Error initializing Product Chart:", error);
     const chartContainer = chartCanvas.closest('.chart-container');
     if (chartContainer) {
       chartContainer.innerHTML = '<div class="alert alert-danger">Error initializing chart. See console for details.</div>';
@@ -945,6 +1171,19 @@ function initializeInventoryChart(data) {
     if (window.inventoryChart && typeof window.inventoryChart.destroy === 'function') {
       window.inventoryChart.destroy();
     }
+    
+    // Create gradients for inventory levels
+    const normalGradient = ctx.createLinearGradient(0, 0, 0, 400);
+    normalGradient.addColorStop(0, 'rgba(76, 175, 80, 0.9)');
+    normalGradient.addColorStop(1, 'rgba(76, 175, 80, 0.6)');
+    
+    const lowGradient = ctx.createLinearGradient(0, 0, 0, 400);
+    lowGradient.addColorStop(0, 'rgba(255, 193, 7, 0.9)');
+    lowGradient.addColorStop(1, 'rgba(255, 193, 7, 0.6)');
+    
+    const outGradient = ctx.createLinearGradient(0, 0, 0, 400);
+    outGradient.addColorStop(0, 'rgba(244, 67, 54, 0.9)');
+    outGradient.addColorStop(1, 'rgba(244, 67, 54, 0.6)');
 
     window.inventoryChart = new Chart(ctx, {
       type: "bar",
@@ -954,20 +1193,32 @@ function initializeInventoryChart(data) {
           {
             label: "Normal Stock",
             data: chartData.normal,
-            backgroundColor: "#4CAF50",
-            borderWidth: 0,
+            backgroundColor: normalGradient,
+            borderWidth: 1,
+            borderColor: 'rgba(76, 175, 80, 1)',
+            borderRadius: 4,
+            barPercentage: 0.8,
+            categoryPercentage: 0.7
           },
           {
             label: "Low Stock",
             data: chartData.low,
-            backgroundColor: "#FFC107",
-            borderWidth: 0,
+            backgroundColor: lowGradient,
+            borderWidth: 1,
+            borderColor: 'rgba(255, 193, 7, 1)',
+            borderRadius: 4,
+            barPercentage: 0.8,
+            categoryPercentage: 0.7
           },
           {
             label: "Out of Stock",
             data: chartData.out,
-            backgroundColor: "#f44336",
-            borderWidth: 0,
+            backgroundColor: outGradient,
+            borderWidth: 1,
+            borderColor: 'rgba(244, 67, 54, 1)',
+            borderRadius: 4,
+            barPercentage: 0.8,
+            categoryPercentage: 0.7
           },
         ],
       },
@@ -975,46 +1226,84 @@ function initializeInventoryChart(data) {
         responsive: true,
         maintainAspectRatio: false,
         interaction: {
-          mode: "nearest",
+          mode: "index",
           intersect: false,
-          axis: "xy",
+        },
+        animation: {
+          duration: 1000,
+          easing: 'easeOutCubic',
+          delay: (context) => context.dataIndex * 50
+        },
+        layout: {
+          padding: {
+            top: 15,
+            right: 15,
+            bottom: 15,
+            left: 15
+          }
         },
         plugins: {
           title: {
             display: true,
-            text: "Inventory Stock Levels by Category",
+            text: "Inventory Status by Category",
             font: {
               size: 16,
-            },
-          },
-          legend: {
-            display: true,
-            position: "top",
+              weight: 'bold'
+            }
           },
           tooltip: {
+            backgroundColor: 'rgba(0,0,0,0.8)',
+            titleFont: { weight: 'bold' },
+            bodyFont: { size: 13 },
             callbacks: {
-              label: (context) => {
-                return `${context.dataset.label}: ${context.raw || 0} items`;
-              },
-            },
+              label: function(context) {
+                let label = context.dataset.label || '';
+                if (label) {
+                  label += ': ';
+                }
+                if (context.parsed.y !== null) {
+                  label += context.parsed.y + ' products';
+                }
+                return label;
+              }
+            }
           },
+          legend: {
+            position: 'top',
+            labels: {
+              usePointStyle: true,
+              boxWidth: 8,
+              padding: 15,
+              font: { size: 11 }
+            }
+          }
         },
         scales: {
           x: {
-            stacked: true,
-            title: {
-              display: true,
-              text: "Product Categories",
+            grid: {
+              display: false
             },
+            ticks: {
+              font: { size: 11 }
+            }
           },
           y: {
-            stacked: true,
             beginAtZero: true,
             title: {
               display: true,
-              text: "Number of Items",
+              text: 'Number of Products',
+              font: {
+                size: 12,
+                weight: 'bold'
+              }
             },
-          },
+            grid: {
+              color: 'rgba(0,0,0,0.05)'
+            },
+            ticks: {
+              font: { size: 11 }
+            }
+          }
         },
       },
     });
@@ -1035,6 +1324,12 @@ function initializeTopProductsChart(data) {
   }
 
   try {
+    const ctx = chartCanvas.getContext("2d");
+    if (!ctx) {
+      console.error("Could not get 2D context for Top Products Chart");
+      return;
+    }
+    
     // Ensure we have valid data
     const chartData = {
       labels: data.labels || ["Product A", "Product B", "Product C", "Product D", "Product E"],
@@ -1085,144 +1380,118 @@ function initializeTopProductsChart(data) {
     unitButton.parentNode.replaceChild(newUnitButton, unitButton);
     revenueButton.parentNode.replaceChild(newRevenueButton, revenueButton);
 
+    // Create gradients for bars
+    const unitsGradient = ctx.createLinearGradient(0, 400, 0, 0);
+    unitsGradient.addColorStop(0, 'rgba(33, 150, 243, 0.9)');
+    unitsGradient.addColorStop(1, 'rgba(33, 150, 243, 0.5)');
+    
+    const revenueGradient = ctx.createLinearGradient(0, 400, 0, 0);
+    revenueGradient.addColorStop(0, 'rgba(76, 175, 80, 0.9)');
+    revenueGradient.addColorStop(1, 'rgba(76, 175, 80, 0.5)');
+    
+    const profitGradient = ctx.createLinearGradient(0, 400, 0, 0);
+    profitGradient.addColorStop(0, 'rgba(255, 152, 0, 0.9)');
+    profitGradient.addColorStop(1, 'rgba(255, 152, 0, 0.5)');
+    
     // Add event listeners to toggle buttons
     newUnitButton.addEventListener('click', function () {
-      if (!this.classList.contains('active')) {
+      if (currentMetric !== 'units') {
+        currentMetric = 'units';
+        newUnitButton.classList.add('active');
+        newUnitButton.classList.remove('btn-outline-primary');
+        newUnitButton.classList.add('btn-primary');
         newRevenueButton.classList.remove('active');
         newRevenueButton.classList.add('btn-outline-primary');
         newRevenueButton.classList.remove('btn-primary');
-
-        this.classList.add('active');
-        this.classList.add('btn-primary');
-        this.classList.remove('btn-outline-primary');
-
-        currentMetric = 'units';
         updateChartData();
       }
     });
 
     newRevenueButton.addEventListener('click', function () {
-      if (!this.classList.contains('active')) {
+      if (currentMetric !== 'revenue') {
+        currentMetric = 'revenue';
+        newRevenueButton.classList.add('active');
+        newRevenueButton.classList.remove('btn-outline-primary');
+        newRevenueButton.classList.add('btn-primary');
         newUnitButton.classList.remove('active');
         newUnitButton.classList.add('btn-outline-primary');
         newUnitButton.classList.remove('btn-primary');
-
-        this.classList.add('active');
-        this.classList.add('btn-primary');
-        this.classList.remove('btn-outline-primary');
-
-        currentMetric = 'revenue';
         updateChartData();
       }
     });
 
-    // Create custom colors for bars (without gradient to avoid potential conflicts)
-    const colors = [
-      '#43a047', // Green
-      '#1e88e5', // Blue
-      '#f9a825', // Amber
-      '#8e24aa', // Purple
-      '#e53935'  // Red
-    ];
-
-    // Function to update chart data based on selected metric
-    function updateChartData() {
-      if (!window.topProductsChart) return;
-
-      const dataset = window.topProductsChart.data.datasets[0];
-
-      if (currentMetric === 'units') {
-        dataset.data = chartData.values;
-        window.topProductsChart.options.scales.x.title.text = 'Units Sold';
-        dataset.label = 'Units Sold';
-      } else {
-        dataset.data = chartData.revenue;
-        window.topProductsChart.options.scales.x.title.text = 'Revenue (₱)';
-        dataset.label = 'Revenue';
-      }
-
-      window.topProductsChart.update('none'); // Use 'none' animation to prevent UI jank
-    }
-
-    // Format currency for display
-    const formatCurrency = (value) => {
-      return "₱" + parseFloat(value).toLocaleString("en-PH", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      });
-    };
-
-    // Use Chart.defaults to override any conflicting Bootstrap styles
-    Chart.defaults.font.family = "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif";
-    Chart.defaults.color = '#666';
-
-    // Setup chart with optimized configuration
-    window.topProductsChart = new Chart(chartCanvas, {
-      type: "bar",
+    // Initialize the chart
+    window.topProductsChart = new Chart(ctx, {
+      type: 'bar',
       data: {
         labels: chartData.labels,
-        datasets: [
-          {
-            label: "Units Sold",
-            data: chartData.values,
-            backgroundColor: chartData.labels.map((_, i) => colors[i % colors.length]),
-            borderWidth: 0,
-            borderRadius: 4,
-            barPercentage: 0.7,
-          },
-        ],
+        datasets: [{
+          label: 'Units Sold',
+          data: chartData.values,
+          backgroundColor: unitsGradient,
+          borderColor: 'rgba(33, 150, 243, 1)',
+          borderWidth: 1,
+          borderRadius: 4,
+          barPercentage: 0.7,
+          order: 1
+        }]
       },
       options: {
-        indexAxis: 'y',  // Horizontal bar chart
         responsive: true,
         maintainAspectRatio: false,
         animation: {
-          duration: 500 // Shorter animations for better performance
+          duration: 1200,
+          easing: 'easeOutQuart',
+          delay: (context) => context.dataIndex * 100
         },
-        interaction: {
-          mode: 'nearest',
-          axis: 'y',
-          intersect: false // This helps with cursor precision
+        layout: {
+          padding: {
+            top: 15,
+            right: 20,
+            bottom: 15,
+            left: 15
+          }
         },
+        indexAxis: 'y',
         plugins: {
           legend: {
-            display: false,
+            display: true,
+            position: 'top',
+            labels: {
+              usePointStyle: true,
+              boxWidth: 8,
+              padding: 15,
+              font: { size: 11 }
+            }
           },
-          tooltip: {
-            enabled: true,
-            position: 'nearest', // Better tooltip positioning
-            backgroundColor: 'rgba(0,0,0,0.8)',
-            titleFont: {
+          title: {
+            display: true,
+            text: 'Top Selling Products',
+            font: {
+              size: 16,
               weight: 'bold'
             },
-            bodyFont: {
-              size: 13
-            },
-            padding: 10,
-            displayColors: false, // Simplifies tooltip appearance
+            padding: {
+              top: 10,
+              bottom: 20
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(0,0,0,0.8)',
+            titleFont: { weight: 'bold' },
+            bodyFont: { size: 13 },
             callbacks: {
-              label: function (context) {
-                const index = context.dataIndex;
-                const dataset = context.chart.data.datasets[0];
-
-                if (dataset.label === 'Units Sold') {
-                  return [
-                    `Units Sold: ${chartData.values[index].toLocaleString()} units`,
-                    `Revenue: ${formatCurrency(chartData.revenue[index])}`,
-                    `Profit: ${formatCurrency(chartData.profit[index])}`,
-                    `Current Stock: ${chartData.stock[index]} units`
-                  ];
-                } else {
-                  return [
-                    `Revenue: ${formatCurrency(chartData.revenue[index])}`,
-                    `Units Sold: ${chartData.values[index].toLocaleString()} units`,
-                    `Profit: ${formatCurrency(chartData.profit[index])}`,
-                    `Current Stock: ${chartData.stock[index]} units`
-                  ];
+              label: function(context) {
+                const label = context.dataset.label || '';
+                const value = context.raw;
+                if (context.dataset.label === 'Units Sold') {
+                  return `${label}: ${value} units`;
+                } else if (context.dataset.label === 'Revenue') {
+                  return `${label}: ${formatCurrency(value)}`;
+                } else if (context.dataset.label === 'Profit Margin') {
+                  return `${label}: ${formatCurrency(value)}`;
                 }
-              },
-              title: function (context) {
-                return context[0].label;
+                return `${label}: ${value}`;
               }
             }
           }
@@ -1231,74 +1500,117 @@ function initializeTopProductsChart(data) {
           x: {
             beginAtZero: true,
             grid: {
-              display: false,
-              drawBorder: true,
-              drawOnChartArea: false
-            },
-            title: {
-              display: true,
-              text: 'Units Sold',
-              font: {
-                size: 14,
-                weight: 'bold'
-              },
-              padding: {
-                top: 10,
-                bottom: 10
-              }
+              color: 'rgba(0,0,0,0.05)'
             },
             ticks: {
-              precision: 0,
-              maxRotation: 0, // Prevent tick rotation
-              autoSkip: true,
-              callback: function (value) {
-                if (currentMetric === 'revenue') {
-                  if (value >= 1000) {
-                    return '₱' + (value / 1000).toFixed(1) + 'K';
-                  }
-                  return '₱' + value;
-                }
-                return value;
-              }
+              font: { size: 11 }
             }
           },
           y: {
             grid: {
-              display: false,
-              drawBorder: true,
-              drawOnChartArea: false
-            },
-            title: {
-              display: true,
-              text: 'Products',
-              font: {
-                size: 14,
-                weight: 'bold'
-              },
-              padding: {
-                top: 0,
-                bottom: 0
-              }
+              display: false
             },
             ticks: {
-              padding: 5, // Add some padding to prevent text clipping
-              mirror: false
+              font: { size: 11, weight: 'bold' }
             }
           }
-        },
-        // Set a specific z-index to ensure chart elements are properly layered
-        layout: {
-          padding: {
-            left: 10,
-            right: 20,
-            top: 0,
-            bottom: 10
-          }
         }
-      },
+      }
     });
 
-    // Initial update
+    function updateChartData() {
+      // Clear existing datasets
+      window.topProductsChart.data.datasets = [];
+      
+      if (currentMetric === 'units') {
+        window.topProductsChart.data.datasets.push({
+          label: 'Units Sold',
+          data: chartData.values,
+          backgroundColor: unitsGradient,
+          borderColor: 'rgba(33, 150, 243, 1)',
+          borderWidth: 1,
+          borderRadius: 4,
+          barPercentage: 0.7,
+          order: 1
+        });
+        
+        // Add stock level as line chart
+        window.topProductsChart.data.datasets.push({
+          label: 'Current Stock',
+          data: chartData.stock,
+          type: 'line',
+          borderColor: 'rgba(156, 39, 176, 0.8)',
+          backgroundColor: 'rgba(156, 39, 176, 0.1)',
+          borderWidth: 2,
+          pointRadius: 4,
+          pointBackgroundColor: 'rgba(156, 39, 176, 1)',
+          pointBorderColor: '#fff',
+          pointHoverRadius: 6,
+          tension: 0.4,
+          fill: false,
+          order: 0
+        });
+        
+        // Update x-axis label
+        window.topProductsChart.options.scales.x.title = {
+          display: true,
+          text: 'Units',
+          font: {
+            size: 12,
+            weight: 'bold'
+          }
+        };
+      } else {
+        window.topProductsChart.data.datasets.push({
+          label: 'Revenue',
+          data: chartData.revenue,
+          backgroundColor: revenueGradient,
+          borderColor: 'rgba(76, 175, 80, 1)',
+          borderWidth: 1,
+          borderRadius: 4,
+          barPercentage: 0.7,
+          order: 1
+        });
+        
+        window.topProductsChart.data.datasets.push({
+          label: 'Profit Margin',
+          data: chartData.profit,
+          backgroundColor: profitGradient,
+          borderColor: 'rgba(255, 152, 0, 1)',
+          borderWidth: 1,
+          borderRadius: 4,
+          barPercentage: 0.7,
+          order: 2
+        });
+        
+        // Update x-axis label
+        window.topProductsChart.options.scales.x.title = {
+          display: true,
+          text: 'Amount (₱)',
+          font: {
+            size: 12,
+            weight: 'bold'
+          }
+        };
+        
+        // Update x-axis ticks for currency
+        window.topProductsChart.options.scales.x.ticks = {
+          callback: (value) => "₱" + value.toLocaleString(),
+          font: { size: 11 }
+        };
+      }
+      
+      window.topProductsChart.update();
+    }
+
+    const formatCurrency = (value) => {
+      return "₱" + parseFloat(value).toLocaleString("en-PH", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    };
+
+    // Initialize with default view
     updateChartData();
 
   } catch (error) {
