@@ -1,9 +1,15 @@
+/**
+ * Dashboard JavaScript for Hardware System
+ * All charts are standardized to use the same height (350px) via CSS 
+ * and are configured to avoid cursor positioning glitches
+ */
+
 document.addEventListener("DOMContentLoaded", function () {
   // Debug DOM structure first
   debugDashboardStructure();
-  
+
   // Initialize all charts with a slight delay to ensure DOM is fully ready
-  setTimeout(function() {
+  setTimeout(function () {
     initializeDashboard();
   }, 100);
 
@@ -20,11 +26,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
 function debugDashboardStructure() {
   console.log("Debugging dashboard structure...");
-  
+
   // Check chart containers and canvases
   const containers = document.querySelectorAll('.chart-container');
   console.log(`Found ${containers.length} chart containers`);
-  
+
   containers.forEach((container, index) => {
     console.log(`Container ${index + 1}: `, container);
     const canvas = container.querySelector('canvas');
@@ -44,14 +50,14 @@ function debugDashboardStructure() {
       console.error(`  - No canvas element found in container`);
     }
   });
-  
+
   // Check for each specific canvas
   const canvasIds = ["salesTrendChart", "expensesTreemap", "employeeSalaryChart", "productBubbleChart", "inventoryChart"];
   canvasIds.forEach(id => {
     const element = document.getElementById(id);
     if (element) {
       console.log(`Found canvas #${id} - Size: ${element.offsetWidth}x${element.offsetHeight}`);
-      
+
       // Check if element is visible
       const style = window.getComputedStyle(element);
       if (style.display === 'none' || style.visibility === 'hidden' || element.offsetParent === null) {
@@ -70,7 +76,7 @@ function initializeDashboard() {
 
 function updateDashboard(timeRange) {
   console.log(`Updating dashboard for time range: ${timeRange}`);
-  
+
   // Show loading state
   document.querySelectorAll(".chart-container").forEach((container) => {
     container.innerHTML =
@@ -82,94 +88,94 @@ function updateDashboard(timeRange) {
     .then((response) => response.json())
     .then((data) => {
       console.log("Dashboard API response:", data);
-      
+
       if (data.success) {
         try {
           // Update each component with error handling
           updateSummaryCards(data.summaryCards || {});
-          
+
           // Clear any existing charts to prevent duplicates
           if (window.salesTrendChart && typeof window.salesTrendChart.destroy === 'function') {
             window.salesTrendChart.destroy();
             window.salesTrendChart = null;
           }
-          
+
           if (window.expensesChart && typeof window.expensesChart.destroy === 'function') {
             window.expensesChart.destroy();
             window.expensesChart = null;
           }
-          
+
           if (window.employeeSalaryChart && typeof window.employeeSalaryChart.destroy === 'function') {
             window.employeeSalaryChart.destroy();
             window.employeeSalaryChart = null;
           }
-          
+
           if (window.productBubbleChart && typeof window.productBubbleChart.destroy === 'function') {
             window.productBubbleChart.destroy();
             window.productBubbleChart = null;
           }
-          
+
           if (window.inventoryChart && typeof window.inventoryChart.destroy === 'function') {
             window.inventoryChart.destroy();
             window.inventoryChart = null;
           }
-          
+
           if (window.topProductsChart && typeof window.topProductsChart.destroy === 'function') {
             window.topProductsChart.destroy();
             window.topProductsChart = null;
           }
-          
+
           // First try to rebuild chart containers if they were emptied
           rebuildChartContainers();
-          
+
           // Initialize charts with appropriate container checks
-          const salesTrendCanvas = document.getElementById("salesTrendChart") || 
-                                   document.querySelector('.chart-container canvas#salesTrendChart');
+          const salesTrendCanvas = document.getElementById("salesTrendChart") ||
+            document.querySelector('.chart-container canvas#salesTrendChart');
           if (salesTrendCanvas) {
             console.log("Initializing sales trend chart", data.salesTrend);
             initializeSalesTrendChart(data.salesTrend || { labels: [], current: [], previous: [], movingAverage: [] });
           } else {
             console.error("Sales trend chart container not found");
           }
-          
+
           const expensesTreemapCanvas = document.getElementById("expensesTreemap") ||
-                                        document.querySelector('.chart-container canvas#expensesTreemap');
+            document.querySelector('.chart-container canvas#expensesTreemap');
           if (expensesTreemapCanvas) {
             console.log("Initializing expenses chart", data.expenseCategories);
             initializeExpensesTreemap(data.expenseCategories || { labels: [], data: [] });
           } else {
             console.error("Expenses treemap container not found");
           }
-          
+
           const employeeSalaryCanvas = document.getElementById("employeeSalaryChart") ||
-                                       document.querySelector('.chart-container canvas#employeeSalaryChart');
+            document.querySelector('.chart-container canvas#employeeSalaryChart');
           if (employeeSalaryCanvas) {
             console.log("Initializing employee salary chart", data.employeeSalaries);
             initializeEmployeeSalaryChart(data.employeeSalaries || { labels: [], datasets: [] });
           } else {
             console.error("Employee salary chart container not found");
           }
-          
+
           const productBubbleCanvas = document.getElementById("productBubbleChart") ||
-                                      document.querySelector('.chart-container canvas#productBubbleChart');
+            document.querySelector('.chart-container canvas#productBubbleChart');
           if (productBubbleCanvas) {
             console.log("Initializing product bubble chart", data.productSales);
             initializeProductBubbleChart(data.productSales || { data: [] });
           } else {
             console.error("Product bubble chart container not found");
           }
-          
+
           const inventoryCanvas = document.getElementById("inventoryChart") ||
-                                  document.querySelector('.chart-container canvas#inventoryChart');
+            document.querySelector('.chart-container canvas#inventoryChart');
           if (inventoryCanvas) {
             console.log("Initializing inventory chart", data.inventory);
             initializeInventoryChart(data.inventory || { labels: [], normal: [], low: [], out: [] });
           } else {
             console.error("Inventory chart container not found");
           }
-          
+
           const topProductsCanvas = document.getElementById("topProductsChart") ||
-                                   document.querySelector('.chart-container canvas#topProductsChart');
+            document.querySelector('.chart-container canvas#topProductsChart');
           if (topProductsCanvas) {
             console.log("Initializing top products chart", data.topProducts);
             initializeTopProductsChart(data.topProducts || { labels: [], values: [], revenue: [], profit: [], stock: [] });
@@ -204,22 +210,22 @@ function updateDashboard(timeRange) {
 function rebuildChartContainers() {
   const chartContainers = document.querySelectorAll('.chart-container');
   const canvasIds = ["salesTrendChart", "expensesTreemap", "employeeSalaryChart", "productBubbleChart", "inventoryChart", "topProductsChart"];
-  
+
   chartContainers.forEach((container) => {
     // Skip if container already has a canvas
     if (container.querySelector('canvas')) return;
-    
+
     // Find which chart this container belongs to based on surrounding elements
     const cardTitle = container.closest('.card-body')?.querySelector('.card-title')?.textContent || '';
     let canvasId = '';
-    
+
     if (cardTitle.includes('Sales Revenue')) canvasId = 'salesTrendChart';
     else if (cardTitle.includes('Expense Categories')) canvasId = 'expensesTreemap';
     else if (cardTitle.includes('Employee Salary')) canvasId = 'employeeSalaryChart';
     else if (cardTitle.includes('Product Sales')) canvasId = 'productBubbleChart';
     else if (cardTitle.includes('Inventory')) canvasId = 'inventoryChart';
     else if (cardTitle.includes('Top Selling Products')) canvasId = 'topProductsChart';
-    
+
     if (canvasId) {
       // Create a new canvas element
       const canvas = document.createElement('canvas');
@@ -251,21 +257,21 @@ function updateSummaryCards(data) {
         data.totalSales?.value || 0
       );
     }
-    
+
     const totalExpensesElement = document.getElementById("totalExpenses");
     if (totalExpensesElement) {
       totalExpensesElement.textContent = formatCurrency(
         data.totalExpenses?.value || 0
       );
     }
-    
+
     const netProfitElement = document.getElementById("netProfit");
     if (netProfitElement) {
       netProfitElement.textContent = formatCurrency(
         data.netProfit?.value || 0
       );
     }
-    
+
     const totalOrdersElement = document.getElementById("totalOrders");
     if (totalOrdersElement) {
       totalOrdersElement.textContent = (data.totalOrders?.value || 0).toLocaleString("en-PH");
@@ -284,10 +290,10 @@ function updateSummaryCards(data) {
 function updateTrendIndicator(elementId, changePercentage) {
   const element = document.getElementById(elementId);
   if (!element) return;
-  
+
   const trendElement = element.nextElementSibling;
   if (!trendElement) return;
-  
+
   const isPositive = (changePercentage || 0) >= 0;
   const isExpense = elementId === "totalExpenses";
 
@@ -295,9 +301,8 @@ function updateTrendIndicator(elementId, changePercentage) {
   const isGood = isExpense ? !isPositive : isPositive;
 
   // Update trend icon and class
-  trendElement.innerHTML = `<i class="fas fa-arrow-${
-    isPositive ? "up" : "down"
-  }"></i> ${Math.abs(changePercentage || 0).toFixed(1)}% vs last period`;
+  trendElement.innerHTML = `<i class="fas fa-arrow-${isPositive ? "up" : "down"
+    }"></i> ${Math.abs(changePercentage || 0).toFixed(1)}% vs last period`;
   trendElement.classList.remove("trend-up", "trend-down");
   trendElement.classList.add(isGood ? "trend-up" : "trend-down");
 }
@@ -308,7 +313,7 @@ function initializeSalesTrendChart(data) {
     console.error("Sales Trend Chart canvas not found");
     return;
   }
-  
+
   try {
     const ctx = chartCanvas.getContext("2d");
     if (!ctx) {
@@ -323,7 +328,7 @@ function initializeSalesTrendChart(data) {
       previous: data.previous || [],
       movingAverage: data.movingAverage || []
     };
-    
+
     // If there's an existing chart, destroy it first
     if (window.salesTrendChart && typeof window.salesTrendChart.destroy === 'function') {
       window.salesTrendChart.destroy();
@@ -383,9 +388,8 @@ function initializeSalesTrendChart(data) {
           tooltip: {
             callbacks: {
               label: (context) => {
-                return `${
-                  context.dataset.label
-                }: ₱${(context.raw || 0).toLocaleString()}`;
+                return `${context.dataset.label
+                  }: ₱${(context.raw || 0).toLocaleString()}`;
               },
             },
           },
@@ -415,7 +419,7 @@ function initializeExpensesTreemap(data) {
     console.error("Expenses Treemap canvas not found");
     return;
   }
-  
+
   try {
     const ctx = chartCanvas.getContext("2d");
     if (!ctx) {
@@ -428,7 +432,7 @@ function initializeExpensesTreemap(data) {
       labels: data.labels || [],
       data: data.data || []
     };
-    
+
     // If there's an existing chart, destroy it first
     if (window.expensesChart && typeof window.expensesChart.destroy === 'function') {
       window.expensesChart.destroy();
@@ -436,24 +440,47 @@ function initializeExpensesTreemap(data) {
 
     // Generate colors for each expense category
     const backgroundColors = [
-      "#FF9800", "#2196F3", "#4CAF50", "#9C27B0", "#F44336", 
+      "#FF9800", "#2196F3", "#4CAF50", "#9C27B0", "#F44336",
       "#607D8B", "#009688", "#E91E63", "#FFEB3B", "#795548"
     ];
-    
+
+    // Sort data by expense values (descending)
+    const sortedIndices = chartData.data
+      .map((value, index) => ({ value, index }))
+      .sort((a, b) => b.value - a.value)
+      .map(item => item.index);
+
+    const sortedLabels = sortedIndices.map(i => chartData.labels[i]);
+    const sortedData = sortedIndices.map(i => chartData.data[i]);
+    const sortedColors = sortedIndices.map(i => backgroundColors[i % backgroundColors.length]);
+
+    // Calculate total for percentage calculation
+    const total = sortedData.reduce((sum, value) => sum + value, 0);
+
+    // Format currency for display
+    const formatCurrency = (value) => {
+      return "₱" + parseFloat(value).toLocaleString("en-PH", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    };
+
     window.expensesChart = new Chart(ctx, {
-      type: "doughnut",
+      type: "bar",
       data: {
-        labels: chartData.labels,
+        labels: sortedLabels,
         datasets: [
           {
-            data: chartData.data,
-            backgroundColor: backgroundColors.slice(0, chartData.labels.length),
-            borderWidth: 1,
-            borderColor: "#fff",
+            data: sortedData,
+            backgroundColor: sortedColors,
+            borderWidth: 0,
+            borderRadius: 4,
+            barPercentage: 0.7,
           },
         ],
       },
       options: {
+        indexAxis: 'y', // Horizontal bar chart
         responsive: true,
         maintainAspectRatio: false,
         layout: {
@@ -464,27 +491,94 @@ function initializeExpensesTreemap(data) {
             left: 20,
           },
         },
-        interaction: {
-          mode: "point",
-          intersect: true,
-        },
         plugins: {
           title: {
             display: true,
             text: "Expense Categories Distribution",
+            font: {
+              size: 16,
+              weight: 'bold'
+            }
+          },
+          legend: {
+            display: false, // Hide legend since colors differentiate categories
           },
           tooltip: {
+            backgroundColor: 'rgba(0,0,0,0.8)',
+            bodyFont: {
+              size: 13
+            },
             callbacks: {
               label: (context) => {
                 const label = context.label || "";
                 const value = context.raw || 0;
-                return `${label}: ₱${value.toLocaleString()}`;
+                const percentage = ((value / total) * 100).toFixed(1);
+                return [
+                  `Amount: ${formatCurrency(value)}`,
+                  `Percentage: ${percentage}% of total expenses`
+                ];
               },
             },
           },
+          // Add data labels to show percentages
+          datalabels: {
+            display: true,
+            color: '#fff',
+            anchor: 'end',
+            align: 'right',
+            formatter: (value) => {
+              return ((value / total) * 100).toFixed(1) + '%';
+            },
+            font: {
+              weight: 'bold',
+              size: 11
+            },
+            // Only display if bar is wide enough
+            display: (context) => context.dataset.data[context.dataIndex] / total > 0.05
+          }
         },
+        scales: {
+          x: {
+            beginAtZero: true,
+            grid: {
+              display: false
+            },
+            ticks: {
+              callback: (value) => "₱" + value.toLocaleString()
+            },
+            title: {
+              display: true,
+              text: "Amount (₱)",
+              font: {
+                size: 12,
+                weight: 'bold'
+              }
+            }
+          },
+          y: {
+            grid: {
+              display: false
+            },
+            title: {
+              display: true,
+              text: "Expense Categories",
+              font: {
+                size: 12,
+                weight: 'bold'
+              }
+            }
+          }
+        }
       },
     });
+
+    // Check if Chart.js DataLabels plugin is available
+    if (window.expensesChart.options.plugins.datalabels && !Chart.plugins?.getAll().find(p => p.id === 'datalabels')) {
+      // If plugin is not available, remove the configuration
+      delete window.expensesChart.options.plugins.datalabels;
+      console.warn("Chart.js DataLabels plugin not found, percentage labels won't be shown");
+    }
+
   } catch (error) {
     console.error("Error initializing Expenses Treemap:", error);
     const chartContainer = chartCanvas.closest('.chart-container');
@@ -500,7 +594,7 @@ function initializeEmployeeSalaryChart(data) {
     console.error("Employee Salary Chart canvas not found");
     return;
   }
-  
+
   try {
     const ctx = chartCanvas.getContext("2d");
     if (!ctx) {
@@ -513,7 +607,7 @@ function initializeEmployeeSalaryChart(data) {
       labels: ['1st-15th', '16th-End'], // Use 15-day periods instead of daily labels
       datasets: []
     };
-    
+
     // If we have data from the API
     if (data && data.datasets && data.datasets.length > 0) {
       // Process each employee's data
@@ -523,21 +617,21 @@ function initializeEmployeeSalaryChart(data) {
           label: employeeData.label,
           data: [0, 0] // Initialize with two periods (1st-15th and 16th-end)
         };
-        
+
         // If the original data has data points, aggregate them into 15-day periods
         if (employeeData.data && employeeData.data.length > 0) {
           // Calculate first half (days 1-15) average
           let firstHalfSum = 0;
           let firstHalfCount = 0;
-          
+
           // Calculate second half (days 16+) average
           let secondHalfSum = 0;
           let secondHalfCount = 0;
-          
+
           // Process each day's data
           employeeData.data.forEach((value, index) => {
             const day = index + 1; // Assuming index 0 is day 1
-            
+
             if (day <= 15) {
               firstHalfSum += parseFloat(value || 0);
               firstHalfCount++;
@@ -546,12 +640,12 @@ function initializeEmployeeSalaryChart(data) {
               secondHalfCount++;
             }
           });
-          
+
           // Assign the calculated averages to the periods
           newEmployeeData.data[0] = firstHalfCount > 0 ? firstHalfSum / firstHalfCount : 0;
           newEmployeeData.data[1] = secondHalfCount > 0 ? secondHalfSum / secondHalfCount : 0;
         }
-        
+
         // Add this employee's processed data to our new dataset
         bimonthlyData.datasets.push(newEmployeeData);
       });
@@ -572,19 +666,19 @@ function initializeEmployeeSalaryChart(data) {
         }
       ];
     }
-    
+
     // Remove the toggle button logic if it exists
     let chartContainer = chartCanvas.closest('.card-body');
     let toggleContainer = chartContainer.querySelector('.chart-toggle');
     if (toggleContainer) {
       toggleContainer.remove();
     }
-    
+
     // If there's an existing chart, destroy it first
     if (window.employeeSalaryChart && typeof window.employeeSalaryChart.destroy === 'function') {
       window.employeeSalaryChart.destroy();
     }
-    
+
     // Format currency for display
     const formatCurrency = (value) => {
       return "₱" + parseFloat(value).toLocaleString("en-PH", {
@@ -592,24 +686,24 @@ function initializeEmployeeSalaryChart(data) {
         maximumFractionDigits: 2,
       });
     };
-    
+
     // Define colors for employee bars
-      const barColors = [
-        'rgba(33, 150, 243, 0.7)', 'rgba(156, 39, 176, 0.7)', 'rgba(244, 67, 54, 0.7)', 
-        'rgba(76, 175, 80, 0.7)', 'rgba(255, 152, 0, 0.7)', 'rgba(0, 188, 212, 0.7)', 
-        'rgba(233, 30, 99, 0.7)', 'rgba(96, 125, 139, 0.7)' 
-      ];
-      
+    const barColors = [
+      'rgba(33, 150, 243, 0.7)', 'rgba(156, 39, 176, 0.7)', 'rgba(244, 67, 54, 0.7)',
+      'rgba(76, 175, 80, 0.7)', 'rgba(255, 152, 0, 0.7)', 'rgba(0, 188, 212, 0.7)',
+      'rgba(233, 30, 99, 0.7)', 'rgba(96, 125, 139, 0.7)'
+    ];
+
     // Assign colors to datasets
     bimonthlyData.datasets.forEach((dataset, index) => {
-        dataset.backgroundColor = barColors[index % barColors.length];
-        dataset.borderColor = barColors[index % barColors.length].replace('0.7', '1'); // Solid border
-        dataset.borderWidth = 1;
+      dataset.backgroundColor = barColors[index % barColors.length];
+      dataset.borderColor = barColors[index % barColors.length].replace('0.7', '1'); // Solid border
+      dataset.borderWidth = 1;
     });
-    
+
     // Initialize the chart as a bar chart
     window.employeeSalaryChart = new Chart(ctx, {
-      type: "bar", 
+      type: "bar",
       data: bimonthlyData, // Use our 15-day period data
       options: {
         responsive: true,
@@ -667,17 +761,17 @@ function initializeEmployeeSalaryChart(data) {
           },
           y: { // Single Y axis for salary
             type: 'linear',
-            display: true, 
+            display: true,
             position: 'left',
             beginAtZero: true,
             title: {
               display: true,
               text: 'Net Salary (₱)',
               color: '#666',
-               font: {
-                 size: 12,
-                 weight: 'bold'
-               }
+              font: {
+                size: 12,
+                weight: 'bold'
+              }
             },
             grid: {
               drawOnChartArea: true,
@@ -707,7 +801,7 @@ function initializeProductBubbleChart(data) {
   const chartCanvas = document.getElementById("productBubbleChart");
   if (!chartCanvas) {
     console.error("Product Bubble Chart canvas not found");
-    
+
     // Try to find it by alternative selectors
     const alternativeCanvas = document.querySelector('.chart-container canvas#productBubbleChart');
     if (alternativeCanvas) {
@@ -717,7 +811,7 @@ function initializeProductBubbleChart(data) {
     }
     return;
   }
-  
+
   initializeProductBubbleChartWithCanvas(chartCanvas, data);
 }
 
@@ -733,7 +827,7 @@ function initializeProductBubbleChartWithCanvas(chartCanvas, data) {
     const chartData = {
       data: data.data || []
     };
-    
+
     // If there's an existing chart, destroy it first
     if (window.productBubbleChart && typeof window.productBubbleChart.destroy === 'function') {
       window.productBubbleChart.destroy();
@@ -752,7 +846,7 @@ function initializeProductBubbleChartWithCanvas(chartCanvas, data) {
       "rgba(255, 235, 59, 0.6)",
       "rgba(121, 85, 72, 0.6)"
     ];
-    
+
     // Add colors to each product
     const products = chartData.data.map((item, index) => {
       return {
@@ -760,7 +854,7 @@ function initializeProductBubbleChartWithCanvas(chartCanvas, data) {
         backgroundColor: backgroundColors[index % backgroundColors.length]
       };
     });
-    
+
     window.productBubbleChart = new Chart(ctx, {
       type: "bubble",
       data: {
@@ -831,7 +925,7 @@ function initializeInventoryChart(data) {
     console.error("Inventory Chart canvas not found");
     return;
   }
-  
+
   try {
     const ctx = chartCanvas.getContext("2d");
     if (!ctx) {
@@ -846,12 +940,12 @@ function initializeInventoryChart(data) {
       low: data.low || [],
       out: data.out || []
     };
-    
+
     // If there's an existing chart, destroy it first
     if (window.inventoryChart && typeof window.inventoryChart.destroy === 'function') {
       window.inventoryChart.destroy();
     }
-    
+
     window.inventoryChart = new Chart(ctx, {
       type: "bar",
       data: {
@@ -939,14 +1033,8 @@ function initializeTopProductsChart(data) {
     console.error("Top Products Chart canvas not found");
     return;
   }
-  
-  try {
-    const ctx = chartCanvas.getContext("2d");
-    if (!ctx) {
-      console.error("Could not get 2D context for Top Products Chart");
-      return;
-    }
 
+  try {
     // Ensure we have valid data
     const chartData = {
       labels: data.labels || ["Product A", "Product B", "Product C", "Product D", "Product E"],
@@ -955,16 +1043,16 @@ function initializeTopProductsChart(data) {
       profit: data.profit || [5000, 4000, 3000, 2800, 2300],
       stock: data.stock || [25, 30, 15, 20, 10]
     };
-    
+
     // If there's an existing chart, destroy it first
     if (window.topProductsChart && typeof window.topProductsChart.destroy === 'function') {
       window.topProductsChart.destroy();
     }
-    
+
     // Add toggle button for units/revenue if it doesn't exist
     let chartContainer = chartCanvas.closest('.card-body');
     let toggleContainer = chartContainer.querySelector('.chart-toggle');
-    
+
     if (!toggleContainer) {
       toggleContainer = document.createElement('div');
       toggleContainer.className = 'chart-toggle d-flex justify-content-end mb-3';
@@ -974,7 +1062,7 @@ function initializeTopProductsChart(data) {
           <button type="button" class="btn btn-outline-primary" data-metric="revenue">Revenue</button>
         </div>
       `;
-      
+
       // Insert after the chart title
       const titleElement = chartContainer.querySelector('.card-title');
       if (titleElement) {
@@ -982,60 +1070,68 @@ function initializeTopProductsChart(data) {
       } else {
         chartContainer.insertBefore(toggleContainer, chartContainer.firstChild);
       }
-      
-      // Add event listeners to toggle buttons
-      const unitButton = toggleContainer.querySelector('[data-metric="units"]');
-      const revenueButton = toggleContainer.querySelector('[data-metric="revenue"]');
-      
-      unitButton.addEventListener('click', function() {
-        if (!this.classList.contains('active')) {
-          revenueButton.classList.remove('active');
-          revenueButton.classList.add('btn-outline-primary');
-          revenueButton.classList.remove('btn-primary');
-          
-          this.classList.add('active');
-          this.classList.add('btn-primary');
-          this.classList.remove('btn-outline-primary');
-          
-          updateChartData('units');
-        }
-      });
-      
-      revenueButton.addEventListener('click', function() {
-        if (!this.classList.contains('active')) {
-          unitButton.classList.remove('active');
-          unitButton.classList.add('btn-outline-primary');
-          unitButton.classList.remove('btn-primary');
-          
-          this.classList.add('active');
-          this.classList.add('btn-primary');
-          this.classList.remove('btn-outline-primary');
-          
-          updateChartData('revenue');
-        }
-      });
     }
-    
-    // Create a gradient for the bars
-    const gradients = chartData.labels.map((_, i) => {
-      const gradient = ctx.createLinearGradient(0, 0, 200, 0);
-      const colors = [
-        ['#43a047', '#66bb6a'], // Green variations
-        ['#1e88e5', '#42a5f5'], // Blue variations
-        ['#f9a825', '#fbc02d'], // Amber variations
-        ['#8e24aa', '#ab47bc'], // Purple variations
-        ['#e53935', '#ef5350']  // Red variations
-      ];
-      gradient.addColorStop(0, colors[i % colors.length][0]);
-      gradient.addColorStop(1, colors[i % colors.length][1]);
-      return gradient;
+
+    // Current active metric
+    let currentMetric = 'units';
+
+    // Get the buttons
+    const unitButton = toggleContainer.querySelector('[data-metric="units"]');
+    const revenueButton = toggleContainer.querySelector('[data-metric="revenue"]');
+
+    // Clear any existing event listeners by cloning and replacing elements
+    const newUnitButton = unitButton.cloneNode(true);
+    const newRevenueButton = revenueButton.cloneNode(true);
+    unitButton.parentNode.replaceChild(newUnitButton, unitButton);
+    revenueButton.parentNode.replaceChild(newRevenueButton, revenueButton);
+
+    // Add event listeners to toggle buttons
+    newUnitButton.addEventListener('click', function () {
+      if (!this.classList.contains('active')) {
+        newRevenueButton.classList.remove('active');
+        newRevenueButton.classList.add('btn-outline-primary');
+        newRevenueButton.classList.remove('btn-primary');
+
+        this.classList.add('active');
+        this.classList.add('btn-primary');
+        this.classList.remove('btn-outline-primary');
+
+        currentMetric = 'units';
+        updateChartData();
+      }
     });
-    
+
+    newRevenueButton.addEventListener('click', function () {
+      if (!this.classList.contains('active')) {
+        newUnitButton.classList.remove('active');
+        newUnitButton.classList.add('btn-outline-primary');
+        newUnitButton.classList.remove('btn-primary');
+
+        this.classList.add('active');
+        this.classList.add('btn-primary');
+        this.classList.remove('btn-outline-primary');
+
+        currentMetric = 'revenue';
+        updateChartData();
+      }
+    });
+
+    // Create custom colors for bars (without gradient to avoid potential conflicts)
+    const colors = [
+      '#43a047', // Green
+      '#1e88e5', // Blue
+      '#f9a825', // Amber
+      '#8e24aa', // Purple
+      '#e53935'  // Red
+    ];
+
     // Function to update chart data based on selected metric
-    function updateChartData(metric) {
+    function updateChartData() {
+      if (!window.topProductsChart) return;
+
       const dataset = window.topProductsChart.data.datasets[0];
-      
-      if (metric === 'units') {
+
+      if (currentMetric === 'units') {
         dataset.data = chartData.values;
         window.topProductsChart.options.scales.x.title.text = 'Units Sold';
         dataset.label = 'Units Sold';
@@ -1044,10 +1140,10 @@ function initializeTopProductsChart(data) {
         window.topProductsChart.options.scales.x.title.text = 'Revenue (₱)';
         dataset.label = 'Revenue';
       }
-      
-      window.topProductsChart.update();
+
+      window.topProductsChart.update('none'); // Use 'none' animation to prevent UI jank
     }
-    
+
     // Format currency for display
     const formatCurrency = (value) => {
       return "₱" + parseFloat(value).toLocaleString("en-PH", {
@@ -1055,8 +1151,13 @@ function initializeTopProductsChart(data) {
         maximumFractionDigits: 2,
       });
     };
-    
-    window.topProductsChart = new Chart(ctx, {
+
+    // Use Chart.defaults to override any conflicting Bootstrap styles
+    Chart.defaults.font.family = "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif";
+    Chart.defaults.color = '#666';
+
+    // Setup chart with optimized configuration
+    window.topProductsChart = new Chart(chartCanvas, {
       type: "bar",
       data: {
         labels: chartData.labels,
@@ -1064,7 +1165,7 @@ function initializeTopProductsChart(data) {
           {
             label: "Units Sold",
             data: chartData.values,
-            backgroundColor: gradients,
+            backgroundColor: chartData.labels.map((_, i) => colors[i % colors.length]),
             borderWidth: 0,
             borderRadius: 4,
             barPercentage: 0.7,
@@ -1075,20 +1176,35 @@ function initializeTopProductsChart(data) {
         indexAxis: 'y',  // Horizontal bar chart
         responsive: true,
         maintainAspectRatio: false,
+        animation: {
+          duration: 500 // Shorter animations for better performance
+        },
+        interaction: {
+          mode: 'nearest',
+          axis: 'y',
+          intersect: false // This helps with cursor precision
+        },
         plugins: {
           legend: {
             display: false,
           },
           tooltip: {
+            enabled: true,
+            position: 'nearest', // Better tooltip positioning
             backgroundColor: 'rgba(0,0,0,0.8)',
+            titleFont: {
+              weight: 'bold'
+            },
             bodyFont: {
               size: 13
             },
+            padding: 10,
+            displayColors: false, // Simplifies tooltip appearance
             callbacks: {
-              label: function(context) {
+              label: function (context) {
                 const index = context.dataIndex;
                 const dataset = context.chart.data.datasets[0];
-                
+
                 if (dataset.label === 'Units Sold') {
                   return [
                     `Units Sold: ${chartData.values[index].toLocaleString()} units`,
@@ -1105,8 +1221,7 @@ function initializeTopProductsChart(data) {
                   ];
                 }
               },
-              title: function(context) {
-                // Bold product name
+              title: function (context) {
                 return context[0].label;
               }
             }
@@ -1116,7 +1231,9 @@ function initializeTopProductsChart(data) {
           x: {
             beginAtZero: true,
             grid: {
-              display: false
+              display: false,
+              drawBorder: true,
+              drawOnChartArea: false
             },
             title: {
               display: true,
@@ -1124,13 +1241,18 @@ function initializeTopProductsChart(data) {
               font: {
                 size: 14,
                 weight: 'bold'
+              },
+              padding: {
+                top: 10,
+                bottom: 10
               }
             },
             ticks: {
               precision: 0,
-              callback: function(value) {
-                const activeMetric = chartContainer.querySelector('.btn-group .active').dataset.metric;
-                if (activeMetric === 'revenue') {
+              maxRotation: 0, // Prevent tick rotation
+              autoSkip: true,
+              callback: function (value) {
+                if (currentMetric === 'revenue') {
                   if (value >= 1000) {
                     return '₱' + (value / 1000).toFixed(1) + 'K';
                   }
@@ -1142,7 +1264,9 @@ function initializeTopProductsChart(data) {
           },
           y: {
             grid: {
-              display: false
+              display: false,
+              drawBorder: true,
+              drawOnChartArea: false
             },
             title: {
               display: true,
@@ -1150,12 +1274,33 @@ function initializeTopProductsChart(data) {
               font: {
                 size: 14,
                 weight: 'bold'
+              },
+              padding: {
+                top: 0,
+                bottom: 0
               }
+            },
+            ticks: {
+              padding: 5, // Add some padding to prevent text clipping
+              mirror: false
             }
+          }
+        },
+        // Set a specific z-index to ensure chart elements are properly layered
+        layout: {
+          padding: {
+            left: 10,
+            right: 20,
+            top: 0,
+            bottom: 10
           }
         }
       },
     });
+
+    // Initial update
+    updateChartData();
+
   } catch (error) {
     console.error("Error initializing Top Products Chart:", error);
     const chartContainer = chartCanvas.closest('.chart-container');

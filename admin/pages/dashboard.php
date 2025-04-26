@@ -1,6 +1,5 @@
 <?php include '../includes/head.php'; ?>
-<link rel="stylesheet" href="../css/dashboard.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="../css/charts-fix.css">
 
 <body>
     <?php include '../includes/sidebar.php'; ?>
@@ -59,32 +58,22 @@
         </div>
 
         <!-- Charts Section -->
+
+
+        <!-- Product Sales Analysis Chart -->
         <div class="row mb-4">
-            <!-- Sales Trend Chart -->
-            <div class="col-md-12">
+            <div class="col-md-6">
                 <div class="card chart-card">
                     <div class="card-body">
-                        <h5 class="card-title">Sales Revenue Trend</h5>
-                        <canvas id="salesTrendChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- Row for Employee Salary and Product Sales -->
-        <div class="row mb-4">
-            <!-- Product Sales Analysis Chart -->
-            <div class="col-md-6">
-                <div class="card chart-card h-100">
-                    <div class="card-body d-flex flex-column">
                         <h5 class="card-title">Product Sales Analysis</h5>
-                        <div class="chart-container flex-grow-1"> <!-- Flex grow for chart area -->
+                        <div class="chart-container">
                             <canvas id="productBubbleChart"></canvas>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Top Selling Products Chart -->
             <div class="col-md-6">
                 <div class="card chart-card">
                     <div class="card-body">
@@ -99,7 +88,7 @@
 
         <!-- Inventory Summary Chart -->
         <div class="row mb-4">
-            <div class="col-md-12">
+            <div class="col-md-6">
                 <div class="card chart-card">
                     <div class="card-body">
                         <h5 class="card-title">Inventory Summary</h5>
@@ -109,10 +98,9 @@
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="row mb-4">
+
             <!-- Expenses Treemap Chart -->
-            <div class="col-md-12">
+            <div class="col-md-6">
                 <div class="card chart-card">
                     <div class="card-body">
                         <h5 class="card-title">Expense Categories</h5>
@@ -124,23 +112,36 @@
             </div>
         </div>
 
-        <!-- Top Selling Products Chart -->
+        <!-- Employee Salary Chart -->
         <div class="row mb-4">
-
-            <!-- Employee Salary Chart -->
             <div class="col-md-12">
-                <div class="card chart-card h-100"> <!-- Changed to full width -->
-                    <div class="card-body d-flex flex-column"> <!-- Flex column for layout -->
+                <div class="card chart-card">
+                    <div class="card-body">
                         <h5 class="card-title">Employee Salary Performance</h5>
-                        <div class="chart-container flex-grow-1" style="min-height: 400px;"> <!-- Added min-height -->
+                        <div class="chart-container">
                             <canvas id="employeeSalaryChart"></canvas>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+
+        <div class="row mb-4">
+            <!-- Sales Trend Chart -->
+            <div class="col-md-12">
+                <div class="card chart-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Sales Revenue Trend</h5>
+                        <div class="chart-container">
+                            <canvas id="salesTrendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script src="../js/dashboard.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
