@@ -23,7 +23,7 @@ if (json_last_error() !== JSON_ERROR_NONE) {
 }
 
 // Validate required fields
-$requiredFields = ['itemName', 'sku', 'barCode', 'category', 'unit', 'costPrice', 'sellingPrice', 'stockLevel'];
+$requiredFields = ['itemName', 'sku', 'category', 'unit', 'costPrice', 'sellingPrice', 'stockLevel'];
 foreach ($requiredFields as $field) {
     if (!isset($input[$field]) || empty($input[$field])) {
         echo json_encode([

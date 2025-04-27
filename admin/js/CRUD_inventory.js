@@ -15,7 +15,7 @@ function addProduct() {
   const productData = {
     itemName: $("#itemName").val().trim(),
     sku: $("#sku").val().trim(),
-    barCode: $("#barCode").val().trim(),
+    barCode: $("#barCode").val().trim() || null,
     category: $("#category option:selected").text(),
     brand:
       $("#brand").val().trim().charAt(0).toUpperCase() +

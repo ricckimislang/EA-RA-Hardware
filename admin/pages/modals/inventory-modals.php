@@ -18,8 +18,8 @@
                             <input type="text" class="form-control" id="sku" required>
                         </div>
                         <div class="col-md-4">
-                            <label for="barCode" class="form-label">Barcode</label>
-                            <input type="text" class="form-control" id="barCode" required>
+                            <label for="barCode" class="form-label">Barcode (optional)</label>
+                            <input type="text" class="form-control" id="barCode">
                         </div>
                     </div>
                     <div class="row mb-3">
