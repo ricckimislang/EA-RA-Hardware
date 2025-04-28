@@ -1,6 +1,6 @@
 <?php session_start();
 
-if (!isset($_SESSION["username"]) || (!isset($_SESSION["usertype"]) || ($_SESSION["usertype"] !== '3' && $_SESSION["usertype"] !== '1'))) {
+if (!isset($_SESSION["username"]) || !isset($_SESSION["usertype"]) || ($_SESSION["usertype"] !== '3' && $_SESSION["usertype"] !== '1' && $_SESSION["usertype"] !== '2')) {
     header("location:../index.php");
     exit();
 }

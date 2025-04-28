@@ -11,7 +11,7 @@
                     <div class="row mb-3">
                         <div class="col-md-12">
                             <label for="full_name" class="form-label">Full Name</label>
-                            <input type="text" class="Fform-control" id="full_name" name="full_name" required>
+                            <input type="text" class="form-control" id="full_name" name="full_name" required>
                         </div>
                     </div>
 
@@ -60,7 +60,7 @@
 
                         <div class="col-md-6">
                             <label for="date_hired" class="form-label">Date Hired</label>
-                            <input type="date" class="form-control" id="date_hired" name="date_hired" required>
+                            <input type="date" class="form-control" id="date_hired" name="date_hired" max="<?php echo date('Y-m-d'); ?>" required>
                         </div>
                     </div>
 

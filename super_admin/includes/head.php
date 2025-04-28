@@ -1,7 +1,7 @@
 <?php
 session_start();
 if (!isset($_SESSION["usertype"]) || $_SESSION["usertype"] !== '1') {
-    header("location: ../../index.php");
+    header("location: logout.php");
     exit();
 }
 ?>
