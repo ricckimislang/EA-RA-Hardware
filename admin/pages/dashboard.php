@@ -77,7 +77,9 @@
             <div class="col-md-6">
                 <div class="card chart-card">
                     <div class="card-body">
-                        <h5 class="card-title">Top Selling Products</h5>
+                        <h5 class="card-title">
+                            Sales Trend</h5>
+                        <p class="text-muted">Top Selling Products</p>
                         <div class="chart-container">
                             <canvas id="topProductsChart"></canvas>
                         </div>
@@ -131,7 +133,7 @@
             <div class="col-md-12">
                 <div class="card chart-card">
                     <div class="card-body">
-                        <h5 class="card-title">Sales Revenue Trend</h5>
+                        <h5 class="card-title">Sales Revenue Overview</h5>
                         <div class="chart-container">
                             <canvas id="salesTrendChart"></canvas>
                         </div>

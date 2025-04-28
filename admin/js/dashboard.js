@@ -224,7 +224,7 @@ function rebuildChartContainers() {
     else if (cardTitle.includes('Employee Salary')) canvasId = 'employeeSalaryChart';
     else if (cardTitle.includes('Product Sales')) canvasId = 'productBubbleChart';
     else if (cardTitle.includes('Inventory')) canvasId = 'inventoryChart';
-    else if (cardTitle.includes('Top Selling Products')) canvasId = 'topProductsChart';
+    else if (cardTitle.includes('Sales Trend')) canvasId = 'topProductsChart';
 
     if (canvasId) {
       // Create a new canvas element
@@ -410,7 +410,7 @@ function initializeSalesTrendChart(data) {
         plugins: {
           title: {
             display: true,
-            text: "Sales Revenue Trend",
+            text: "Sales Revenue Overview",
             font: {
               size: 16,
               weight: 'bold'
