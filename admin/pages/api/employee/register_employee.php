@@ -155,8 +155,8 @@ function createrUserAccount($employee_id, $usertype)
     $full_name = $row['full_name'];
     $contact_number = $row['contact_number'];
     $email_address = $row['email_address'];
-
-    $password = 'cashier';
+    
+    $password = ($usertype == '2') ? 'admin' : 'cashier';
     $password = md5($password);
 
     $addUser = $conn->query("INSERT INTO users (employee_id, username, fullname, email, contact_no, password, usertype) VALUES ('$employeeId', '$username', '$full_name', '$email_address', '$contact_number', '$password', '$usertype')");
