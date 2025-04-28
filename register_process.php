@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Insert user
     $insert = $conn->prepare("INSERT INTO users (username, fullname, email, contact_no, password, usertype) VALUES (?, ?, ?, ?, ?, '1')");
     $insert->bind_param('sssss', $username, $full_name, $email, $phone, $hashed_password);
-    
+        
     if ($insert->execute()) {
         $response['success'] = true;
         $response['message'] = 'Registration successful';
