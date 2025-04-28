@@ -3,12 +3,10 @@ session_start();
 require '../../database/config.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
     $username = $conn->real_escape_string($_POST['username']);
-    $password = $_POST['password'];
-    $password = md5($password); // Hash the password
+    $password = md5($_POST['password']); // Hash the password
 
-    $stmt = $conn->prepare("SELECT * FROM users WHERE username = ?");
+    $stmt = $conn->prepare("SELECT id, username, usertype, password FROM users WHERE username = ?");
     $stmt->bind_param("s", $username);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -20,13 +18,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['username'] = $user['username'];
             $_SESSION['usertype'] = $user['usertype'];
 
-            echo json_encode(['success' => true, 'message' => 'Login successful', 'usertype' => (int)$user['usertype']]);
+            $response = ['success' => true, 'message' => 'Login successful', 'usertype' => (int)$user['usertype']];
         } else {
-            echo json_encode(['success' => false, 'message' => $password]);
+            $response = ['success' => false, 'message' => 'Invalid password'];
         }
-        $stmt->close();
-        $conn->close();
+    } else {
+        $response = ['success' => false, 'message' => 'User not found'];
     }
+
+    $stmt->close();
+    $conn->close();
+
+    echo json_encode($response);
 } else {
     echo json_encode(['success' => false, 'message' => 'Invalid request']);
 }
