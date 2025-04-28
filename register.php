@@ -116,7 +116,7 @@ if (!isset($_SESSION['admin_access']) && (!isset($_POST['access_password']) || $
                             </div>
 
                             <div class="d-grid gap-2">
-                                <button type="submit" class="btn btn-primary">Register</button>
+                                <button type="submit" id="submitButton" class="btn btn-primary">Register</button>
                                 <a href="index.php" class="btn btn-secondary">Back to Login</a>
                             </div>
                         </form>
@@ -149,7 +149,8 @@ if (!isset($_SESSION['admin_access']) && (!isset($_POST['access_password']) || $
         // Form validation
         document.getElementById('registrationForm').addEventListener('submit', function(e) {
             e.preventDefault(); // Prevent default form submission
-            
+            const submitButton = document.getElementById('submitButton');
+            submitButton.disabled = true; // Disable the button at the start of form submission
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirm_password').value;
             let isValid = true;
@@ -162,7 +163,7 @@ if (!isset($_SESSION['admin_access']) && (!isset($_POST['access_password']) || $
                 toastr.error('Password must be at least 8 characters long!');
                 isValid = false;
             }
-            
+
             if (isValid) {
                 const form = document.getElementById('registrationForm');
                 const formData = new FormData(form);
@@ -184,15 +185,20 @@ if (!isset($_SESSION['admin_access']) && (!isset($_POST['access_password']) || $
                                 }, 2000);
                             } else {
                                 toastr.error(data.message);
+                                submitButton.disabled = false; // Re-enable the button if there's an error
                             }
                         } catch (e) {
                             toastr.error('Error processing response: ' + e.message);
+                            submitButton.disabled = false; // Re-enable the button if there's an error
                         }
                     },
                     error: function(xhr, status, error) {
                         toastr.error('Error: ' + error);
+                        submitButton.disabled = false; // Re-enable the button if there's an error
                     }
                 });
+            } else {
+                submitButton.disabled = false; // Re-enable the button if validation fails
             }
         });
     </script>
