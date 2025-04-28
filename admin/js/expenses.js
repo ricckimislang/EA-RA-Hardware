@@ -31,7 +31,7 @@ function initExpensesTable() {
         if (error === "abort" || thrown === "abort") return;
         if (xhr.status === 0) {
           console.error("Network error");
-          alert("Unable to connect to server. Check your internet connection.");
+          showNotification("Unable to connect to server. Check your internet connection.", "error");
         } else {
           console.error("AJAX Error", {
             status: xhr.status,
@@ -39,7 +39,7 @@ function initExpensesTable() {
             error,
             thrown,
           });
-          alert("Error loading data. Check the console.");
+          showNotification("Error loading data. Check the console.", "error");
         }
         return [];
       },

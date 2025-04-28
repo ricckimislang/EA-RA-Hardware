@@ -10,6 +10,11 @@ $(document).ready(function () {
     registerEmployee();
   });
 
+  $("#registerPositionForm").on("submit", function (e) {
+    e.preventDefault();
+    registerPosition();
+  });
+
   // Set today's date as default for date hired
   const today = new Date().toISOString().split("T")[0];
   $("#date_hired").val(today);
@@ -36,8 +41,8 @@ $(document).ready(function () {
   // Delete employee
   $(document).on("click", ".delete-employee", function () {
     const employeeId = $(this).data("id");
-    
-    if (confirm("Are you sure you want to delete this employee? This action cannot be undone.")) {
+
+    showConfirmDialog("Are you sure you want to delete this employee? This action cannot be undone.", function () {
       $.ajax({
         url: "api/employee/delete_employee.php",
         type: "POST",
@@ -45,17 +50,17 @@ $(document).ready(function () {
         dataType: "json",
         success: function (response) {
           if (response.success) {
-            showToast("success", "Employee deleted successfully");
+            showNotification("Employee deleted successfully", "success");
             reloadEmployeesTable();
           } else {
-            showToast("error", "Error deleting employee: " + response.message);
+            showNotification("Error deleting employee: " + response.message, "error");
           }
         },
         error: function (xhr, status, error) {
-          showToast("error", "Failed to delete employee. Please try again.");
+          showNotification("Failed to delete employee. Please try again.", "error");
         }
       });
-    }
+    });
   });
 });
 
@@ -85,7 +90,7 @@ function initEmployeesTable() {
         if (error === "abort" || thrown === "abort") return;
         if (xhr.status === 0) {
           console.error("Network error");
-          alert("Unable to connect to server. Check your internet connection.");
+          showNotification("Unable to connect to server. Check your internet connection.", "error");
         } else {
           console.error("AJAX Error", {
             status: xhr.status,
@@ -93,7 +98,7 @@ function initEmployeesTable() {
             error,
             thrown,
           });
-          alert("Error loading data. Check the console.");
+          showNotification("Error loading data. Check the console.", "error");
         }
         return [];
       },
@@ -177,11 +182,11 @@ function loadPositions() {
           );
         });
       } else {
-        showToast("error", "Error loading positions: " + response.message);
+        showNotification("Error loading positions: " + response.message, "error");
       }
     },
     error: function (xhr, status, error) {
-      showToast("error", "Failed to load positions. Please try again.");
+      showNotification("Failed to load positions. Please try again.", "error");
     },
   });
 }
@@ -277,14 +282,14 @@ function viewEmployee(employeeId) {
         // Show the modal
         $("#viewEmployeeModal").modal("show");
       } else {
-        showToast(
-          "error",
-          "Error loading employee details: " + response.message
+        showNotification(
+          "Error loading employee details: " + response.message,
+          "error"
         );
       }
     },
     error: function (xhr, status, error) {
-      showToast("error", "Failed to load employee details. Please try again.");
+      showNotification("Failed to load employee details. Please try again.", "error");
     },
   });
 }
@@ -323,23 +328,23 @@ function registerEmployee() {
 
   // Get the form element
   const form = document.getElementById("addEmployeeForm");
-  
+
   // Check if form exists
   if (!form) {
-    showToast("error", "Form not found. Please refresh the page and try again.");
+    showNotification("Form not found. Please refresh the page and try again.", "error");
     return false;
   }
-  
+
   // Create FormData object for file uploads
   const formData = new FormData(form);
-  
+
   // Debug log what's in the FormData
   console.log("Form data being submitted:");
-  
+
   // Check form fields
-  const fields = ['full_name', 'position_id', 'employment_type', 'date_hired', 
+  const fields = ['full_name', 'position_id', 'employment_type', 'date_hired',
     'overtime_rate', 'contact_number', 'email_address'];
-    
+
   fields.forEach(field => {
     console.log(`${field}: ${formData.get(field)}`);
     // Make sure the field is properly added to formData
@@ -357,27 +362,27 @@ function registerEmployee() {
       }
     }
   });
-  
+
   // Check file inputs and ensure they're properly added
   const fileFields = ['sss_file', 'pagibig_file', 'philhealth_file', 'tin_file'];
   let fileTooLarge = false;
-  
+
   fileFields.forEach(fileField => {
     const fileInput = document.getElementById(fileField);
     if (fileInput && fileInput.files && fileInput.files.length > 0) {
       const file = fileInput.files[0];
       console.log(`${fileField}: ${file.name} (${file.size} bytes)`);
-      
+
       // Check if file size is too large (set to 15MB to be safe with PHP's default 20MB after our changes)
       if (file.size > 15 * 1024 * 1024) {
-        showToast("error", `File ${file.name} is too large. Maximum size is 15MB.`);
+        showNotification(`File ${file.name} is too large. Maximum size is 15MB.`, "error");
         fileTooLarge = true;
       }
     } else {
       console.log(`${fileField}: No file selected`);
     }
   });
-  
+
   if (fileTooLarge) {
     return false;
   }
@@ -388,6 +393,9 @@ function registerEmployee() {
     .html(
       '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...'
     );
+
+  // Use loading notification
+  const hideLoading = showLoadingNotification("Registering employee...");
 
   // Send AJAX request with explicit settings
   $.ajax({
@@ -401,10 +409,10 @@ function registerEmployee() {
     timeout: 60000,    // Set timeout to 60 seconds for large files
     success: function (response) {
       console.log("Server response:", response);
-      
+
       if (response.status === "success") {
         // Show success message
-        showToast("success", "Employee registered successfully");
+        showNotification("Employee registered successfully", "success");
 
         // Reset form and close modal
         $("#addEmployeeForm")[0].reset();
@@ -413,7 +421,7 @@ function registerEmployee() {
         // Reload the employees table or add the new employee to the table
         reloadEmployeesTable();
       } else {
-        showToast("error", "Error registering employee: " + response.message);
+        showNotification("Error registering employee: " + response.message, "error");
         console.error("Registration failed:", response);
       }
     },
@@ -423,17 +431,18 @@ function registerEmployee() {
         statusText: xhr.statusText,
         responseText: xhr.responseText
       });
-      
+
       try {
         const response = JSON.parse(xhr.responseText);
-        showToast("error", "Registration failed: " + (response.message || error));
+        showNotification("Registration failed: " + (response.message || error), "error");
       } catch (e) {
-        showToast("error", "Failed to register employee. Server error or timeout.");
+        showNotification("Failed to register employee. Server error or timeout.", "error");
       }
     },
     complete: function () {
       // Reset button state
       $("#saveEmployeeBtn").prop("disabled", false).text("Register Employee");
+      hideLoading(); // Hide loading notification
     },
   });
 }
@@ -495,13 +504,8 @@ function reloadEmployeesTable() {
 
 // Function to show toast notifications
 function showToast(type, message) {
-  // You can use a toast library or Bootstrap toasts
-  // For simplicity, using alert for now
-  if (type === "error") {
-    alert("Error: " + message);
-  } else {
-    alert(message);
-  }
+  // Use our centralized notification system
+  showNotification(message, type);
 }
 
 // Function to edit employee (populate edit modal)
@@ -576,14 +580,14 @@ function editEmployee(employeeId) {
         // Show the modal
         $("#editEmployeeModal").modal("show");
       } else {
-        showToast(
-          "error",
-          "Error loading employee details: " + response.message
+        showNotification(
+          "Error loading employee details: " + response.message,
+          "error"
         );
       }
     },
     error: function (xhr, status, error) {
-      showToast("error", "Failed to load employee details. Please try again.");
+      showNotification("Failed to load employee details. Please try again.", "error");
     },
   });
 }
@@ -597,24 +601,24 @@ function updateEmployee() {
 
   // Create FormData object for file uploads
   const formData = new FormData($("#editEmployeeForm")[0]);
-  
+
   // Ensure the employee ID is included
   const employeeId = $("#edit_employee_id").val();
   if (!employeeId) {
-    showToast("error", "Missing employee ID. Please try again.");
+    showNotification("Missing employee ID. Please try again.", "error");
     return false;
   }
-  
+
   // Explicitly append important fields to ensure they're included
   formData.set('edit_employee_id', employeeId);
-  
+
   // Debug what's in the FormData
   console.log("Employee ID being submitted:", employeeId);
-  
+
   // Check file inputs and their data
   const fileInputs = ['edit_sss_file', 'edit_pagibig_file', 'edit_philhealth_file', 'edit_tin_file'];
   let hasFiles = false;
-  
+
   fileInputs.forEach(inputId => {
     const fileInput = document.getElementById(inputId);
     if (fileInput && fileInput.files && fileInput.files.length > 0) {
@@ -627,7 +631,7 @@ function updateEmployee() {
       });
     }
   });
-  
+
   if (hasFiles) {
     console.log("Form has files to upload");
   }
@@ -639,6 +643,9 @@ function updateEmployee() {
       '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...'
     );
 
+  // Use loading notification
+  const hideUpdateLoading = showLoadingNotification("Updating employee...");
+
   // Send AJAX request
   $.ajax({
     url: "api/employee/update_employee.php",
@@ -649,10 +656,10 @@ function updateEmployee() {
     contentType: false, // Important for FormData
     success: function (response) {
       console.log("Update response:", response);
-      
+
       if (response.success) {
         // Show success message
-        showToast("success", "Employee updated successfully");
+        showNotification("Employee updated successfully", "success");
 
         // Reset form and close modal
         $("#editEmployeeForm")[0].reset();
@@ -661,7 +668,7 @@ function updateEmployee() {
         // Reload the employees table
         reloadEmployeesTable();
       } else {
-        showToast("error", "Error updating employee: " + response.message);
+        showNotification("Error updating employee: " + response.message, "error");
         console.error("Update failed:", response);
       }
     },
@@ -671,17 +678,18 @@ function updateEmployee() {
         statusText: xhr.statusText,
         responseText: xhr.responseText
       });
-      
+
       try {
         const response = JSON.parse(xhr.responseText);
-        showToast("error", "Update failed: " + (response.message || error));
+        showNotification("Update failed: " + (response.message || error), "error");
       } catch (e) {
-        showToast("error", "Failed to update employee. Server error occurred.");
+        showNotification("Failed to update employee. Server error occurred.", "error");
       }
     },
     complete: function () {
       // Reset button state
       $("#updateEmployeeBtn").prop("disabled", false).text("Update Employee");
+      hideUpdateLoading(); // Hide loading notification
     }
   });
 }
@@ -726,4 +734,103 @@ function validateEditEmployeeForm() {
   }
 
   return isValid;
+}
+
+function registerPosition() {
+  // Validate form
+  const form = document.getElementById("registerPositionForm");
+  if (!form) {
+    showNotification("Form not found. Please refresh the page and try again.", "error");
+    return false;
+  }
+
+  // Validate required fields
+  const positionName = form.position_name.value;
+  const positionSalary = form.position_salary.value;
+
+  let isValid = true;
+
+  // Check position name
+  if (!positionName) {
+    $("#position_name").addClass("is-invalid");
+    if (!$("#position_name").next(".invalid-feedback").length) {
+      $("#position_name").after('<div class="invalid-feedback">Position Name is required</div>');
+    }
+    isValid = false;
+  } else {
+    $("#position_name").removeClass("is-invalid");
+  }
+
+  // Check position salary
+  if (!positionSalary) {
+    $("#position_salary").addClass("is-invalid");
+    if (!$("#position_salary").next(".invalid-feedback").length) {
+      $("#position_salary").after('<div class="invalid-feedback">Position Salary is required</div>');
+    }
+    isValid = false;
+  } else {
+    $("#position_salary").removeClass("is-invalid");
+  }
+
+  if (!isValid) {
+    showNotification("Please fill in all required fields", "error");
+    return false;
+  }
+
+  // Get form data
+  const formData = new FormData(form);
+
+  // Debug log what's in the FormData
+  console.log("Position form data being submitted:");
+  console.log(`Position Name: ${positionName}`);
+  console.log(`Position Salary: ${positionSalary}`);
+
+  // Show loading indicator
+  $("#savePositionBtn")
+    .prop("disabled", true)
+    .html(
+      '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...'
+    );
+
+  // Use loading notification
+  const hideLoading = showLoadingNotification("Registering position...");
+
+  $.ajax({
+    url: "api/position/register_position.php",
+    type: "POST",
+    data: formData,
+    processData: false,
+    contentType: false,
+    dataType: "json",
+    success: function (response) {
+      if (response.status === "success") {
+        showNotification("Position registered successfully", "success");
+        $("#registerPositionModal").modal("hide");
+        form.reset();
+        loadPositions(); // Refresh positions dropdown
+      } else {
+        showNotification(response.message || "Failed to register position", "error");
+        console.error("Position registration failed:", response);
+      }
+    },
+    error: function (xhr, status, error) {
+      console.error("AJAX error:", {
+        status: xhr.status,
+        statusText: xhr.statusText,
+        responseText: xhr.responseText
+      });
+
+      try {
+        const response = JSON.parse(xhr.responseText);
+        showNotification("Registration failed: " + (response.message || error), "error");
+      } catch (e) {
+        showNotification("Failed to register position. Please try again.", "error");
+      }
+    },
+    complete: function () {
+      // Reset button state
+      $("#savePositionBtn").prop("disabled", false).text("Register Position");
+      hideLoading(); // Hide loading notification
+    }
+  });
 }

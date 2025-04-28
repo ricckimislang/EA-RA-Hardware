@@ -33,6 +33,9 @@ function addProduct() {
     .prop("disabled", true)
     .html('<i class="fas fa-spinner fa-spin"></i> Saving...');
 
+  // Use loading notification from notifications.js
+  const hideLoading = showLoadingNotification("Adding product...");
+
   // Send data to server
   fetch("api/add_product.php", {
     method: "POST",
@@ -74,6 +77,7 @@ function addProduct() {
     .finally(() => {
       // Reset button state
       $("#saveProduct").prop("disabled", false).html("Save Product");
+      hideLoading(); // Hide the loading notification
     });
 }
 
@@ -132,6 +136,9 @@ function updateProduct() {
     .prop("disabled", true)
     .html('<i class="fas fa-spinner fa-spin"></i> Updating...');
 
+  // Use loading notification from notifications.js
+  const hideEditLoading = showLoadingNotification("Updating product...");
+
   fetch("api/update_product.php", {
     method: "POST",
     headers: {
@@ -156,12 +163,13 @@ function updateProduct() {
     })
     .finally(() => {
       $("#saveEditProduct").prop("disabled", false).html("Save Changes");
+      hideEditLoading(); // Hide the loading notification
     });
 }
 
 // DELETE - Delete product
 function deleteProduct(productId) {
-  if (confirm("Are you sure you want to delete this product?")) {
+  showConfirmDialog("Are you sure you want to delete this product?", function () {
     fetch("api/delete_product.php", {
       method: "POST",
       headers: {
@@ -183,7 +191,7 @@ function deleteProduct(productId) {
         console.error("Error:", error);
         showNotification("Error deleting product", "error");
       });
-  }
+  });
 }
 
 // Adjust stock
@@ -210,6 +218,9 @@ function saveStockAdjustment() {
     .prop("disabled", true)
     .html('<i class="fas fa-spinner fa-spin"></i> Saving...');
 
+  // Use loading notification from notifications.js
+  const hideAdjustmentLoading = showLoadingNotification("Adjusting stock...");
+
   fetch("api/adjust_stock.php", {
     method: "POST",
     headers: {
@@ -235,31 +246,8 @@ function saveStockAdjustment() {
     })
     .finally(() => {
       $("#saveAdjustment").prop("disabled", false).html("Save Adjustment");
+      hideAdjustmentLoading(); // Hide the loading notification
     });
-}
-
-// Helper function to show notifications
-function showNotification(message, type = "info") {
-  // You can replace this with your preferred notification library
-  // For example: toastr, sweetalert2, etc.
-
-  // Simple implementation using alert
-  if (type === "error") {
-    alert("Error: " + message);
-  } else if (type === "success") {
-    alert("Success: " + message);
-  } else {
-    alert(message);
-  }
-
-  // If you have a notification library, use it instead:
-  /*
-  toastr[type](message, type === "error" ? "Error" : "Success", {
-    closeButton: true,
-    timeOut: 5000,
-    progressBar: true
-  });
-  */
 }
 
 // Attach event listeners when document is ready

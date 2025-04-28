@@ -78,6 +78,8 @@ if (isset($_POST['toggle_status']) && isset($_POST['employee_id'])) {
 <!-- Add Bootstrap Icons -->
 <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<!-- Toastify CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css">
 <style>
     .card {
         border: none;
@@ -300,38 +302,32 @@ if (isset($_POST['toggle_status']) && isset($_POST['employee_id'])) {
                                                         Print
                                                     </button>
                                                     <?php if ($row['qr_code_hash']): ?>
-                                                        <form method="post" class="d-inline">
-                                                            <input type="hidden" name="employee_id" value="<?php echo $row['id']; ?>">
-                                                            <input type="hidden" name="regenerate" value="1">
-                                                            <button type="submit" class="btn btn-sm btn-warning btn-action">
-                                                                <i class="bi bi-arrow-repeat"></i>
-                                                                Regenerate
-                                                            </button>
-                                                        </form>
+                                                        <button type="button" class="btn btn-sm btn-warning btn-action regenerate-qr"
+                                                                data-employee-id="<?php echo $row['id']; ?>"
+                                                                data-employee-name="<?php echo htmlspecialchars($row['full_name']); ?>">
+                                                            <i class="bi bi-arrow-repeat"></i>
+                                                            Regenerate
+                                                        </button>
 
-                                                        <form method="post" class="d-inline">
-                                                            <input type="hidden" name="employee_id" value="<?php echo $row['id']; ?>">
-                                                            <input type="hidden" name="toggle_status" value="1">
-                                                            <input type="hidden" name="new_status" value="<?php echo $row['is_active'] ? 0 : 1; ?>">
-                                                            <button type="submit" class="btn btn-sm <?php echo $row['is_active'] ? 'btn-danger' : 'btn-success'; ?> btn-action">
-                                                                <?php if ($row['is_active']): ?>
-                                                                    <i class="bi bi-toggle-off"></i>
-                                                                    Deactivate
-                                                                <?php else: ?>
-                                                                    <i class="bi bi-toggle-on"></i>
-                                                                    Activate
-                                                                <?php endif; ?>
-                                                            </button>
-                                                        </form>
+                                                        <button type="button" class="btn btn-sm <?php echo $row['is_active'] ? 'btn-danger' : 'btn-success'; ?> btn-action toggle-status"
+                                                                data-employee-id="<?php echo $row['id']; ?>"
+                                                                data-employee-name="<?php echo htmlspecialchars($row['full_name']); ?>"
+                                                                data-new-status="<?php echo $row['is_active'] ? 0 : 1; ?>">
+                                                            <?php if ($row['is_active']): ?>
+                                                                <i class="bi bi-toggle-off"></i>
+                                                                Deactivate
+                                                            <?php else: ?>
+                                                                <i class="bi bi-toggle-on"></i>
+                                                                Activate
+                                                            <?php endif; ?>
+                                                        </button>
                                                     <?php else: ?>
-                                                        <form method="post">
-                                                            <input type="hidden" name="employee_id" value="<?php echo $row['id']; ?>">
-                                                            <input type="hidden" name="regenerate" value="1">
-                                                            <button type="submit" class="btn btn-sm btn-primary btn-action">
-                                                                <i class="bi bi-qr-code"></i>
-                                                                Generate QR
-                                                            </button>
-                                                        </form>
+                                                        <button type="button" class="btn btn-sm btn-primary btn-action regenerate-qr"
+                                                                data-employee-id="<?php echo $row['id']; ?>"
+                                                                data-employee-name="<?php echo htmlspecialchars($row['full_name']); ?>">
+                                                            <i class="bi bi-qr-code"></i>
+                                                            Generate QR
+                                                        </button>
                                                     <?php endif; ?>
                                                 </div>
                                             </td>
@@ -356,6 +352,12 @@ if (isset($_POST['toggle_status']) && isset($_POST['employee_id'])) {
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+        <!-- Toastify JS -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+        <!-- SweetAlert2 -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <!-- Custom Notification System -->
+        <script src="../js/notifications.js"></script>
         <script>
             // Wait for the QRCode library to load
             document.addEventListener('DOMContentLoaded', function() {
@@ -389,16 +391,19 @@ if (isset($_POST['toggle_status']) && isset($_POST['employee_id'])) {
                 window.printQR = function(qrId, name) {
                     const qrElement = document.getElementById(qrId);
                     if (!qrElement) {
-                        alert('QR code element not found');
+                        showNotification('QR code element not found', 'error');
                         return;
                     }
 
                     // Get the original QR code hash from the data attribute
                     const qrHash = qrElement.getAttribute('data-hash');
                     if (!qrHash) {
-                        alert('QR code hash not found');
+                        showNotification('QR code hash not found', 'error');
                         return;
                     }
+
+                    // Show loading notification
+                    const hideLoading = showLoadingNotification('Generating high resolution QR code...');
 
                     // Create a high-resolution QR code for printing
                     const printQrContainer = document.createElement('div');
@@ -415,16 +420,21 @@ if (isset($_POST['toggle_status']) && isset($_POST['employee_id'])) {
                     setTimeout(() => {
                         const printQrImage = printQrContainer.querySelector('img');
                         if (!printQrImage) {
-                            alert('Failed to generate high-resolution QR code');
+                            hideLoading();
+                            showNotification('Failed to generate high-resolution QR code', 'error');
                             return;
                         }
 
                         // Create print window with improved styling
                         const printWindow = window.open('', '_blank');
                         if (!printWindow) {
-                            alert('Pop-up blocked. Please allow pop-ups for this site to print QR codes.');
+                            hideLoading();
+                            showNotification('Pop-up blocked. Please allow pop-ups for this site to print QR codes.', 'warning');
                             return;
                         }
+
+                        hideLoading();
+                        showNotification(`QR code for ${name} generated successfully`, 'success');
 
                         const currentDate = new Date().toLocaleDateString();
 
@@ -563,3 +573,63 @@ if (isset($_POST['toggle_status']) && isset($_POST['employee_id'])) {
 </body>
 
 <?php $conn->close(); ?>
+
+<script>
+    $(document).ready(function() {
+        // Show notifications based on URL parameters
+        <?php if (isset($_GET['success'])): ?>
+            showNotification("<?php echo htmlspecialchars($_GET['success']); ?>", "success");
+        <?php endif; ?>
+        
+        <?php if (isset($_GET['error'])): ?>
+            showNotification("<?php echo htmlspecialchars($_GET['error']); ?>", "error");
+        <?php endif; ?>
+        
+        // Handle QR code regeneration
+        $('.regenerate-qr').on('click', function(e) {
+            e.preventDefault();
+            const employeeId = $(this).data('employee-id');
+            const employeeName = $(this).data('employee-name');
+            
+            showConfirmDialog(`Are you sure you want to regenerate the QR code for ${employeeName}? The old QR code will no longer work.`, function() {
+                const form = $(`<form method="post" action="employee_qr.php">
+                    <input type="hidden" name="regenerate" value="1">
+                    <input type="hidden" name="employee_id" value="${employeeId}">
+                </form>`);
+                $('body').append(form);
+                
+                // Show loading notification
+                const hideLoading = showLoadingNotification(`Regenerating QR code for ${employeeName}...`);
+                
+                setTimeout(() => {
+                    form.submit();
+                }, 500);
+            });
+        });
+        
+        // Handle QR code activation/deactivation
+        $('.toggle-status').on('click', function(e) {
+            e.preventDefault();
+            const employeeId = $(this).data('employee-id');
+            const employeeName = $(this).data('employee-name');
+            const newStatus = $(this).data('new-status');
+            const statusText = newStatus == 1 ? 'activate' : 'deactivate';
+            
+            showConfirmDialog(`Are you sure you want to ${statusText} the QR code for ${employeeName}?`, function() {
+                const form = $(`<form method="post" action="employee_qr.php">
+                    <input type="hidden" name="toggle_status" value="1">
+                    <input type="hidden" name="employee_id" value="${employeeId}">
+                    <input type="hidden" name="new_status" value="${newStatus}">
+                </form>`);
+                $('body').append(form);
+                
+                // Show loading notification
+                const hideLoading = showLoadingNotification(`${statusText.charAt(0).toUpperCase() + statusText.slice(1)}ing QR code...`);
+                
+                setTimeout(() => {
+                    form.submit();
+                }, 500);
+            });
+        });
+    });
+</script>

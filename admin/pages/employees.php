@@ -12,9 +12,14 @@ require_once '../../database/config.php';
             <div class="page-header">
                 <h2 class="mb-4">Employee Management</h2>
                 <!-- Add Employee Button -->
-                <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
-                    <i class="fas fa-plus"></i> Register New Employee
-                </button>
+                <div class="btn-group mb-3 gap-1">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+                        <i class="fas fa-plus"></i> Register Employee
+                    </button>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#registerPositionModal">
+                        <i class="fas fa-plus"></i> Register Position
+                    </button>
+                </div>
             </div>
             <div class="row">
                 <div class="col-md-12">

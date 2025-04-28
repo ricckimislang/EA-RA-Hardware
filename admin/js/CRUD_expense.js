@@ -30,6 +30,7 @@ function addExpense() {
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
+        showNotification("Expense added successfully", "success");
         return response.json();
       })
       .then((data) => handleExpenseResponse(data))
@@ -63,6 +64,7 @@ function addExpense() {
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
+        showNotification("Expense added successfully", "success");
         return response.json();
       })
       .then((data) => handleExpenseResponse(data))
@@ -99,29 +101,6 @@ function handleExpenseResponse(data) {
   }
 }
 
-// Helper function to show notifications
-function showNotification(message, type = "info") {
-  // You can replace this with your preferred notification library
-  // For example: toastr, sweetalert2, etc.
-
-  // Simple implementation using alert
-  if (type === "error") {
-    alert("Error: " + message);
-  } else if (type === "success") {
-    alert("Success: " + message);
-  } else {
-    alert(message);
-  }
-
-  // If you have a notification library, use it instead:
-  /*
-    toastr[type](message, type === "error" ? "Error" : "Success", {
-      closeButton: true,
-      timeOut: 5000,
-      progressBar: true
-    });
-    */
-}
 
 // READ - Edit expense (fetch expense details)
 function editExpense(transaction_id) {
@@ -131,11 +110,11 @@ function editExpense(transaction_id) {
   }
 
   console.log("Fetching expense details for ID:", transaction_id);
-  
+
   // Clear form before populating with new data
   $("#editExpenseForm")[0].reset();
   $("#currentReceiptContainer").addClass("d-none");
-  
+
   fetch(`api/get_edit_expense.php?id=${transaction_id}`)
     .then((response) => {
       if (!response.ok) {
@@ -145,21 +124,21 @@ function editExpense(transaction_id) {
     })
     .then((data) => {
       console.log("Expense data received:", data);
-      
+
       if (data.success) {
         const item = data.expense;
-        
+
         // Store ID as a number to ensure proper comparison
         $("#editExpenseId").val(parseInt(item.transaction_id));
-        
+
         // Set other form fields
         $("#editExpenseCategory").val(item.category_id);
         $("#editExpenseName").val(item.expense_name);
         $("#editExpenseAmount").val(item.amount);
         $("#editExpenseNotes").val(item.notes);
         $("#editExpenseDate").val(item.transaction_date);
-      
-        
+
+
         // Display current receipt if exists
         if (item.receipt_path) {
           $("#currentReceiptContainer").removeClass("d-none");
@@ -169,7 +148,7 @@ function editExpense(transaction_id) {
         } else {
           $("#currentReceiptContainer").addClass("d-none");
         }
-        
+
         // Show modal
         $("#editExpenseModal").modal("show");
       } else {
@@ -238,6 +217,10 @@ function UpdateExpense() {
     })
       .then(response => {
         console.log("Response status:", response.status);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        showNotification("Expense updated successfully", "success");
         return response.json(); // Parse response to JSON
       })
       .then(data => {
@@ -271,6 +254,10 @@ function UpdateExpense() {
     })
       .then(response => {
         console.log("Response status:", response.status);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        showNotification("Expense updated successfully", "success");
         return response.json(); // Parse response to JSON
       })
       .then(data => {
@@ -298,7 +285,7 @@ function handleUpdateResult(data) {
   } else {
     showNotification("Error: " + data.message, "error");
   }
-  
+
   // Reset button state
   $("#updateExpense").prop("disabled", false).html("Update Expense");
 }
@@ -319,42 +306,41 @@ function deleteExpense(transaction_id) {
   }
 
   // Confirm deletion with the user
-  if (!confirm("Are you sure you want to delete this expense? This action cannot be undone.")) {
-    return;
-  }
+  showConfirmDialog("Are you sure you want to delete this expense? This action cannot be undone.", function () {
+    // Show loading state (can be implemented with a spinner or disabling the delete button)
+    console.log("Deleting expense ID:", transaction_id);
 
-  // Show loading state (can be implemented with a spinner or disabling the delete button)
-  console.log("Deleting expense ID:", transaction_id);
-
-  // Send delete request to server
-  fetch(`api/delete_expense.php?id=${transaction_id}`, {
-    method: "DELETE"
-  })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      return response.json();
+    // Send delete request to server
+    fetch(`api/delete_expense.php?id=${transaction_id}`, {
+      method: "DELETE"
     })
-    .then(data => {
-      console.log("Delete response:", data);
-      
-      if (data.success) {
-        showNotification("Expense deleted successfully", "success");
-        
-        // Refresh table and summary
-        if (typeof expenseTable !== "undefined") {
-          expenseTable.ajax.reload();
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
         }
-        updateSummaryCards();
-      } else {
-        showNotification("Error: " + data.message, "error");
-      }
-    })
-    .catch(error => {
-      console.error("Error:", error);
-      showNotification("Error deleting expense. Please try again.", "error");
-    });
+        showNotification("Expense deleted successfully", "success");
+        return response.json();
+      })
+      .then(data => { 
+        console.log("Delete response:", data);
+
+        if (data.success) {
+          showNotification("Expense deleted successfully", "success");
+
+          // Refresh table and summary
+          if (typeof expenseTable !== "undefined") {
+            expenseTable.ajax.reload();
+          }
+          updateSummaryCards();
+        } else {
+          showNotification("Error: " + data.message, "error");
+        }
+      })
+      .catch(error => {
+        console.error("Error:", error);
+        showNotification("Error deleting expense. Please try again.", "error");
+      });
+  });
 }
 
 $(document).ready(function () {

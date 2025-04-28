@@ -11,7 +11,7 @@
                     <div class="row mb-3">
                         <div class="col-md-12">
                             <label for="full_name" class="form-label">Full Name</label>
-                            <input type="text" class="form-control" id="full_name" name="full_name" required>
+                            <input type="text" class="Fform-control" id="full_name" name="full_name" required>
                         </div>
                     </div>
 
@@ -374,6 +374,40 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary edit-from-view" id="editFromViewBtn">Edit Employee</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- register position modal -->
+<div class="modal fade" id="registerPositionModal" tabindex="-1" aria-labelledby="registerPositionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="registerPositionModalLabel">Register New Position</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="registerPositionForm">
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label for="position_name" class="form-label">Position Name</label>
+                            <input type="text" class="form-control" id="position_name" name="position_name" required>
+                        </div>
+                        <div class="col-md-12">
+                            <label for="position_salary" class="form-label">Base Salary</label>
+                            <input type="number" class="form-control" id="position_salary" name="position_salary" step="0.01" required>
+                        </div>
+                        <div class="col-md-12">
+                            <label for="position_description" class="form-label">Position Description</label>
+                            <textarea class="form-control" id="position_description" name="position_description" rows="3"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="registerPositionForm" class="btn btn-primary" id="savePositionBtn">Save Position</button>
             </div>
         </div>
     </div>
