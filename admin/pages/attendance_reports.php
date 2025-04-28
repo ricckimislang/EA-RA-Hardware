@@ -144,7 +144,7 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover mb-0">
+                        <table id="attendance-table" class="table table-striped table-hover mb-0">
                             <thead>
                                 <tr>
                                     <th>Employee</th>
@@ -158,37 +158,7 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if ($result->num_rows > 0): ?>
-                                    <?php while ($row = $result->fetch_assoc()): ?>
-                                        <tr>
-                                            <td><?php echo $row['full_name']; ?></td>
-                                            <td><?php echo $row['position']; ?></td>
-                                            <td><?php echo date('M d, Y', strtotime($row['date'])); ?></td>
-                                            <td><?php echo date('h:i A', strtotime($row['time_in'])); ?></td>
-                                            <td>
-                                                <?php echo $row['time_out'] ? date('h:i A', strtotime($row['time_out'])) : '<span class="text-muted">Not logged out</span>'; ?>
-                                            </td>
-                                            <td>
-                                                <?php echo $row['total_hours'] ? number_format($row['total_hours'], 2) : '-'; ?>
-                                            </td>
-                                            <td>
-                                                <?php
-                                                $badgeClass = 'bg-secondary';
-                                                if ($row['status'] == 'present') $badgeClass = 'bg-success';
-                                                if ($row['status'] == 'late') $badgeClass = 'bg-warning text-dark';
-                                                if ($row['status'] == 'half-day') $badgeClass = 'bg-info text-dark';
-                                                if ($row['status'] == 'absent') $badgeClass = 'bg-danger';
-                                                ?>
-                                                <span class="badge <?php echo $badgeClass; ?>"><?php echo ucfirst($row['status']); ?></span>
-                                            </td>
-                                            <td><?php echo $row['notes'] ?? ''; ?></td>
-                                        </tr>
-                                    <?php endwhile; ?>
-                                <?php else: ?>
-                                    <tr>
-                                        <td colspan="8" class="text-center py-3">No attendance records found</td>
-                                    </tr>
-                                <?php endif; ?>
+                                <!-- Data will be populated by JavaScript -->
                             </tbody>
                         </table>
                     </div>
@@ -224,24 +194,24 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col-md-3 text-center mb-3">
-                                        <div class="h1 text-success"><?php echo $presentCount; ?></div>
+                                        <div class="h1 text-success summary-present"><?php echo $presentCount; ?></div>
                                         <div>Present</div>
                                     </div>
                                     <div class="col-md-3 text-center mb-3">
-                                        <div class="h1 text-warning"><?php echo $lateCount; ?></div>
+                                        <div class="h1 text-warning summary-late"><?php echo $lateCount; ?></div>
                                         <div>Late</div>
                                     </div>
                                     <div class="col-md-3 text-center mb-3">
-                                        <div class="h1 text-info"><?php echo $halfDayCount; ?></div>
+                                        <div class="h1 text-info summary-half-day"><?php echo $halfDayCount; ?></div>
                                         <div>Half Day</div>
                                     </div>
                                     <div class="col-md-3 text-center mb-3">
-                                        <div class="h1 text-danger"><?php echo $absentCount; ?></div>
+                                        <div class="h1 text-danger summary-absent"><?php echo $absentCount; ?></div>
                                         <div>Absent</div>
                                     </div>
                                 </div>
                                 <div class="text-center mt-3">
-                                    <div class="h4">Total Hours: <?php echo number_format($totalHours, 2); ?></div>
+                                    <div class="h4">Total Hours: <span class="summary-total-hours"><?php echo number_format($totalHours, 2); ?></span></div>
                                 </div>
                             </div>
                         </div>
@@ -252,6 +222,139 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
 
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+        <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+        <script>
+            $(document).ready(function() {
+                // Function to get badge class based on status
+                function getStatusBadgeClass(status) {
+                    switch(status) {
+                        case 'present': return 'bg-success';
+                        case 'late': return 'bg-warning text-dark';
+                        case 'half-day': return 'bg-info text-dark';
+                        case 'absent': return 'bg-danger';
+                        default: return 'bg-secondary';
+                    }
+                }
+
+                // Function to format date
+                function formatDate(dateString) {
+                    return new Date(dateString).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                    });
+                }
+
+                // Function to format time
+                function formatTime(timeString) {
+                    if (!timeString) return '<span class="text-muted">Not logged out</span>';
+                    return new Date('1970-01-01T' + timeString).toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                }
+
+                // Function to load attendance data
+                function loadAttendanceData() {
+                    const employeeId = $('#employee_id').val();
+                    const startDate = $('#start_date').val();
+                    const endDate = $('#end_date').val();
+                    const status = $('#status').val();
+
+                    $.ajax({
+                        url: 'get_attendance_data.php',
+                        method: 'GET',
+                        data: {
+                            employee_id: employeeId,
+                            start_date: startDate,
+                            end_date: endDate,
+                            status: status
+                        },
+                        dataType: 'json',
+                        success: function(response) {
+                            const table = $('#attendance-table').DataTable();
+                            table.clear();
+
+                            response.data.forEach(function(row) {
+                                table.row.add([
+                                    row.full_name,
+                                    row.position,
+                                    formatDate(row.date),
+                                    formatTime(row.time_in),
+                                    formatTime(row.time_out),
+                                    row.total_hours ? parseFloat(row.total_hours).toFixed(2) : '-',
+                                    `<span class="badge ${getStatusBadgeClass(row.status)}">${row.status.charAt(0).toUpperCase() + row.status.slice(1)}</span>`,
+                                    row.notes || ''
+                                ]);
+                            });
+
+                            table.draw();
+                            updateSummary(response.summary);
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Error loading attendance data:', error);
+                        }
+                    });
+                }
+
+                // Function to update summary
+                function updateSummary(summary) {
+                    if (summary) {
+                        $('.summary-present').text(summary.presentCount);
+                        $('.summary-late').text(summary.lateCount);
+                        $('.summary-half-day').text(summary.halfDayCount);
+                        $('.summary-absent').text(summary.absentCount);
+                        $('.summary-total-hours').text(summary.totalHours.toFixed(2));
+                    }
+                }
+
+                // Initialize DataTable
+                const table = $('#attendance-table').DataTable({
+                    "paging": true,
+                    "lengthChange": true,
+                    "searching": true,
+                    "ordering": true,
+                    "info": true,
+                    "autoWidth": false,
+                    "responsive": true,
+                    "pageLength": 10,
+                    "order": [[2, 'desc']],
+                    "language": {
+                        "search": "Filter records...",
+                        "lengthMenu": "Show _MENU_ entries",
+                        "zeroRecords": "No matching records found",
+                        "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+                        "infoEmpty": "Showing 0 to 0 of 0 entries",
+                        "infoFiltered": "(filtered from _MAX_ total entries)",
+                        "paginate": {
+                            "first": "First",
+                            "last": "Last",
+                            "next": "Next",
+                            "previous": "Previous"
+                        }
+                    },
+                    "dom": '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>'
+                });
+
+                // Load initial data
+                loadAttendanceData();
+
+                // Handle filter form submission
+                $('form').on('submit', function(e) {
+                    e.preventDefault();
+                    loadAttendanceData();
+                });
+
+                // Handle reset button click
+                $('.btn-secondary').on('click', function(e) {
+                    e.preventDefault();
+                    $('form')[0].reset();
+                    loadAttendanceData();
+                });
+            });
+        </script>
     </div>
 </body>
 
