@@ -1,6 +1,6 @@
 <div class="sidebar">
     <div class="sidebar-header">
-        <img src="../../assets/images/ea-ra-logo.svg" alt="Hardware System Logo">
+        <img src="../../assets/images/ea-ra-logo.png" alt="Hardware System Logo">
         <h3>Hardware Admin</h3>
     </div>
 

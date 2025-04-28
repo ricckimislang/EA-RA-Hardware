@@ -111,7 +111,7 @@
 <body>
     <div class="login-container">
         <div class="login-header">
-            <img src="assets/images/ea-ra-logo.svg" alt="EA-RA Hardware Logo">
+            <img src="assets/images/ea-ra-logo.png" alt="EA-RA Hardware Logo">
             <h2>EA-RA Hardware</h2>
             <p>Hardware Management System</p>
         </div>
@@ -135,7 +135,9 @@
                 <button type="submit" class="btn btn-primary btn-login">
                     <i class="fas fa-sign-in-alt"></i> Login
                 </button>
-
+                <div class="forgot-password">
+                    <a href="register.php">Register</a>
+                </div>
                 <div class="forgot-password">
                     <a href="#">Forgot password?</a>
                 </div>
