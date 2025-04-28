@@ -141,27 +141,41 @@ function getFileUploadErrorMessage($error_code)
     }
 }
 
-function createrUserAccount($employee_id)
+function createrUserAccount($employee_id, $usertype)
 {
     global $conn;
     $employeeId = $employee_id;
 
-    $stmt = $conn->prepare('SELECT full_name FROM employees WHERE id = ?');
+    $stmt = $conn->prepare('SELECT full_name, contact_number, email_address FROM employees WHERE id = ?');
     $stmt->bind_param('i', $employeeId);
     $stmt->execute();
     $result = $stmt->get_result();
     $row = $result->fetch_assoc();
-    $username = explode('_', $row['full_name'])[0];
+    $username = explode(' ', $row['full_name'])[0];
+    $full_name = $row['full_name'];
+    $contact_number = $row['contact_number'];
+    $email_address = $row['email_address'];
 
     $password = 'cashier';
     $password = md5($password);
 
-    $addUser = $conn->query("INSERT INTO users (employee_id, username, password, usertype) VALUES ('$employeeId', '$username', '$password', '3')");
+    $addUser = $conn->query("INSERT INTO users (employee_id, username, fullname, email, contact_no, password, usertype) VALUES ('$employeeId', '$username', '$full_name', '$email_address', '$contact_number', '$password', '$usertype')");
     if ($addUser) {
         return true;
     } else {
         return false;
     }
+}
+
+// get position name
+function getPositionName($position_id){
+    global $conn;
+    $stmt = $conn->prepare('SELECT title FROM positions WHERE id = ?');
+    $stmt->bind_param('i', $position_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    return $row['title'];
 }
 
 // Check if the form is submitted
@@ -208,7 +222,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($stmt->execute()) {
             $employee_id = $conn->insert_id;
 
-            $createUserAccount = createrUserAccount($employee_id);
+            $position_name = getPositionName($position_id);
+            if($position_name == 'MANAGER'){
+                $usertype = '2';
+            }else if($position_name == 'CASHIER'){
+                $usertype = '3';
+            }else{
+                $usertype = '4';
+            }
+
+            $createUserAccount = createrUserAccount($employee_id, $usertype);
 
             // Handle file uploads
             $sss_file_path = isset($_FILES['sss_file']) ? handleFileUpload($_FILES['sss_file'], $employee_id, 'sss') : null;

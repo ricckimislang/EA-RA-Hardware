@@ -5,7 +5,7 @@ header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['position_name'])) {
 
-    $position_name = $_POST['position_name'];
+    $position_name = strtoupper($_POST['position_name']);
     $position_salary = $_POST['position_salary'];
     $position_description = $_POST['position_description'];
 
@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['position_name'])) {
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("sds", $position_name, $position_salary, $position_description);
     $success = $stmt->execute();
-    
+
     if ($success) {
         echo json_encode([
             'status' => 'success',
