@@ -680,16 +680,16 @@ function initializeEmployeeSalaryChart(data) {
       // If no data from API, create sample data
       bimonthlyData.datasets = [
         {
-          label: "Sample Employee 1",
-          data: [45000, 48000]
+          label: "Manager",
+          data: [15000, 20000]
         },
         {
-          label: "Sample Employee 2",
-          data: [52000, 55000]
+          label: "Cashier",
+          data: [10000, 15000]
         },
         {
-          label: "Sample Employee 3",
-          data: [38000, 42000]
+          label: "Laborer",
+          data: [8000, 12000]
         }
       ];
     }
