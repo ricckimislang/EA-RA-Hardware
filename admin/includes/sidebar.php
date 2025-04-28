@@ -61,12 +61,12 @@
         </li> -->
 
         <li>
-            <a href="../settings/index.php" class="<?php echo (strpos($_SERVER['PHP_SELF'], 'settings')) ? 'active' : ''; ?>">
+            <a href="../pages/settings.php" class="<?php echo (strpos($_SERVER['PHP_SELF'], 'settings')) ? 'active' : ''; ?>">
                 <i class="fas fa-cog"></i>
                 <span>Settings</span>
             </a>
         </li>
-        
+
         <li>
             <a href="logout.php">
                 <i class="fas fa-sign-out-alt"></i>

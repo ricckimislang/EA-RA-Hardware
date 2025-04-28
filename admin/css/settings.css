@@ -1,0 +1,150 @@
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 10px;
+  box-shadow: var(--card-shadow);
+}
+
+.settings-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.card {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
+}
+
+.card-header {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 1rem 1.5rem;
+}
+
+.card-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+/* Admin information styles */
+.admin-info .info-row {
+  display: flex;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.admin-info .info-row:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.admin-info .info-label {
+  width: 35%;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.admin-info .info-value {
+  width: 65%;
+  color: #555;
+}
+
+/* Password change form styles */
+.password-change .form-group {
+  margin-bottom: 1.2rem;
+}
+
+.password-change label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.password-change .form-control {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  transition: border-color 0.2s;
+}
+
+.password-change .form-control:focus {
+  border-color: var(--accent-color);
+  outline: none;
+  box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+}
+
+.password-change .btn-primary {
+  background-color: var(--accent-color);
+  border: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: 4px;
+  color: white;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+
+.password-change .btn-primary:hover {
+  background-color: #2980b9;
+}
+
+.alert {
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.alert-success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.alert-danger {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.alert-warning {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .settings-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .admin-info .info-row {
+    flex-direction: column;
+  }
+  
+  .admin-info .info-label,
+  .admin-info .info-value {
+    width: 100%;
+  }
+  
+  .admin-info .info-label {
+    margin-bottom: 0.3rem;
+  }
+}
