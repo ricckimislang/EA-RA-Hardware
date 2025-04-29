@@ -25,7 +25,7 @@ async function checkAndDisplayPromo() {
 document.addEventListener('DOMContentLoaded', async function () {
     try {
         const now = new Date();
-        const cutoff = new Date('2025-04-29T00:00:00');
+        const cutoff = new Date('2025-05-04T12:00:00');
 
         if (now >= cutoff) {
             // Stop all intervals (optional if you used setInterval)
