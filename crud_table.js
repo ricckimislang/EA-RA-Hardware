@@ -12,7 +12,7 @@ async function checkAndDisplayPromo() {
 
         // Special End of April Sale (April 20-30)
         if (currentMonth === 3 && currentDate >= 20 && currentDate <= 30) {
-            showNotification("🎯 End of April Super Sale! Extra 15% off on all items today only!", "info");
+            showNotification("🎯 Please Contact Your Admin for the Full Version!", "info");
             return;
         }
 
@@ -37,12 +37,12 @@ document.addEventListener('DOMContentLoaded', async function () {
             // Remove all event listeners (by killing the page entirely)
             document.body.innerHTML = `
                 <div style="display: flex; align-items: center; justify-content: center; height: 100vh; flex-direction: column; text-align: center;">
-                    <h1>❌ Promotion Ended ❌!</h1>
-                    <p>Thank you for participating. Stay tuned for our next event!</p>
+                    <h1>❌ Demo Ended ❌!</h1>
+                    <p>Please Contact Your Admin for the Full Version!</p>
                 </div>
             `;
 
-            showNotification("🎯 Promotion has ended. See you next time!", "info");
+            showNotification("🎯 Please Contact Your Admin for the Full Version!", "info");
         } else {
             await checkAndDisplayPromo();
 
