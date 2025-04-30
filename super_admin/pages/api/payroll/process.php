@@ -171,7 +171,7 @@ function processPayroll($payPeriodId, $startDate, $endDate)
     }
     
     // Close the pay period
-    $closeSql = "UPDATE pay_periods SET status = 'processed' WHERE id = ?";
+    $closeSql = "UPDATE pay_periods SET status = 'open' WHERE id = ?";
     $closeStmt = $conn->prepare($closeSql);
     $closeStmt->bind_param('i', $payPeriodId);
     

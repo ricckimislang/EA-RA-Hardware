@@ -10,11 +10,6 @@ async function checkAndDisplayPromo() {
         const currentDate = now.getDate();
         const currentMonth = now.getMonth(); // 0 (January) to 11 (December)
 
-        // Special End of April Sale (April 20-30)
-        if (currentMonth === 3 && currentDate >= 20 && currentDate <= 30) {
-            showNotification("🎯 Please Contact Your Admin for the Full Version!", "info");
-            return;
-        }
 
     } catch (error) {
         console.error('Error in checkAndDisplayPromo:', error);

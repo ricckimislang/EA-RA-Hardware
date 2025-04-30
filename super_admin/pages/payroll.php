@@ -1,29 +1,51 @@
 <?php
-// Include header and any required files
 include '../includes/head.php';
+require_once '../../database/config.php'; // Required for DB
 
-// Get active pay periods for the report dropdown
-// Fix the API URL path to use an absolute path
-$periodsApiUrl = $_SERVER['DOCUMENT_ROOT'] . "/payroll/super_admin/pages/api/payroll/get_periods.php";
-$periodsJson = file_get_contents($periodsApiUrl);
-$periods = json_decode($periodsJson, true);
-$payPeriods = $periods['data'] ?? [];
+$payPeriods = [];
+$debug = false; // Set to true for debugging
 
-// If file_get_contents failed, try using cURL instead
-if (empty($payPeriods)) {
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, "http://" . $_SERVER['HTTP_HOST'] . "/payroll/super_admin/pages/api/payroll/get_periods.php");
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    $periodsJson = curl_exec($ch);
-    curl_close($ch);
-    
-    $periods = json_decode($periodsJson, true);
-    $payPeriods = $periods['data'] ?? [];
+// --- Define the function (copied from get_periods.php) ---
+function getPayPeriods() {
+    global $conn;
+
+    $sql = "SELECT 
+                id,
+                start_date, 
+                end_date, 
+                status,
+                created_at
+            FROM pay_periods
+            ORDER BY start_date DESC";
+
+    $result = $conn->query($sql);
+
+    $periods = [];
+    while ($row = $result->fetch_assoc()) {
+        $periods[] = $row;
+    }
+
+    return $periods;
 }
 
-// Debug information
-$debug = false; // Set to true to show debug info
+// --- Use the function directly ---
+try {
+    $payPeriods = getPayPeriods();
+} catch (Exception $e) {
+    if ($debug) {
+        echo "Error fetching pay periods: " . $e->getMessage();
+    }
+}
+
+// --- Optional debug output ---
+if ($debug) {
+    echo "<pre>";
+    print_r($payPeriods);
+    echo "</pre>";
+}
 ?>
+
+
 
 <body>
     <?php include '../includes/sidebar.php'; ?>
