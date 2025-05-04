@@ -222,7 +222,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($stmt->execute()) {
             $employee_id = $conn->insert_id;
 
-            $position_name = getPositionName($position_id);
+            $position_name = strtoupper(getPositionName($position_id));
             if($position_name == 'MANAGER'){
                 $usertype = '2';
             }else if($position_name == 'CASHIER'){
