@@ -87,9 +87,9 @@ while ($row = $result->fetch_assoc()) {
         $row['full_name'],
         $row['position'],
         (int)$row['total_hours'],
-        number_format($grossPay, 2, '.', ''),
-        number_format($deductions, 2, '.', ''),
-        number_format($netPay, 2, '.', ''),
+        number_format($grossPay, 2, '.', ','),
+        number_format($deductions, 2, '.', ','),
+        number_format($netPay, 2, '.', ','),
         $paymentStatus
     ]);
 }
@@ -99,9 +99,9 @@ fputcsv($output, [
     'TOTALS',
     '',
     '',
-    number_format($totalGrossPay, 2, '.', ''),
-    number_format($totalDeductions, 2, '.', ''),
-    number_format($totalNetPay, 2, '.', ''),
+    number_format($totalGrossPay, 2, '.', ','),
+    number_format($totalDeductions, 2, '.', ','),
+    number_format($totalNetPay, 2, '.', ','),
     ''
 ]);
 

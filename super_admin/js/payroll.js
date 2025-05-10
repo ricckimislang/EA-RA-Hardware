@@ -158,6 +158,17 @@ function getPayrollReport() {
 }
 
 /**
+ * Format number as currency with peso sign and thousand separators
+ */
+function formatCurrency(amount) {
+    // Ensure amount is a number
+    const numberAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    
+    // Format with peso symbol and thousand separators
+    return '₱' + numberAmount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+/**
  * Display payroll report in the table
  */
 function displayPayrollReport(reportData, isPeriodClosed = false) {
@@ -220,9 +231,9 @@ function displayPayrollReport(reportData, isPeriodClosed = false) {
             <td>${employee.full_name}</td>
             <td>${employee.position}</td>
             <td>${parseInt(employee.total_hours)} hrs</td>
-            <td>₱${parseFloat(employee.gross_pay).toFixed(2)}</td>
-            <td>₱${parseFloat(employee.deductions).toFixed(2)}</td>
-            <td>₱${parseFloat(employee.net_pay).toFixed(2)}</td>
+            <td>${formatCurrency(employee.gross_pay)}</td>
+            <td>${formatCurrency(employee.deductions)}</td>
+            <td>${formatCurrency(employee.net_pay)}</td>
             <td>
                 <span class="text-black badge badge-${statusClass}">${statusText}</span>
             </td>
@@ -378,7 +389,7 @@ function viewPayslipDetails(payrollId) {
         .then(data => {
             if (data.status === 'success') {
                 // For now, we'll just show an alert with some details
-                alert(`Payslip details for: ${data.data.full_name}\nPosition: ${data.data.position}\nNet Pay: ₱${parseFloat(data.data.net_pay).toFixed(2)}`);
+                alert(`Payslip details for: ${data.data.full_name}\nPosition: ${data.data.position}\nNet Pay: ${formatCurrency(data.data.net_pay)}`);
                 
                 // In a real implementation, you would populate a modal with this data
                 // or redirect to a detailed view
@@ -461,15 +472,39 @@ function printPayslip(payrollId) {
                                 <h3>Earnings</h3>
                                 <div class="info-row">
                                     <div class="label">Base Salary (${employee.salary_rate_type}):</div>
-                                    <div>₱${parseFloat(employee.base_salary).toFixed(2)}</div>
+                                    <div>${formatCurrency(employee.base_salary)}</div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="label">Hourly Rate:</div>
+                                    <div>${formatCurrency(employee.hourly_rate)}/hour</div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="label">Overtime Rate:</div>
+                                    <div>${formatCurrency(employee.overtime_rate)}/hour</div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="label">Regular Hours:</div>
+                                    <div>${parseInt(employee.regular_hours)} hours</div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="label">Overtime Hours:</div>
+                                    <div>${parseInt(employee.overtime_hours)} hours</div>
                                 </div>
                                 <div class="info-row">
                                     <div class="label">Total Hours:</div>
                                     <div>${parseInt(employee.total_hours)} hours</div>
                                 </div>
+                                <div class="info-row">
+                                    <div class="label">Regular Pay:</div>
+                                    <div>${formatCurrency(employee.regular_pay)}</div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="label">Overtime Pay:</div>
+                                    <div>${formatCurrency(employee.overtime_pay)}</div>
+                                </div>
                                 <div class="info-row total">
                                     <div class="label">Gross Pay:</div>
-                                    <div>₱${parseFloat(employee.gross_pay).toFixed(2)}</div>
+                                    <div>${formatCurrency(employee.gross_pay)}</div>
                                 </div>
                             </div>
                             
@@ -477,30 +512,30 @@ function printPayslip(payrollId) {
                                 <h3>Deductions</h3>
                                 <div class="info-row">
                                     <div class="label">SSS (${employee.sss ? (employee.sss / employee.gross_pay * 100).toFixed(1) : 5}%):</div>
-                                    <div>₱${parseFloat(employee.sss || 0).toFixed(2)}</div>
+                                    <div>${formatCurrency(employee.sss || 0)}</div>
                                 </div>
                                 <div class="info-row">
                                     <div class="label">PhilHealth (${employee.philhealth ? (employee.philhealth / employee.gross_pay * 100).toFixed(1) : 2.5}%):</div>
-                                    <div>₱${parseFloat(employee.philhealth || 0).toFixed(2)}</div>
+                                    <div>${formatCurrency(employee.philhealth || 0)}</div>
                                 </div>
                                 <div class="info-row">
                                     <div class="label">Pag-IBIG (${employee.pagibig ? (employee.pagibig / employee.gross_pay * 100).toFixed(1) : 2}%):</div>
-                                    <div>₱${parseFloat(employee.pagibig || 0).toFixed(2)}</div>
+                                    <div>${formatCurrency(employee.pagibig || 0)}</div>
                                 </div>
                                 <div class="info-row">
                                     <div class="label">Tax (Fixed):</div>
-                                    <div>₱${parseFloat(employee.tin || 0).toFixed(2)}</div>
+                                    <div>${formatCurrency(employee.tin || 0)}</div>
                                 </div>
                                 <div class="info-row total">
                                     <div class="label">Total Deductions:</div>
-                                    <div>₱${parseFloat(employee.deductions).toFixed(2)}</div>
+                                    <div>${formatCurrency(employee.deductions)}</div>
                                 </div>
                             </div>
                             
                             <div class="section">
                                 <div class="info-row total">
                                     <div class="label">Net Pay:</div>
-                                    <div>₱${parseFloat(employee.net_pay).toFixed(2)}</div>
+                                    <div>${formatCurrency(employee.net_pay)}</div>
                                 </div>
                             </div>
                             
@@ -621,17 +656,17 @@ function printPayrollReport() {
             
             // Calculate totals
             if (cells[3].textContent) {
-                const grossPay = parseFloat(cells[3].textContent.replace('₱', '').trim());
+                const grossPay = parseFloat(cells[3].textContent.replace('₱', '').replace(/,/g, '').trim());
                 if (!isNaN(grossPay)) totalGrossPay += grossPay;
             }
             
             if (cells[4].textContent) {
-                const deductions = parseFloat(cells[4].textContent.replace('₱', '').trim());
+                const deductions = parseFloat(cells[4].textContent.replace('₱', '').replace(/,/g, '').trim());
                 if (!isNaN(deductions)) totalDeductions += deductions;
             }
             
             if (cells[5].textContent) {
-                const netPay = parseFloat(cells[5].textContent.replace('₱', '').trim());
+                const netPay = parseFloat(cells[5].textContent.replace('₱', '').replace(/,/g, '').trim());
                 if (!isNaN(netPay)) totalNetPay += netPay;
             }
         }
@@ -641,9 +676,9 @@ function printPayrollReport() {
     printWindow.document.write(`
                     <tr style="font-weight: bold; background-color: #f8f9fc;">
                         <td colspan="3" class="text-right">TOTALS:</td>
-                        <td>₱${totalGrossPay.toFixed(2)}</td>
-                        <td>₱${totalDeductions.toFixed(2)}</td>
-                        <td>₱${totalNetPay.toFixed(2)}</td>
+                        <td>${formatCurrency(totalGrossPay)}</td>
+                        <td>${formatCurrency(totalDeductions)}</td>
+                        <td>${formatCurrency(totalNetPay)}</td>
                         <td></td>
                     </tr>
                 </tbody>

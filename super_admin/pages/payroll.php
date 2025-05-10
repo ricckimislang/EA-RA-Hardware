@@ -6,7 +6,8 @@ $payPeriods = [];
 $debug = false; // Set to true for debugging
 
 // --- Define the function (copied from get_periods.php) ---
-function getPayPeriods() {
+function getPayPeriods()
+{
     global $conn;
 
     $sql = "SELECT 
@@ -56,12 +57,12 @@ if ($debug) {
             </div>
 
             <?php if ($debug): ?>
-            <div class="alert alert-info">
-                <p>Debug Info:</p>
-                <p>API URL: <?= $periodsApiUrl ?></p>
-                <p>Response: <?= $periodsJson ?></p>
-                <p>Pay Periods Count: <?= count($payPeriods) ?></p>
-            </div>
+                <div class="alert alert-info">
+                    <p>Debug Info:</p>
+                    <p>API URL: <?= $periodsApiUrl ?></p>
+                    <p>Response: <?= $periodsJson ?></p>
+                    <p>Pay Periods Count: <?= count($payPeriods) ?></p>
+                </div>
             <?php endif; ?>
 
             <div class="row">
@@ -86,25 +87,25 @@ if ($debug) {
                                             $monthDate = clone $currentDate;
                                             $monthDate->modify("+$i month");
                                             $monthName = $monthDate->format('F Y');
-                                            
+
                                             // First half of month (1-15)
                                             $firstStart = clone $monthDate;
                                             $firstStart->modify('first day of this month');
                                             $firstEnd = clone $firstStart;
                                             $firstEnd->modify('+14 days');
-                                            
+
                                             // Second half of month (16-end)
                                             $secondStart = clone $firstEnd;
                                             $secondStart->modify('+1 day');
                                             $secondEnd = clone $monthDate;
                                             $secondEnd->modify('last day of this month');
-                                            
+
                                             // Format for display and value
                                             $firstStartStr = $firstStart->format('Y-m-d');
                                             $firstEndStr = $firstEnd->format('Y-m-d');
                                             $secondStartStr = $secondStart->format('Y-m-d');
                                             $secondEndStr = $secondEnd->format('Y-m-d');
-                                            
+
                                             echo "<option value=\"$firstStartStr,$firstEndStr\">" . $monthName . " (1-15)</option>";
                                             echo "<option value=\"$secondStartStr,$secondEndStr\">" . $monthName . " (16-" . $secondEnd->format('d') . ")</option>";
                                         }

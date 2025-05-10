@@ -89,7 +89,7 @@ function processPayroll($payPeriodId, $startDate, $endDate)
     }
     
     // Verify we have all required settings
-    $requiredSettings = ['sss_rate', 'philhealth_rate', 'pagibig_rate', 'tin_fixed'];
+    $requiredSettings = ['sss_rate', 'philhealth_rate', 'pagibig_rate', 'tin_fixed', 'standard_hours', 'overtime_multiplier'];
     foreach ($requiredSettings as $setting) {
         if (!isset($settings[$setting])) {
             throw new Exception("Missing required pay setting: $setting");
@@ -117,7 +117,8 @@ function processPayroll($payPeriodId, $startDate, $endDate)
     
     // Standard work values for hourly rate calculation
     $standardWorkDays = 22; // Standard working days in a month
-    $standardWorkHours = 8; // Standard working hours per day
+    $standardWorkHours = (int)$settings['standard_hours']; // Standard working hours per day
+    $overtimeMultiplier = (float)$settings['overtime_multiplier']; // Overtime rate multiplier
     
     // Process each employee's payroll
     $processedCount = 0;
@@ -128,11 +129,49 @@ function processPayroll($payPeriodId, $startDate, $endDate)
         // Calculate hourly rate using the formula: Monthly Salary / (Work Days × Work Hours)
         $hourlyRate = $monthlySalary / ($standardWorkDays * $standardWorkHours);
         
-        // Ensure total_hours is an integer
-        $totalHours = (int)$employee['total_hours'];
+        // Get employee's individual overtime rate
+        $getOvertimeRateSql = "SELECT overtime_rate FROM employees WHERE id = ?";
+        $overtimeStmt = $conn->prepare($getOvertimeRateSql);
+        $overtimeStmt->bind_param('i', $employee['employee_id']);
+        $overtimeStmt->execute();
+        $overtimeResult = $overtimeStmt->get_result();
+        $overtimeRow = $overtimeResult->fetch_assoc();
+        $overtimeRate = $overtimeRow ? $overtimeRow['overtime_rate'] : ($hourlyRate * $overtimeMultiplier);
         
-        // Calculate gross pay (hourly rate × total hours)
-        $grossPay = $hourlyRate * $totalHours;
+        // Get daily hours breakdown to calculate overtime
+        $dailyHoursSql = "SELECT 
+                            DATE(time_in) as work_date, 
+                            total_hours
+                        FROM attendance_records 
+                        WHERE employee_id = ? AND DATE(time_in) BETWEEN ? AND ?";
+        $dailyStmt = $conn->prepare($dailyHoursSql);
+        $dailyStmt->bind_param('iss', $employee['employee_id'], $startDate, $endDate);
+        $dailyStmt->execute();
+        $dailyResult = $dailyStmt->get_result();
+        
+        $regularHours = 0;
+        $overtimeHours = 0;
+        
+        while ($day = $dailyResult->fetch_assoc()) {
+            $hoursToday = (int)$day['total_hours'];
+            
+            if ($hoursToday <= $standardWorkHours) {
+                $regularHours += $hoursToday;
+            } else {
+                $regularHours += $standardWorkHours;
+                $overtimeHours += ($hoursToday - $standardWorkHours);
+            }
+        }
+        
+        // Calculate regular pay and overtime pay
+        $regularPay = $hourlyRate * $regularHours;
+        $overtimePay = $overtimeRate * $overtimeHours;
+        
+        // Total gross pay (regular + overtime)
+        $grossPay = $regularPay + $overtimePay;
+        
+        // Total hours (regular + overtime)
+        $totalHours = $regularHours + $overtimeHours;
         
         // Calculate deductions
         $sss = $grossPay * ($settings['sss_rate'] / 100);
