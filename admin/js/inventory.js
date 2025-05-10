@@ -112,7 +112,7 @@ function initProductsTable() {
         render: function (data, type) {
           const price = parseFloat(data);
           if ((type === "display" || type === "filter") && !isNaN(price)) {
-            return "₱" + price.toFixed(2);
+            return "₱" + price.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
           }
           return data;
         },
@@ -122,7 +122,7 @@ function initProductsTable() {
         render: function (data, type) {
           const price = parseFloat(data);
           if ((type === "display" || type === "filter") && !isNaN(price)) {
-            return "₱" + price.toFixed(2);
+            return "₱" + price.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
           }
           return data;
         },
@@ -233,7 +233,7 @@ function updateSummaryCards(summary) {
   $("#lowStockItems").text(summary.low_stock || 0);
   $("#outOfStock").text(summary.out_of_stock || 0);
   $("#totalValue").text(
-    "₱" + (parseFloat(summary.total_value) || 0).toFixed(2)
+    "₱" + (parseFloat(summary.total_value) || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")
   );
 }
 

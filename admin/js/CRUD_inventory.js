@@ -25,7 +25,7 @@ function addProduct() {
     costPrice: parseFloat($("#costPrice").val()),
     sellingPrice: parseFloat($("#sellingPrice").val()),
     stockLevel: parseInt($("#initialStock").val()),
-    lowStockThreshold: parseInt($("#lowStockThreshold").val() || 5),
+    lowStockThreshold: Math.max(parseInt($("#lowStockThreshold").val() || 5), 5),
   };
 
   // Show loading state
@@ -129,7 +129,7 @@ function updateProduct() {
     costPrice: parseFloat($("#editCostPrice").val()),
     sellingPrice: parseFloat($("#editSellingPrice").val()),
     stockLevel: parseInt($("#editStockLevel").val()),
-    lowStockThreshold: parseInt($("#editLowStockThreshold").val() || 5),
+    lowStockThreshold: Math.max(parseInt($("#editLowStockThreshold").val() || 5), 5),
   };
 
   $("#saveEditProduct")
