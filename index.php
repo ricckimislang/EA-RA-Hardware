@@ -105,6 +105,17 @@
             color: var(--accent-color);
             margin-bottom: 15px;
         }
+        
+        #togglePassword {
+            cursor: pointer;
+            background-color: var(--light-color);
+            border-color: #ced4da;
+            color: var(--primary-color);
+        }
+        
+        #togglePassword:hover {
+            background-color: #dfe6e9;
+        }
     </style>
 </head>
 
@@ -130,6 +141,9 @@
                 <div class="input-group mb-3">
                     <span class="input-group-text"><i class="fas fa-lock"></i></span>
                     <input type="password" id="password" name="password" class="form-control" placeholder="Password" required>
+                    <button class="btn btn-outline-secondary input-group-text" type="button" id="togglePassword">
+                        <i class="fas fa-eye"></i>
+                    </button>
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-login">
@@ -151,6 +165,20 @@
     <script src="admin/js/notifications.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Password visibility toggle
+            const togglePassword = document.getElementById('togglePassword');
+            const password = document.getElementById('password');
+            
+            togglePassword.addEventListener('click', function() {
+                // Toggle type attribute
+                const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+                password.setAttribute('type', type);
+                
+                // Toggle icon
+                this.querySelector('i').classList.toggle('fa-eye');
+                this.querySelector('i').classList.toggle('fa-eye-slash');
+            });
+            
             $('#loginForm').on('submit', function(e) {
                 e.preventDefault();
                 const formElement = document.getElementById('loginForm');
