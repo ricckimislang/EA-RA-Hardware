@@ -383,16 +383,16 @@ function checkAllEmployeesPaid() {
  * View payslip details
  */
 function viewPayslipDetails(payrollId) {
-    // Open the payslip details in a modal or redirect to a details page
+    // Fetch the payslip details
     fetch(`../pages/api/payroll/get_payslip.php?payroll_id=${payrollId}`)
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                // For now, we'll just show an alert with some details
-                alert(`Payslip details for: ${data.data.full_name}\nPosition: ${data.data.position}\nNet Pay: ${formatCurrency(data.data.net_pay)}`);
+                populatePayslipDetailsModal(data.data);
                 
-                // In a real implementation, you would populate a modal with this data
-                // or redirect to a detailed view
+                // Show the modal
+                const modal = new bootstrap.Modal(document.getElementById('payslipDetailsModal'));
+                modal.show();
             } else {
                 alert('Error: ' + data.message);
             }
@@ -403,173 +403,389 @@ function viewPayslipDetails(payrollId) {
 }
 
 /**
+ * Populate the payslip details modal with calculation information
+ */
+function populatePayslipDetailsModal(employee) {
+    // Parse deduction breakdown if available
+    let deductions = {
+        sss: employee.sss || 0,
+        philhealth: employee.philhealth || 0,
+        pagibig: employee.pagibig || 0,
+        tin: employee.tin || 0,
+        cash_advances: 0,
+        other: 0
+    };
+    
+    if (employee.deduction_breakdown) {
+        try {
+            deductions = JSON.parse(employee.deduction_breakdown);
+        } catch (e) {
+            console.error('Error parsing deduction breakdown:', e);
+        }
+    }
+    
+    // Fill employee information
+    document.getElementById('employee-name').textContent = employee.full_name;
+    document.getElementById('employee-position').textContent = employee.position;
+    document.getElementById('employee-hired').textContent = new Date(employee.date_hired).toLocaleDateString();
+    document.getElementById('employee-rate-type').textContent = employee.salary_rate_type;
+    document.getElementById('employee-base-salary').textContent = formatCurrency(employee.base_salary);
+    
+    // Fill hours and earnings information
+    document.getElementById('regular-hours').textContent = parseFloat(employee.regular_hours).toFixed(2);
+    document.getElementById('regular-rate').textContent = formatCurrency(employee.hourly_rate);
+    document.getElementById('regular-amount').textContent = formatCurrency(employee.regular_pay);
+    
+    document.getElementById('overtime-hours').textContent = parseFloat(employee.overtime_hours).toFixed(2);
+    document.getElementById('overtime-rate').textContent = formatCurrency(employee.overtime_rate);
+    document.getElementById('overtime-amount').textContent = formatCurrency(employee.overtime_pay);
+    
+    document.getElementById('total-gross-pay').textContent = formatCurrency(employee.gross_pay);
+    
+    // Fill deductions information
+    const deductionsTableBody = document.getElementById('deductions-table-body');
+    deductionsTableBody.innerHTML = ''; // Clear existing rows
+    
+    // Add each deduction type as a row
+    const deductionLabels = {
+        'sss': 'SSS Contribution',
+        'philhealth': 'PhilHealth Contribution',
+        'pagibig': 'Pag-IBIG Contribution',
+        'tin': 'Tax (TIN)',
+        'cash_advances': 'Cash Advances',
+        'other': 'Other Deductions'
+    };
+    
+    for (const [key, amount] of Object.entries(deductions)) {
+        // Skip zero deductions unless they're one of the main ones
+        if (amount === 0 && !['sss', 'philhealth', 'pagibig', 'tin'].includes(key)) continue;
+        
+        const row = document.createElement('tr');
+        
+        // Determine the rate/formula text
+        let rateText = '';
+        if (key === 'sss' || key === 'philhealth') {
+            const rate = (amount / employee.gross_pay * 100).toFixed(2);
+            rateText = `${rate}% of Gross Pay`;
+        } else if (key === 'pagibig' || key === 'tin') {
+            rateText = 'Fixed Amount';
+        } else if (key === 'cash_advances') {
+            // For cash advances, show info on remaining balances
+            const remainingAdvances = parseFloat(employee.remaining_advances || 0);
+            rateText = `Current Deduction (Remaining: ${formatCurrency(remainingAdvances)})`;
+        } else {
+            rateText = '-';
+        }
+        
+        row.innerHTML = `
+            <td>${deductionLabels[key] || key}</td>
+            <td>${rateText}</td>
+            <td>${formatCurrency(amount)}</td>
+        `;
+        deductionsTableBody.appendChild(row);
+    }
+    
+    // Add cash advance details row if it has remaining advances
+    if (employee.remaining_advances > 0 && deductions.cash_advances === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>Cash Advances</td>
+            <td>Outstanding Balance</td>
+            <td>${formatCurrency(employee.remaining_advances)}</td>
+        `;
+        deductionsTableBody.appendChild(row);
+    }
+    
+    // Populate cash advance information section if available
+    const cashAdvanceSection = document.getElementById('cash-advance-info-section');
+    if (employee.available_advance !== undefined) {
+        document.getElementById('available-advance').textContent = formatCurrency(employee.available_advance);
+        document.getElementById('max-advance-amount').textContent = formatCurrency(employee.max_advance_amount);
+        document.getElementById('max-advance-percent').textContent = employee.max_advance_percent || 30;
+        cashAdvanceSection.style.display = 'block';
+    } else {
+        cashAdvanceSection.style.display = 'none';
+    }
+    
+    // Fill summary information
+    document.getElementById('total-deductions').textContent = formatCurrency(employee.deductions);
+    document.getElementById('summary-gross-pay').textContent = formatCurrency(employee.gross_pay);
+    document.getElementById('summary-deductions').textContent = formatCurrency(employee.deductions);
+    document.getElementById('summary-net-pay').textContent = formatCurrency(employee.net_pay);
+    
+    // Set payment status badge
+    const paymentStatus = document.getElementById('payment-status');
+    paymentStatus.textContent = employee.payment_status === 'paid' ? 'PAID' : 'PENDING';
+    paymentStatus.className = employee.payment_status === 'paid' ? 
+        'badge bg-success py-2 px-3 fs-6' : 'badge bg-warning py-2 px-3 fs-6';
+    
+    // Set up print button click event
+    document.getElementById('print-details-btn').onclick = function() {
+        printPayslipDetails(employee);
+    };
+}
+
+/**
  * Print payslip for an employee
  */
 function printPayslip(payrollId) {
-    // In a real implementation, you would:
-    // 1. Fetch the payslip data 
-    // 2. Format it into a printable layout
-    // 3. Open a print dialog
-    
-    // For now, we'll just open a new window with basic info
+    // Fetch the payslip data 
     fetch(`../pages/api/payroll/get_payslip.php?payroll_id=${payrollId}`)
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                // Create print window content
-                const printWindow = window.open('', '_blank');
-                const employee = data.data;
-                
-                printWindow.document.write(`
-                    <html>
-                    <head>
-                        <title>Payslip - ${employee.full_name}</title>
-                        <style>
-                            body { font-family: Arial, sans-serif; margin: 20px; }
-                            .payslip { border: 1px solid #ccc; padding: 20px; max-width: 800px; margin: 0 auto; }
-                            .header { text-align: center; margin-bottom: 20px; }
-                            .info-row { display: flex; margin-bottom: 10px; }
-                            .info-row .label { font-weight: bold; width: 200px; }
-                            .section { margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px; }
-                            .total { font-weight: bold; margin-top: 15px; }
-                            .footer { margin-top: 30px; text-align: center; font-size: 0.8em; }
-                            @media print { .no-print { display: none; } }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="no-print" style="margin-bottom: 20px; text-align: center;">
-                            <button onclick="window.print()">Print Payslip</button>
-                            <button onclick="window.close()">Close</button>
-                        </div>
-                        
-                        <div class="payslip">
-                            <div class="header">
-                                <h2>Employee Payslip</h2>
-                                <p>Pay Period: ${new Date(employee.start_date).toLocaleDateString()} to ${new Date(employee.end_date).toLocaleDateString()}</p>
-                            </div>
-                            
-                            <div class="section">
-                                <h3>Employee Information</h3>
-                                <div class="info-row">
-                                    <div class="label">Name:</div>
-                                    <div>${employee.full_name}</div>
-                                </div>
-                                <div class="info-row">
-                                    <div class="label">Position:</div>
-                                    <div>${employee.position}</div>
-                                </div>
-                                <div class="info-row">
-                                    <div class="label">Employee ID:</div>
-                                    <div>${employee.employee_id}</div>
-                                </div>
-                                <div class="info-row">
-                                    <div class="label">Date Hired:</div>
-                                    <div>${new Date(employee.date_hired).toLocaleDateString()}</div>
-                                </div>
-                            </div>
-                            
-                            <div class="section">
-                                <h3>Earnings</h3>
-                                <div class="info-row">
-                                    <div class="label">Base Salary (${employee.salary_rate_type}):</div>
-                                    <div>${formatCurrency(employee.base_salary)}</div>
-                                </div>
-                                <div class="info-row">
-                                    <div class="label">Hourly Rate:</div>
-                                    <div>${formatCurrency(employee.hourly_rate)}/hour</div>
-                                </div>
-                                <div class="info-row">
-                                    <div class="label">Overtime Rate:</div>
-                                    <div>${formatCurrency(employee.overtime_rate)}/hour</div>
-                                </div>
-                                <div class="info-row">
-                                    <div class="label">Regular Hours:</div>
-                                    <div>${parseInt(employee.regular_hours)} hours</div>
-                                </div>
-                                <div class="info-row">
-                                    <div class="label">Overtime Hours:</div>
-                                    <div>${parseInt(employee.overtime_hours)} hours</div>
-                                </div>
-                                <div class="info-row">
-                                    <div class="label">Total Hours:</div>
-                                    <div>${parseInt(employee.total_hours)} hours</div>
-                                </div>
-                                <div class="info-row">
-                                    <div class="label">Regular Pay:</div>
-                                    <div>${formatCurrency(employee.regular_pay)}</div>
-                                </div>
-                                <div class="info-row">
-                                    <div class="label">Overtime Pay:</div>
-                                    <div>${formatCurrency(employee.overtime_pay)}</div>
-                                </div>
-                                <div class="info-row total">
-                                    <div class="label">Gross Pay:</div>
-                                    <div>${formatCurrency(employee.gross_pay)}</div>
-                                </div>
-                            </div>
-                            
-                            <div class="section">
-                                <h3>Deductions</h3>
-                                <div class="info-row">
-                                    <div class="label">SSS (${employee.sss ? (employee.sss / employee.gross_pay * 100).toFixed(1) : 5}%):</div>
-                                    <div>${formatCurrency(employee.sss || 0)}</div>
-                                </div>
-                                <div class="info-row">
-                                    <div class="label">PhilHealth (${employee.philhealth ? (employee.philhealth / employee.gross_pay * 100).toFixed(1) : 2.5}%):</div>
-                                    <div>${formatCurrency(employee.philhealth || 0)}</div>
-                                </div>
-                                <div class="info-row">
-                                    <div class="label">Pag-IBIG (${employee.pagibig ? (employee.pagibig / employee.gross_pay * 100).toFixed(1) : 2}%):</div>
-                                    <div>${formatCurrency(employee.pagibig || 0)}</div>
-                                </div>
-                                <div class="info-row">
-                                    <div class="label">Tax (Fixed):</div>
-                                    <div>${formatCurrency(employee.tin || 0)}</div>
-                                </div>
-                                <div class="info-row total">
-                                    <div class="label">Total Deductions:</div>
-                                    <div>${formatCurrency(employee.deductions)}</div>
-                                </div>
-                            </div>
-                            
-                            <div class="section">
-                                <div class="info-row total">
-                                    <div class="label">Net Pay:</div>
-                                    <div>${formatCurrency(employee.net_pay)}</div>
-                                </div>
-                            </div>
-                            
-                            <div class="footer">
-                                <p>This is a computer-generated document. No signature required.</p>
-                                <p>Generated on: ${new Date().toLocaleString()}</p>
-                            </div>
-                        </div>
-                    </body>
-                    </html>
-                `);
-                
-                printWindow.document.close();
+                // Use the detailed print function with the fetched data
+                printPayslipDetails(data.data);
             } else {
                 alert('Error: ' + data.message);
             }
         })
         .catch(error => {
             alert('Error preparing payslip: ' + error);
-    });
+        });
 }
 
 /**
- * Show a message in the specified element
+ * Print detailed payslip for an employee
  */
-function showMessage(element, message, type) {
-    element.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+function printPayslipDetails(employee) {
+    // Create print window content
+    const printWindow = window.open('', '_blank');
     
-    // Auto-hide success messages after 5 seconds
-    if (type === 'success') {
-        setTimeout(() => {
-            element.innerHTML = '';
-        }, 5000);
+    // Parse deduction breakdown if available
+    let deductions = {
+        sss: employee.sss || 0,
+        philhealth: employee.philhealth || 0,
+        pagibig: employee.pagibig || 0,
+        tin: employee.tin || 0,
+        cash_advances: employee.cash_advances || 0,
+        other: employee.other || 0
+    };
+    
+    if (employee.deduction_breakdown_json) {
+        try {
+            deductions = JSON.parse(employee.deduction_breakdown_json);
+        } catch (e) {
+            console.error('Error parsing deduction breakdown:', e);
+        }
     }
+    
+    // Generate deductions HTML
+    let deductionsHtml = '';
+    const deductionLabels = {
+        'sss': 'SSS Contribution',
+        'philhealth': 'PhilHealth Contribution',
+        'pagibig': 'Pag-IBIG Contribution',
+        'tin': 'Tax (TIN)',
+        'cash_advances': 'Cash Advances',
+        'other': 'Other Deductions'
+    };
+    
+    for (const [key, amount] of Object.entries(deductions)) {
+        // Skip zero deductions unless they're one of the main ones
+        if (amount === 0 && !['sss', 'philhealth', 'pagibig', 'tin'].includes(key)) continue;
+        
+        // Determine the rate/formula text
+        let rateText = '';
+        if (key === 'sss' || key === 'philhealth') {
+            const rate = (amount / employee.gross_pay * 100).toFixed(2);
+            rateText = `${rate}% of Gross Pay`;
+        } else if (key === 'pagibig' || key === 'tin') {
+            rateText = 'Fixed Amount';
+        } else if (key === 'cash_advances') {
+            // For cash advances, add info on remaining balances
+            const remainingAdvances = parseFloat(employee.remaining_advances || 0);
+            rateText = `Current Deduction (Remaining: ${formatCurrency(remainingAdvances)})`;
+        } else {
+            rateText = '-';
+        }
+        
+        deductionsHtml += `
+            <tr>
+                <td>${deductionLabels[key] || key}</td>
+                <td>${rateText}</td>
+                <td>${formatCurrency(amount)}</td>
+            </tr>
+        `;
+    }
+    
+    // Add cash advance details row if it has remaining advances but no current deduction
+    if (employee.remaining_advances > 0 && deductions.cash_advances === 0) {
+        deductionsHtml += `
+            <tr>
+                <td>Cash Advances</td>
+                <td>Outstanding Balance</td>
+                <td>${formatCurrency(employee.remaining_advances)}</td>
+            </tr>
+        `;
+    }
+    
+    // Add available cash advance information if applicable
+    let cashAdvanceInfoHtml = '';
+    if (employee.available_advance > 0) {
+        cashAdvanceInfoHtml = `
+            <div class="section">
+                <h3>Cash Advance Information</h3>
+                <p>Available Cash Advance: ${formatCurrency(employee.available_advance)}</p>
+                <p class="small">Maximum allowed: ${formatCurrency(employee.max_advance_amount)} (${employee.max_advance_percent || 30}% of monthly salary)</p>
+            </div>
+        `;
+    }
+    
+    // Generate payment information
+    const paymentStatus = employee.payment_status === 'paid' ? 
+        '<span style="color:#28a745;font-weight:bold;">PAID</span>' : 
+        '<span style="color:#ffc107;font-weight:bold;">PENDING</span>';
+    
+    // Write the HTML content
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>Detailed Payslip - ${employee.full_name}</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .payslip { border: 1px solid #ccc; padding: 20px; max-width: 800px; margin: 0 auto; }
+                .header { text-align: center; margin-bottom: 20px; }
+                .company-info { text-align: center; margin-bottom: 15px; }
+                .section { margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px; }
+                .section h3 { margin-top: 0; color: #333; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+                table th, table td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+                table th { background-color: #f2f2f2; }
+                .summary-table { margin-top: 20px; }
+                .summary-row { font-weight: bold; }
+                .footer { margin-top: 30px; text-align: center; font-size: 0.8em; }
+                .signature-line { margin-top: 50px; border-top: 1px solid #333; display: inline-block; width: 200px; }
+                .print-buttons { text-align: center; margin-bottom: 20px; }
+                .print-buttons button { padding: 8px 15px; margin: 0 5px; cursor: pointer; }
+                .small { font-size: 0.85em; color: #666; }
+                @media print { .print-buttons { display: none; } }
+            </style>
+        </head>
+        <body>
+            <div class="print-buttons">
+                <button onclick="window.print()">Print Payslip</button>
+                <button onclick="window.close()">Close</button>
+            </div>
+            
+            <div class="payslip">
+                <div class="header">
+                    <h2>DETAILED PAYSLIP</h2>
+                </div>
+                
+                <div class="company-info">
+                    <h3>EA-RA Hardware</h3>
+                    <p>Pay Period: ${new Date(employee.start_date).toLocaleDateString()} to ${new Date(employee.end_date).toLocaleDateString()}</p>
+                </div>
+                
+                <div class="section">
+                    <h3>Employee Information</h3>
+                    <table>
+                        <tr>
+                            <td width="35%"><strong>Employee Name:</strong></td>
+                            <td>${employee.full_name}</td>
+                            <td width="35%"><strong>Date Hired:</strong></td>
+                            <td>${new Date(employee.date_hired).toLocaleDateString()}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Position:</strong></td>
+                            <td>${employee.position}</td>
+                            <td><strong>Employee ID:</strong></td>
+                            <td>${employee.employee_id}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Base Salary:</strong></td>
+                            <td>${formatCurrency(employee.base_salary)}</td>
+                            <td><strong>Payment Status:</strong></td>
+                            <td>${paymentStatus}</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="section">
+                    <h3>Hours & Earnings</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Hours</th>
+                                <th>Rate</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Regular Hours</td>
+                                <td>${parseFloat(employee.regular_hours).toFixed(2)}</td>
+                                <td>${formatCurrency(employee.hourly_rate)}</td>
+                                <td>${formatCurrency(employee.regular_pay)}</td>
+                            </tr>
+                            <tr>
+                                <td>Overtime Hours</td>
+                                <td>${parseFloat(employee.overtime_hours).toFixed(2)}</td>
+                                <td>${formatCurrency(employee.overtime_rate)}</td>
+                                <td>${formatCurrency(employee.overtime_pay)}</td>
+                            </tr>
+                            <tr style="font-weight: bold; background-color: #f8f9fa;">
+                                <td colspan="3">Total Gross Pay</td>
+                                <td>${formatCurrency(employee.gross_pay)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="section">
+                    <h3>Deductions</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Deduction Type</th>
+                                <th>Details</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${deductionsHtml}
+                            <tr style="font-weight: bold; background-color: #f8f9fa;">
+                                <td colspan="2">Total Deductions</td>
+                                <td>${formatCurrency(employee.deductions)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                ${cashAdvanceInfoHtml}
+                
+                <div class="section">
+                    <h3>Net Pay Summary</h3>
+                    <table class="summary-table">
+                        <tr>
+                            <td><strong>Gross Pay:</strong></td>
+                            <td>${formatCurrency(employee.gross_pay)}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Total Deductions:</strong></td>
+                            <td>${formatCurrency(employee.deductions)}</td>
+                        </tr>
+                        <tr class="summary-row">
+                            <td><strong>NET PAY:</strong></td>
+                            <td><strong>${formatCurrency(employee.net_pay)}</strong></td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="footer">
+                    <p>This is a computer-generated document. No signature is required.</p>
+                    <p>Printed on: ${new Date().toLocaleString()}</p>
+                </div>
+            </div>
+        </body>
+        </html>
+    `);
+    
+    // Finish up
+    printWindow.document.close();
+    printWindow.focus();
 }
 
 /**
@@ -767,4 +983,18 @@ function closePayroll() {
     .catch(error => {
         alert('Error closing payroll: ' + error);
     });
+}
+
+/**
+ * Show a message in the specified element
+ */
+function showMessage(element, message, type) {
+    element.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+    
+    // Auto-hide success messages after 5 seconds
+    if (type === 'success') {
+        setTimeout(() => {
+            element.innerHTML = '';
+        }, 5000);
+    }
 } 

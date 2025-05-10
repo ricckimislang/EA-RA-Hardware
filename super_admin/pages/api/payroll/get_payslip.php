@@ -55,7 +55,11 @@ function getPayslipData($payrollId)
                 p.total_hours,
                 p.gross_pay,
                 p.deductions,
-                p.net_pay
+                p.net_pay,
+                p.deduction_breakdown,
+                p.regular_hours,
+                p.overtime_hours,
+                p.payment_status
             FROM payroll p
             JOIN employees e ON p.employee_id = e.id
             JOIN positions pos ON e.position_id = pos.id
@@ -82,25 +86,37 @@ function getPayslipData($payrollId)
         $settings[$row['setting_name']] = $row['setting_value'];
     }
 
+    // Set default values if settings not found
+    if (!isset($settings['sss_rate'])) $settings['sss_rate'] = 5.0;
+    if (!isset($settings['philhealth_rate'])) $settings['philhealth_rate'] = 2.5;
+    if (!isset($settings['pagibig_rate'])) $settings['pagibig_rate'] = 100.0;
+    if (!isset($settings['tin_fixed'])) $settings['tin_fixed'] = 0.0;
+    if (!isset($settings['standard_hours'])) $settings['standard_hours'] = 8.0;
+    
     // Get standard work hours
     $standardWorkHours = isset($settings['standard_hours']) ? (int)$settings['standard_hours'] : 8;
 
-    // Calculate overtime hours for the pay period
-    $overtimeSql = "SELECT 
-                    SUM(CASE WHEN total_hours > ? THEN total_hours - ? ELSE 0 END) as overtime_hours
-                FROM attendance_records 
-                WHERE employee_id = ? 
-                AND DATE(time_in) BETWEEN ? AND ?";
+    // If regular_hours and overtime_hours are not in the database, calculate them
+    if (!isset($payslip['regular_hours']) || !isset($payslip['overtime_hours']) || 
+        $payslip['regular_hours'] === null || $payslip['overtime_hours'] === null) {
+        
+        // Calculate overtime hours for the pay period
+        $overtimeSql = "SELECT 
+                        SUM(CASE WHEN total_hours > ? THEN total_hours - ? ELSE 0 END) as overtime_hours
+                    FROM attendance_records 
+                    WHERE employee_id = ? 
+                    AND DATE(time_in) BETWEEN ? AND ?";
 
-    $overtimeStmt = $conn->prepare($overtimeSql);
-    $overtimeStmt->bind_param('iiiss', $standardWorkHours, $standardWorkHours, $payslip['employee_id'], $payslip['start_date'], $payslip['end_date']);
-    $overtimeStmt->execute();
-    $overtimeResult = $overtimeStmt->get_result();
-    $overtimeData = $overtimeResult->fetch_assoc();
+        $overtimeStmt = $conn->prepare($overtimeSql);
+        $overtimeStmt->bind_param('iiiss', $standardWorkHours, $standardWorkHours, $payslip['employee_id'], $payslip['start_date'], $payslip['end_date']);
+        $overtimeStmt->execute();
+        $overtimeResult = $overtimeStmt->get_result();
+        $overtimeData = $overtimeResult->fetch_assoc();
 
-    // Add overtime data to payslip
-    $payslip['overtime_hours'] = $overtimeData['overtime_hours'] ?? 0;
-    $payslip['regular_hours'] = $payslip['total_hours'] - $payslip['overtime_hours'];
+        // Add overtime data to payslip
+        $payslip['overtime_hours'] = $overtimeData['overtime_hours'] ?? 0;
+        $payslip['regular_hours'] = $payslip['total_hours'] - $payslip['overtime_hours'];
+    }
 
     // Calculate hourly and overtime rates
     $standardWorkDays = 22; // Standard working days per month
@@ -111,11 +127,74 @@ function getPayslipData($payrollId)
     $payslip['regular_pay'] = $hourlyRate * $payslip['regular_hours'];
     $payslip['overtime_pay'] = $payslip['overtime_rate'] * $payslip['overtime_hours'];
 
-    // Add deduction breakdowns
-    $payslip['sss'] = $payslip['gross_pay'] * ($settings['sss_rate'] / 100);
-    $payslip['philhealth'] = $payslip['gross_pay'] * ($settings['philhealth_rate'] / 100);
-    $payslip['pagibig'] = $payslip['gross_pay'] * ($settings['pagibig_rate'] / 100);
-    $payslip['tin'] = $settings['tin_fixed'];
+    // Parse existing deduction breakdown if available
+    $deductions = [
+        'sss' => $payslip['gross_pay'] * ($settings['sss_rate'] / 100),
+        'philhealth' => $payslip['gross_pay'] * ($settings['philhealth_rate'] / 100),
+        'pagibig' => $settings['pagibig_rate'], // Fixed amount
+        'tin' => $settings['tin_fixed'],
+        'cash_advances' => 0,
+        'other' => 0
+    ];
+    
+    if (isset($payslip['deduction_breakdown']) && !empty($payslip['deduction_breakdown'])) {
+        try {
+            $deductionData = json_decode($payslip['deduction_breakdown'], true);
+            if (is_array($deductionData)) {
+                $deductions = $deductionData;
+            }
+        } catch (Exception $e) {
+            // Log error but continue with default calculations
+            error_log('Error parsing deduction breakdown: ' . $e->getMessage());
+        }
+    }
+    
+    // Get cash advances associated with this payroll
+    $cashAdvancesSql = "SELECT SUM(amount) as total_advances FROM cash_advances 
+                        WHERE payroll_id = ? AND employee_id = ?";
+    $cashAdvancesStmt = $conn->prepare($cashAdvancesSql);
+    $cashAdvancesStmt->bind_param('ii', $payrollId, $payslip['employee_id']);
+    $cashAdvancesStmt->execute();
+    $cashAdvancesResult = $cashAdvancesStmt->get_result();
+    
+    if ($cashAdvancesResult && $cashAdvancesResult->num_rows > 0) {
+        $cashAdvanceAmount = $cashAdvancesResult->fetch_assoc()['total_advances'];
+        if ($cashAdvanceAmount) {
+            $deductions['cash_advances'] = $cashAdvanceAmount;
+        }
+    }
+    
+    // Get remaining pending advances (not yet paid off)
+    $pendingAdvancesSql = "SELECT SUM(amount) as total_pending 
+                          FROM cash_advances 
+                          WHERE employee_id = ? 
+                          AND status = 'approved' 
+                          AND payroll_id IS NULL";
+    $pendingStmt = $conn->prepare($pendingAdvancesSql);
+    $pendingStmt->bind_param('i', $payslip['employee_id']);
+    $pendingStmt->execute();
+    $pendingAdvances = $pendingStmt->get_result()->fetch_assoc()['total_pending'] ?? 0;
+    
+    // Add remaining advances to payslip
+    $payslip['remaining_advances'] = $pendingAdvances;
+    
+    // Calculate maximum allowed advance
+    $maxAdvancePercent = isset($settings['max_cash_advance_percent']) ? 
+        floatval($settings['max_cash_advance_percent']) : 30;
+    $maxAllowedAdvance = $payslip['base_salary'] * ($maxAdvancePercent / 100);
+    $remainingAvailable = $maxAllowedAdvance - $pendingAdvances;
+    if ($remainingAvailable < 0) {
+        $remainingAvailable = 0;
+    }
+    
+    $payslip['max_advance_amount'] = $maxAllowedAdvance;
+    $payslip['available_advance'] = $remainingAvailable;
+    
+    // Add deduction breakdown to the payslip
+    $payslip['deduction_breakdown_json'] = json_encode($deductions);
+    foreach ($deductions as $key => $value) {
+        $payslip[$key] = $value;
+    }
 
     // Get government IDs if available
     $idsSql = "SELECT * FROM employee_government_ids WHERE employee_id = ?";

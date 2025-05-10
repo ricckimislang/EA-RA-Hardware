@@ -20,6 +20,13 @@
                     <span>Payroll</span>
                 </a>
             </li>
+            
+            <li>
+                <a href="http://localhost/ea-ra-hardware/super_admin/pages/cash_advance.php" class="<?php echo (basename($_SERVER['PHP_SELF']) == 'cash_advance.php') ? 'active' : ''; ?>">
+                    <i class="fas fa-hand-holding-usd"></i>
+                    <span>Cash Advance</span>
+                </a>
+            </li>
 
 
             <li>

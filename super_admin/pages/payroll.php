@@ -222,6 +222,152 @@ if ($debug) {
         </div>
     </div>
 
+    <!-- Modal for displaying detailed payslip calculations -->
+    <div class="modal fade" id="payslipDetailsModal" tabindex="-1" aria-labelledby="payslipDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="payslipDetailsModalLabel">Payslip Calculation Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Employee Information Section -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Employee Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Name:</strong> <span id="employee-name"></span></p>
+                                    <p><strong>Position:</strong> <span id="employee-position"></span></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Date Hired:</strong> <span id="employee-hired"></span></p>
+                                    <p><strong>Rate Type:</strong> <span id="employee-rate-type"></span></p>
+                                    <p><strong>Base Salary:</strong> <span id="employee-base-salary"></span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hours and Earnings Section -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Hours & Earnings Calculation</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Category</th>
+                                            <th>Hours</th>
+                                            <th>Rate</th>
+                                            <th>Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Regular Hours</td>
+                                            <td id="regular-hours"></td>
+                                            <td id="regular-rate"></td>
+                                            <td id="regular-amount"></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Overtime Hours</td>
+                                            <td id="overtime-hours"></td>
+                                            <td id="overtime-rate"></td>
+                                            <td id="overtime-amount"></td>
+                                        </tr>
+                                        <tr class="table-light">
+                                            <th colspan="3">Total Gross Pay</th>
+                                            <th id="total-gross-pay"></th>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Deductions Section -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Deductions Breakdown</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Deduction Type</th>
+                                            <th>Rate/Amount</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="deductions-table-body">
+                                        <!-- Deduction rows will be dynamically inserted here -->
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="table-light">
+                                            <th colspan="2">Total Deductions</th>
+                                            <th id="total-deductions"></th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Cash Advance Information Section -->
+                    <div class="card mb-3" id="cash-advance-info-section" style="display: none;">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Cash Advance Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Available Cash Advance:</strong> <span id="available-advance"></span></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Maximum Allowed:</strong> <span id="max-advance-amount"></span></p>
+                                    <p class="text-muted small">Based on <span id="max-advance-percent"></span>% of monthly salary</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Net Pay Section -->
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h6 class="mb-0">Net Pay Calculation</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <p><strong>Gross Pay:</strong> <span id="summary-gross-pay"></span></p>
+                                    <p><strong>Total Deductions:</strong> <span id="summary-deductions"></span></p>
+                                    <hr>
+                                    <p class="h5"><strong>Net Pay:</strong> <span id="summary-net-pay"></span></p>
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    <div class="mt-3">
+                                        <p><strong>Payment Status</strong></p>
+                                        <span class="badge bg-success py-2 px-3 fs-6" id="payment-status">Paid</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="print-details-btn">Print Details</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript for Payroll Processing -->
     <script src="../js/payroll.js"></script>
 </body>

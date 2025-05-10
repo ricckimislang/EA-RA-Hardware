@@ -200,6 +200,29 @@ INSERT INTO `attendance_records` (`id`, `employee_id`, `time_in`, `time_out`, `t
 (150, 5, '2025-04-30 08:00:00', '2025-04-30 17:00:00', 9, 'present', 'Normal shift', '2025-04-28 14:19:32', '2025-04-28 14:19:32');
 
 -- --------------------------------------------------------
+--
+-- Table structure for table `cash_advances`
+--
+
+DROP TABLE IF EXISTS `cash_advances`;
+CREATE TABLE IF NOT EXISTS `cash_advances` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `employee_id` int NOT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `request_date` date NOT NULL,
+  `approval_date` date DEFAULT NULL,
+  `approved_by` int DEFAULT NULL,
+  `status` enum('pending','approved','rejected','paid') NOT NULL DEFAULT 'pending',
+  `payment_method` varchar(50) DEFAULT NULL,
+  `notes` text,
+  `payroll_id` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `employee_id` (`employee_id`),
+  KEY `approved_by` (`approved_by`),
+  KEY `payroll_id` (`payroll_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Table structure for table `attendance_settings`

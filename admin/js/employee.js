@@ -145,6 +145,9 @@ function initEmployeesTable() {
                             <button class="btn btn-primary btn-sm" onclick=editEmployee(${row.id}) data-id="" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </button>
+                            <button class="btn btn-warning btn-sm" onclick="window.location.href='../super_admin/pages/employee_cash_advances.php?id=${row.id}'" title="Cash Advances">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </button>
                             <button class="btn btn-danger btn-sm delete-employee" data-id="${row.id}" title="Delete">
                                 <i class="fas fa-trash"></i>
                             </button>

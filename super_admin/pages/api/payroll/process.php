@@ -73,7 +73,7 @@ function createPayPeriod($startDate, $endDate)
 // Process payroll for all employees in a pay period
 function processPayroll($payPeriodId, $startDate, $endDate)
 {
-    global $conn;
+    global $conn, $settings;
     
     // Get the pay settings
     $settingsSql = "SELECT * FROM pay_settings";
@@ -83,10 +83,18 @@ function processPayroll($payPeriodId, $startDate, $endDate)
         throw new Exception("Error fetching pay settings: " . $conn->error);
     }
     
-    $settings = [];
+    $settings = []; // Initialize settings as array
     while ($row = $settingsResult->fetch_assoc()) {
         $settings[$row['setting_name']] = $row['setting_value'];
     }
+    
+    // Set default values for essential settings
+    if (!isset($settings['sss_rate'])) $settings['sss_rate'] = 5.0;
+    if (!isset($settings['philhealth_rate'])) $settings['philhealth_rate'] = 2.5;
+    if (!isset($settings['pagibig_rate'])) $settings['pagibig_rate'] = 100.0;
+    if (!isset($settings['tin_fixed'])) $settings['tin_fixed'] = 0.0;
+    if (!isset($settings['standard_hours'])) $settings['standard_hours'] = 8.0;
+    if (!isset($settings['overtime_multiplier'])) $settings['overtime_multiplier'] = 1.5;
     
     // Verify we have all required settings
     $requiredSettings = ['sss_rate', 'philhealth_rate', 'pagibig_rate', 'tin_fixed', 'standard_hours', 'overtime_multiplier'];
@@ -174,13 +182,9 @@ function processPayroll($payPeriodId, $startDate, $endDate)
         $totalHours = $regularHours + $overtimeHours;
         
         // Calculate deductions
-        $sss = $grossPay * ($settings['sss_rate'] / 100);
-        $philhealth = $grossPay * ($settings['philhealth_rate'] / 100);
-        $pagibig = $grossPay * ($settings['pagibig_rate'] / 100);
-        $tin = $settings['tin_fixed']; // Fixed amount
+        $deductions = calculateDeductions($employee['employee_id'], $payPeriodId, $grossPay);
         
-        $totalDeductions = $sss + $philhealth + $pagibig + $tin;
-        $netPay = $grossPay - $totalDeductions;
+        $netPay = $grossPay - $deductions['total'];
         
         // Insert into payroll
         $payrollSql = "INSERT INTO payroll 
@@ -198,7 +202,7 @@ function processPayroll($payPeriodId, $startDate, $endDate)
             $employee['employee_id'],
             $totalHours,
             $grossPay,
-            $totalDeductions,
+            $deductions['total'],
             $netPay
         );
         
@@ -258,4 +262,210 @@ function getAttendanceRecords($startDate, $endDate)
     $result = $stmt->get_result();
     
     return $result;
+}
+
+// Calculate deductions for an employee
+function calculateDeductions($employeeId, $payPeriodId, $grossPay) {
+    global $conn, $settings;
+    
+    // Make sure settings is defined and has the necessary values
+    if (!isset($settings) || !is_array($settings)) {
+        // Get the pay settings if not already loaded
+        $settingsSql = "SELECT * FROM pay_settings";
+        $settingsResult = $conn->query($settingsSql);
+        
+        if (!$settingsResult) {
+            error_log("Error fetching pay settings: " . $conn->error);
+        }
+        
+        $settings = [];
+        while ($settingsResult && $row = $settingsResult->fetch_assoc()) {
+            $settings[$row['setting_name']] = $row['setting_value'];
+        }
+    }
+    
+    // Set default rates if not available
+    $sssRate = isset($settings['sss_rate']) ? floatval($settings['sss_rate']) : 5.0;
+    $philhealthRate = isset($settings['philhealth_rate']) ? floatval($settings['philhealth_rate']) : 2.5;
+    $pagibigAmount = isset($settings['pagibig_rate']) ? floatval($settings['pagibig_rate']) : 100.0;
+    $tinAmount = isset($settings['tin_fixed']) ? floatval($settings['tin_fixed']) : 0.0;
+    
+    // Initialize deductions array
+    $deductions = [
+        'sss' => 0,
+        'philhealth' => 0,
+        'pagibig' => 0,
+        'tin' => 0,
+        'cash_advances' => 0,
+        'other' => 0
+    ];
+    
+    // Calculate standard deductions
+    $deductions['sss'] = $grossPay * ($sssRate / 100);
+    $deductions['philhealth'] = $grossPay * ($philhealthRate / 100);
+    $deductions['pagibig'] = $pagibigAmount; // Fixed amount
+    $deductions['tin'] = $tinAmount;
+    
+    // Get cash advance deductions
+    $cashAdvanceSql = "SELECT SUM(amount) as total_advance 
+                       FROM cash_advances 
+                       WHERE employee_id = ? 
+                       AND status = 'approved' 
+                       AND payroll_id IS NULL";
+                       
+    $cashAdvanceStmt = $conn->prepare($cashAdvanceSql);
+    $cashAdvanceStmt->bind_param('i', $employeeId);
+    $cashAdvanceStmt->execute();
+    $cashAdvanceResult = $cashAdvanceStmt->get_result();
+    
+    if ($cashAdvanceResult && $cashAdvanceResult->num_rows > 0) {
+        $cashAdvanceAmount = $cashAdvanceResult->fetch_assoc()['total_advance'];
+        if ($cashAdvanceAmount) {
+            $deductions['cash_advances'] = $cashAdvanceAmount;
+        }
+    }
+    
+    // Calculate total deductions
+    $totalDeductions = array_sum($deductions);
+    
+    return [
+        'breakdown' => $deductions,
+        'total' => $totalDeductions
+    ];
+}
+
+// Process payroll for an employee
+function processEmployeePayroll($employeeId, $payPeriodId, $startDate, $endDate) {
+    global $conn, $settings;
+    
+    // Make sure settings is defined and has the necessary values
+    if (!isset($settings) || !is_array($settings)) {
+        // Get the pay settings if not already loaded
+        $settingsSql = "SELECT * FROM pay_settings";
+        $settingsResult = $conn->query($settingsSql);
+        
+        if (!$settingsResult) {
+            error_log("Error fetching pay settings: " . $conn->error);
+        }
+        
+        $settings = [];
+        while ($settingsResult && $row = $settingsResult->fetch_assoc()) {
+            $settings[$row['setting_name']] = $row['setting_value'];
+        }
+    }
+    
+    // Set default values if settings are not available
+    $standardHours = isset($settings['standard_hours']) ? floatval($settings['standard_hours']) : 8.0;
+    $overtimeMultiplier = isset($settings['overtime_multiplier']) ? floatval($settings['overtime_multiplier']) : 1.5;
+    
+    // Get employee details
+    $employeeQuery = "SELECT e.*, p.base_salary, p.title
+                     FROM employees e
+                     JOIN positions p ON e.position_id = p.id
+                     WHERE e.id = ?";
+    $employeeStmt = $conn->prepare($employeeQuery);
+    $employeeStmt->bind_param('i', $employeeId);
+    $employeeStmt->execute();
+    $employeeResult = $employeeStmt->get_result();
+    
+    if ($employeeResult->num_rows === 0) {
+        throw new Exception("Employee with ID $employeeId not found");
+    }
+    
+    $employee = $employeeResult->fetch_assoc();
+    
+    // Get daily hours breakdown to calculate overtime
+    $dailyHoursSql = "SELECT 
+                        DATE(time_in) as work_date, 
+                        total_hours
+                    FROM attendance_records 
+                    WHERE employee_id = ? AND DATE(time_in) BETWEEN ? AND ?";
+    $dailyStmt = $conn->prepare($dailyHoursSql);
+    $dailyStmt->bind_param('iss', $employeeId, $startDate, $endDate);
+    $dailyStmt->execute();
+    $dailyResult = $dailyStmt->get_result();
+    
+    $regularHours = 0;
+    $overtimeHours = 0;
+    $totalHours = 0;
+    
+    while ($day = $dailyResult->fetch_assoc()) {
+        $hoursToday = (float)$day['total_hours'];
+        $totalHours += $hoursToday;
+        
+        if ($hoursToday <= $standardHours) {
+            $regularHours += $hoursToday;
+        } else {
+            $regularHours += $standardHours;
+            $overtimeHours += ($hoursToday - $standardHours);
+        }
+    }
+    
+    // Calculate base pay for regular hours
+    $hourlyRate = $employee['base_salary'] / (22 * $standardHours); // Assumes 22 working days per month
+    $regularPay = $hourlyRate * $regularHours;
+    
+    // Calculate overtime pay
+    $overtimeRate = $hourlyRate * $overtimeMultiplier;
+    $overtimePay = $overtimeRate * $overtimeHours;
+    
+    // Calculate gross pay
+    $grossPay = $regularPay + $overtimePay;
+    
+    // Calculate deductions
+    $deductions = calculateDeductions($employeeId, $payPeriodId, $grossPay);
+    
+    // Calculate net pay
+    $netPay = $grossPay - $deductions['total'];
+    
+    // Record the payroll entry
+    $insertSql = "INSERT INTO payroll 
+                 (employee_id, pay_period_id, total_hours, regular_hours, overtime_hours, 
+                  gross_pay, deductions, net_pay, deduction_breakdown, payment_status, date_processed) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())";
+                 
+    $insertStmt = $conn->prepare($insertSql);
+    $deductionsJson = json_encode($deductions['breakdown']);
+    
+    $insertStmt->bind_param(
+        'iiiddddss', 
+        $employeeId, 
+        $payPeriodId, 
+        $totalHours, 
+        $regularHours,
+        $overtimeHours,
+        $grossPay, 
+        $deductions['total'], 
+        $netPay,
+        $deductionsJson
+    );
+    
+    if (!$insertStmt->execute()) {
+        throw new Exception("Error processing payroll for employee $employeeId: " . $conn->error);
+    }
+    
+    $payrollId = $conn->insert_id;
+    
+    // Update cash advances to mark them as paid
+    $updateAdvancesSql = "UPDATE cash_advances 
+                         SET payroll_id = ?, status = 'paid' 
+                         WHERE employee_id = ? AND status = 'approved' AND payroll_id IS NULL";
+                         
+    $updateAdvancesStmt = $conn->prepare($updateAdvancesSql);
+    $updateAdvancesStmt->bind_param('ii', $payrollId, $employeeId);
+    $updateAdvancesStmt->execute();
+    
+    return [
+        'employee_id' => $employeeId,
+        'full_name' => $employee['full_name'],
+        'position' => $employee['title'],
+        'payroll_id' => $payrollId,
+        'total_hours' => $totalHours,
+        'regular_hours' => $regularHours,
+        'overtime_hours' => $overtimeHours,
+        'gross_pay' => $grossPay,
+        'deductions' => $deductions['total'],
+        'net_pay' => $netPay,
+        'deduction_breakdown' => $deductions['breakdown']
+    ];
 }
