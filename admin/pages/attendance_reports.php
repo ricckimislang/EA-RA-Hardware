@@ -56,6 +56,19 @@ $result = $stmt->get_result();
 
 // Export to CSV if requested
 if (isset($_GET['export']) && $_GET['export'] == 'csv') {
+    // Check if there are any records to export
+    if ($result->num_rows === 0) {
+        // Redirect back with error parameter
+        $redirectUrl = 'attendance_reports.php?';
+        $params = $_GET;
+        unset($params['export']); // Remove export parameter
+        $params['no_data'] = '1'; // Add no_data parameter
+        $redirectUrl .= http_build_query($params);
+        
+        header('Location: ' . $redirectUrl);
+        exit;
+    }
+
     header('Content-Type: text/csv');
     header('Content-Disposition: attachment; filename="attendance_report_' . date('Y-m-d') . '.csv"');
 
@@ -227,6 +240,23 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
         <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
         <script>
             $(document).ready(function() {
+                // Check if no_data parameter exists in URL
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.has('no_data')) {
+                    // Show SweetAlert notification
+                    Swal.fire({
+                        title: 'No Data to Export',
+                        text: 'There are no attendance records matching your filter criteria.',
+                        icon: 'warning',
+                        confirmButtonText: 'OK'
+                    });
+                    
+                    // Remove the parameter from URL without reloading the page
+                    urlParams.delete('no_data');
+                    const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+                    window.history.replaceState({}, document.title, newUrl);
+                }
+                
                 // Function to get badge class based on status
                 function getStatusBadgeClass(status) {
                     switch(status) {
@@ -344,6 +374,35 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                 // Handle filter form submission
                 $('form').on('submit', function(e) {
                     e.preventDefault();
+                    
+                    // Check if export button was clicked
+                    if ($(document.activeElement).attr('name') === 'export' && $(document.activeElement).val() === 'csv') {
+                        // Check if there are any records to export by looking at both:
+                        // 1. DataTable data (client-side filtered data)
+                        // 2. PHP result count (for initial page load)
+                        const table = $('#attendance-table').DataTable();
+                        const dataTableEmpty = table.page.info().recordsDisplay === 0;
+                        const phpResultsEmpty = <?php echo $result->num_rows === 0 ? 'true' : 'false'; ?>;
+                        
+                        if (dataTableEmpty || phpResultsEmpty) {
+                            // Show SweetAlert notification
+                            Swal.fire({
+                                title: 'No Data to Export',
+                                text: 'There are no attendance records matching your filter criteria.',
+                                icon: 'warning',
+                                confirmButtonText: 'OK'
+                            });
+                            return;
+                        }
+                        
+                        // Proceed with export - redirect to the same page with export parameter
+                        const params = new URLSearchParams($(this).serialize());
+                        params.set('export', 'csv');
+                        window.location.href = 'attendance_reports.php?' + params.toString();
+                        return;
+                    }
+                    
+                    // Normal filter submission
                     loadAttendanceData();
                 });
 
