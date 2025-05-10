@@ -26,7 +26,7 @@ $sql = "SELECT a.id, a.employee_id, e.full_name, p.title as position,
                DATE(a.time_in) as date, 
                TIME(a.time_in) as time_in, 
                TIME(a.time_out) as time_out, 
-               a.total_hours, a.status, a.notes
+               a.total_hours, a.minutes, a.status, a.notes
         FROM attendance_records a
         JOIN employees e ON a.employee_id = e.id
         JOIN positions p ON e.position_id = p.id
@@ -64,7 +64,7 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
         unset($params['export']); // Remove export parameter
         $params['no_data'] = '1'; // Add no_data parameter
         $redirectUrl .= http_build_query($params);
-        
+
         header('Location: ' . $redirectUrl);
         exit;
     }
@@ -75,7 +75,7 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
     $output = fopen('php://output', 'w');
 
     // Add CSV header
-    fputcsv($output, ['Employee', 'Position', 'Date', 'Time In', 'Time Out', 'Hours', 'Status', 'Notes']);
+    fputcsv($output, ['Employee', 'Position', 'Date', 'Time In', 'Time Out', 'Hours', 'Minutes', 'Status', 'Notes']);
 
     // Add data rows
     while ($row = $result->fetch_assoc()) {
@@ -86,6 +86,7 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
             $row['time_in'],
             $row['time_out'] ?? 'Not logged out',
             $row['total_hours'] ?? '-',
+            $row['minutes'] ?? '0',
             $row['status'],
             $row['notes'] ?? ''
         ]);
@@ -166,6 +167,7 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                                     <th>Time In</th>
                                     <th>Time Out</th>
                                     <th>Hours</th>
+                                    <th>Minutes</th>
                                     <th>Status</th>
                                     <th>Notes</th>
                                 </tr>
@@ -186,6 +188,7 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                 $summaryResult = $stmt->get_result();
 
                 $totalHours = 0;
+                $minutes = 0;
                 $presentCount = 0;
                 $lateCount = 0;
                 $halfDayCount = 0;
@@ -193,11 +196,19 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
 
                 while ($row = $summaryResult->fetch_assoc()) {
                     $totalHours += $row['total_hours'] ?? 0;
+                    $minutes += $row['minutes'] ?? 0;
 
                     if ($row['status'] == 'present') $presentCount++;
                     if ($row['status'] == 'late') $lateCount++;
                     if ($row['status'] == 'half-day') $halfDayCount++;
                     if ($row['status'] == 'absent') $absentCount++;
+                }
+
+                // Convert excess minutes to hours
+                if ($minutes >= 60) {
+                    $additionalHours = floor($minutes / 60);
+                    $totalHours += $additionalHours;
+                    $minutes = $minutes % 60;
                 }
                 ?>
                 <div class="row mt-4">
@@ -224,7 +235,7 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                                     </div>
                                 </div>
                                 <div class="text-center mt-3">
-                                    <div class="h4">Total Hours: <span class="summary-total-hours"><?php echo number_format($totalHours, 2); ?></span></div>
+                                    <div class="h4">Total Hours: <span class="summary-total-hours"><?php echo number_format($totalHours, 0); ?></span> hours, <span class="summary-total-minutes"><?php echo $minutes ?? 0; ?></span> minutes</div>
                                 </div>
                             </div>
                         </div>
@@ -250,21 +261,26 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                         icon: 'warning',
                         confirmButtonText: 'OK'
                     });
-                    
+
                     // Remove the parameter from URL without reloading the page
                     urlParams.delete('no_data');
                     const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
                     window.history.replaceState({}, document.title, newUrl);
                 }
-                
+
                 // Function to get badge class based on status
                 function getStatusBadgeClass(status) {
-                    switch(status) {
-                        case 'present': return 'bg-success';
-                        case 'late': return 'bg-warning text-dark';
-                        case 'half-day': return 'bg-info text-dark';
-                        case 'absent': return 'bg-danger';
-                        default: return 'bg-secondary';
+                    switch (status) {
+                        case 'present':
+                            return 'bg-success';
+                        case 'late':
+                            return 'bg-warning text-dark';
+                        case 'half-day':
+                            return 'bg-info text-dark';
+                        case 'absent':
+                            return 'bg-danger';
+                        default:
+                            return 'bg-secondary';
                     }
                 }
 
@@ -314,9 +330,10 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                                     formatDate(row.date),
                                     formatTime(row.time_in),
                                     formatTime(row.time_out),
-                                    row.total_hours ? parseFloat(row.total_hours).toFixed(2) : '-',
+                                    row.total_hours ? parseFloat(row.total_hours).toFixed(0) : '-',
+                                    row.minutes ? parseFloat(row.minutes).toFixed(0) : '0',
                                     `<span class="badge ${getStatusBadgeClass(row.status)}">${row.status.charAt(0).toUpperCase() + row.status.slice(1)}</span>`,
-                                    row.notes || ''
+                                    row.notes || 'N/A'
                                 ]);
                             });
 
@@ -336,7 +353,8 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                         $('.summary-late').text(summary.lateCount);
                         $('.summary-half-day').text(summary.halfDayCount);
                         $('.summary-absent').text(summary.absentCount);
-                        $('.summary-total-hours').text(summary.totalHours.toFixed(2));
+                        $('.summary-total-hours').text(summary.totalHours.toFixed(0));
+                        $('.summary-total-minutes').text(summary.totalMinutes);
                     }
                 }
 
@@ -350,7 +368,9 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                     "autoWidth": false,
                     "responsive": true,
                     "pageLength": 10,
-                    "order": [[2, 'desc']],
+                    "order": [
+                        [2, 'desc']
+                    ],
                     "language": {
                         "search": "Filter records...",
                         "lengthMenu": "Show _MENU_ entries",
@@ -374,7 +394,7 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                 // Handle filter form submission
                 $('form').on('submit', function(e) {
                     e.preventDefault();
-                    
+
                     // Check if export button was clicked
                     if ($(document.activeElement).attr('name') === 'export' && $(document.activeElement).val() === 'csv') {
                         // Check if there are any records to export by looking at both:
@@ -383,7 +403,7 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                         const table = $('#attendance-table').DataTable();
                         const dataTableEmpty = table.page.info().recordsDisplay === 0;
                         const phpResultsEmpty = <?php echo $result->num_rows === 0 ? 'true' : 'false'; ?>;
-                        
+
                         if (dataTableEmpty || phpResultsEmpty) {
                             // Show SweetAlert notification
                             Swal.fire({
@@ -394,14 +414,14 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                             });
                             return;
                         }
-                        
+
                         // Proceed with export - redirect to the same page with export parameter
                         const params = new URLSearchParams($(this).serialize());
                         params.set('export', 'csv');
                         window.location.href = 'attendance_reports.php?' + params.toString();
                         return;
                     }
-                    
+
                     // Normal filter submission
                     loadAttendanceData();
                 });

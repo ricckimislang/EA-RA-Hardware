@@ -96,18 +96,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['qr_hash'])) {
                 } else {
                     // Calculate hours worked
                     $interval = $timeIn->diff($now);
-                    $totalWholeHours = ($interval->days * 24) + $interval->h;
+                    $totalHours = ($interval->days * 24) + $interval->h;
+                    $minutes = $interval->i;
+                    $totalHoursWithMinutes = $totalHours + ($minutes / 60);
+                    
+                    // Check if work period spans lunch time (12:00 PM - 1:00 PM)
+                    $lunchStart = new DateTime($timeInDate . ' 12:00:00');
+                    $lunchEnd = new DateTime($timeInDate . ' 13:00:00');
+                    
+                    // Deduct lunch hour if work period includes lunch time
+                    if ($timeIn <= $lunchEnd && $now >= $lunchStart) {
+                        // Calculate lunch overlap
+                        $lunchDeduction = 1.0; // Default full hour
+                        
+                        // If employee arrived during lunch
+                        if ($timeIn > $lunchStart) {
+                            $lunchOverlap = ($lunchEnd->getTimestamp() - $timeIn->getTimestamp()) / 3600;
+                            $lunchDeduction = min($lunchDeduction, $lunchOverlap);
+                        }
+                        
+                        // If employee left during lunch
+                        if ($now < $lunchEnd) {
+                            $lunchOverlap = ($now->getTimestamp() - $lunchStart->getTimestamp()) / 3600;
+                            $lunchDeduction = min($lunchDeduction, $lunchOverlap);
+                        }
+                        
+                        // Apply lunch deduction
+                        $lunchDeductionHours = floor($lunchDeduction);
+                        $lunchDeductionMinutes = round(($lunchDeduction - $lunchDeductionHours) * 60);
+                        
+                        $totalHours -= $lunchDeductionHours;
+                        $minutes -= $lunchDeductionMinutes;
+                        
+                        // Handle negative minutes
+                        if ($minutes < 0) {
+                            $totalHours--;
+                            $minutes += 60;
+                        }
+                        
+                        $totalHoursWithMinutes -= $lunchDeduction;
+                    }
+                    
+                    // Round to 2 decimal places
+                    $totalHoursWithMinutes = round($totalHoursWithMinutes, 2);
                     
                     // Update attendance record with time out and hours worked
-                    $updateQuery = "UPDATE attendance_records SET time_out = ?, total_hours = ? WHERE id = ?";
+                    $updateQuery = "UPDATE attendance_records SET time_out = ?, total_hours = ?, minutes = ? WHERE id = ?";
                     $updateStmt = $conn->prepare($updateQuery);
-                    $updateStmt->bind_param("sdi", $currentDatetime, $totalWholeHours, $recordId);
+                    $updateStmt->bind_param("sidi", $currentDatetime, $totalHours, $minutes, $recordId);
                     
                     if ($updateStmt->execute()) {
                         $response = [
                             'status' => 'success',
                             'message' => "Time out recorded for $employeeName at " . date('h:i A', strtotime($currentDatetime)) . 
-                                         ". Total hours: " . $totalWholeHours
+                                         ". Total hours: " . $totalHours . " hours, " . $minutes . " minutes"
                         ];
                     } else {
                         $response = [

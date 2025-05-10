@@ -1,0 +1,1 @@
+ALTER TABLE `attendance_records` ADD COLUMN `minutes` DECIMAL(5,2) DEFAULT 0 AFTER `total_hours`; 

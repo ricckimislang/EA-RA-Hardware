@@ -22,7 +22,7 @@ $sql = "SELECT a.id, a.employee_id, e.full_name, p.title as position,
                DATE(a.time_in) as date, 
                TIME(a.time_in) as time_in, 
                TIME(a.time_out) as time_out, 
-               a.total_hours, a.status, a.notes
+               a.total_hours, a.minutes, a.status, a.notes
         FROM attendance_records a
         JOIN employees e ON a.employee_id = e.id
         JOIN positions p ON e.position_id = p.id
@@ -58,7 +58,8 @@ $response = [
         'lateCount' => 0,
         'halfDayCount' => 0,
         'absentCount' => 0,
-        'totalHours' => 0
+        'totalHours' => 0,
+        'totalMinutes' => 0
     ]
 ];
 
@@ -84,6 +85,14 @@ while ($row = $result->fetch_assoc()) {
 
     // Add to total hours
     $response['summary']['totalHours'] += $row['total_hours'] ?? 0;
+    $response['summary']['totalMinutes'] += $row['minutes'] ?? 0;
+}
+
+// Convert excess minutes to hours
+if ($response['summary']['totalMinutes'] >= 60) {
+    $additionalHours = floor($response['summary']['totalMinutes'] / 60);
+    $response['summary']['totalHours'] += $additionalHours;
+    $response['summary']['totalMinutes'] = $response['summary']['totalMinutes'] % 60;
 }
 
 // Close database connection
