@@ -165,6 +165,86 @@
     <script src="admin/js/notifications.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Anti-brute force protection setup
+            const MAX_FAILED_ATTEMPTS = 5;
+            const COOLDOWN_TIME = 5 * 60 * 1000; // 5 minutes in milliseconds
+            
+            // Check if user is locked out
+            function checkLockout() {
+                const loginData = JSON.parse(localStorage.getItem('loginAttempts') || '{"attempts": 0, "lockedUntil": 0}');
+                const currentTime = new Date().getTime();
+                
+                if (loginData.lockedUntil > currentTime) {
+                    // User is locked out
+                    const remainingTime = Math.ceil((loginData.lockedUntil - currentTime) / 1000 / 60);
+                    showNotification(`Too many failed login attempts. Please try again in ${remainingTime} minute(s).`, 'error');
+                    disableLoginForm(loginData.lockedUntil);
+                    return true;
+                }
+                
+                // Reset if cooldown has expired
+                if (loginData.attempts >= MAX_FAILED_ATTEMPTS && loginData.lockedUntil < currentTime) {
+                    loginData.attempts = 0;
+                    localStorage.setItem('loginAttempts', JSON.stringify(loginData));
+                }
+                
+                return false;
+            }
+            
+            // Disable login form and display countdown
+            function disableLoginForm(unlockTime) {
+                const loginButton = document.querySelector('.btn-login');
+                const usernameInput = document.getElementById('username');
+                const passwordInput = document.getElementById('password');
+                
+                loginButton.disabled = true;
+                usernameInput.disabled = true;
+                passwordInput.disabled = true;
+                
+                // Start countdown timer
+                const countdownInterval = setInterval(() => {
+                    const currentTime = new Date().getTime();
+                    if (unlockTime <= currentTime) {
+                        clearInterval(countdownInterval);
+                        loginButton.disabled = false;
+                        usernameInput.disabled = false;
+                        passwordInput.disabled = false;
+                        loginButton.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+                        return;
+                    }
+                    
+                    const remainingSeconds = Math.ceil((unlockTime - currentTime) / 1000);
+                    const minutes = Math.floor(remainingSeconds / 60);
+                    const seconds = remainingSeconds % 60;
+                    loginButton.innerHTML = `<i class="fas fa-lock"></i> Locked (${minutes}:${seconds < 10 ? '0' : ''}${seconds})`;
+                }, 1000);
+            }
+            
+            // Record a failed login attempt
+            function recordFailedAttempt() {
+                const loginData = JSON.parse(localStorage.getItem('loginAttempts') || '{"attempts": 0, "lockedUntil": 0}');
+                loginData.attempts++;
+                
+                if (loginData.attempts >= MAX_FAILED_ATTEMPTS) {
+                    const lockUntil = new Date().getTime() + COOLDOWN_TIME;
+                    loginData.lockedUntil = lockUntil;
+                    showNotification(`Too many failed login attempts. Your account is locked for ${COOLDOWN_TIME/60000} minutes.`, 'error');
+                    disableLoginForm(lockUntil);
+                } else {
+                    showNotification(`Login failed. ${MAX_FAILED_ATTEMPTS - loginData.attempts} attempts remaining before lockout.`, 'warning');
+                }
+                
+                localStorage.setItem('loginAttempts', JSON.stringify(loginData));
+            }
+            
+            // Reset login attempts on successful login
+            function resetLoginAttempts() {
+                localStorage.setItem('loginAttempts', JSON.stringify({"attempts": 0, "lockedUntil": 0}));
+            }
+            
+            // Check for lockout on page load
+            checkLockout();
+            
             // Password visibility toggle
             const togglePassword = document.getElementById('togglePassword');
             const password = document.getElementById('password');
@@ -181,6 +261,12 @@
             
             $('#loginForm').on('submit', function(e) {
                 e.preventDefault();
+                
+                // Check if user is locked out
+                if (checkLockout()) {
+                    return false;
+                }
+                
                 const formElement = document.getElementById('loginForm');
                 const formData = new FormData(formElement);
 
@@ -191,6 +277,7 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
+                            resetLoginAttempts(); // Reset attempts on successful login
                             showNotification(data.message, 'success');
                             setTimeout(() => {
                                 switch (data.usertype) {
@@ -208,7 +295,7 @@
                                 }
                             }, 1000);
                         } else {
-                            showNotification(data.message || 'Login failed. Please try again.', 'error');
+                            recordFailedAttempt(); // Record failed attempt
                         }
                     })
                     .catch(err => {

@@ -103,6 +103,16 @@ if (!isset($_SESSION['admin_access']) && (!isset($_POST['access_password']) || $
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
+                                <div class="password-requirements mt-2 small">
+                                    <p class="mb-1">Password must contain:</p>
+                                    <ul class="ps-3">
+                                        <li id="length-check"><span class="text-danger">✗</span> At least 8 characters</li>
+                                        <li id="uppercase-check"><span class="text-danger">✗</span> At least one uppercase letter</li>
+                                        <li id="lowercase-check"><span class="text-danger">✗</span> At least one lowercase letter</li>
+                                        <li id="number-check"><span class="text-danger">✗</span> At least one number</li>
+                                        <li id="special-check"><span class="text-danger">✗</span> At least one special character</li>
+                                    </ul>
+                                </div>
                             </div>
 
                             <div class="mb-3">
@@ -146,6 +156,36 @@ if (!isset($_SESSION['admin_access']) && (!isset($_POST['access_password']) || $
             this.querySelector('i').classList.toggle('fa-eye-slash');
         });
 
+        // Real-time password validation
+        document.getElementById('password').addEventListener('input', function() {
+            const password = this.value;
+            
+            // Length check
+            const lengthValid = password.length >= 8;
+            document.getElementById('length-check').innerHTML = 
+                (lengthValid ? '<span class="text-success">✓</span>' : '<span class="text-danger">✗</span>') + ' At least 8 characters';
+            
+            // Uppercase check
+            const uppercaseValid = /[A-Z]/.test(password);
+            document.getElementById('uppercase-check').innerHTML = 
+                (uppercaseValid ? '<span class="text-success">✓</span>' : '<span class="text-danger">✗</span>') + ' At least one uppercase letter';
+            
+            // Lowercase check
+            const lowercaseValid = /[a-z]/.test(password);
+            document.getElementById('lowercase-check').innerHTML = 
+                (lowercaseValid ? '<span class="text-success">✓</span>' : '<span class="text-danger">✗</span>') + ' At least one lowercase letter';
+            
+            // Number check
+            const numberValid = /[0-9]/.test(password);
+            document.getElementById('number-check').innerHTML = 
+                (numberValid ? '<span class="text-success">✓</span>' : '<span class="text-danger">✗</span>') + ' At least one number';
+            
+            // Special character check
+            const specialValid = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+            document.getElementById('special-check').innerHTML = 
+                (specialValid ? '<span class="text-success">✓</span>' : '<span class="text-danger">✗</span>') + ' At least one special character';
+        });
+
         // Form validation
         document.getElementById('registrationForm').addEventListener('submit', function(e) {
             e.preventDefault(); // Prevent default form submission
@@ -161,6 +201,26 @@ if (!isset($_SESSION['admin_access']) && (!isset($_POST['access_password']) || $
             }
             if (password.length < 8) {
                 toastr.error('Password must be at least 8 characters long!');
+                isValid = false;
+            }
+            // Check for uppercase letter
+            if (!/[A-Z]/.test(password)) {
+                toastr.error('Password must contain at least one uppercase letter!');
+                isValid = false;
+            }
+            // Check for lowercase letter
+            if (!/[a-z]/.test(password)) {
+                toastr.error('Password must contain at least one lowercase letter!');
+                isValid = false;
+            }
+            // Check for number
+            if (!/[0-9]/.test(password)) {
+                toastr.error('Password must contain at least one number!');
+                isValid = false;
+            }
+            // Check for special character
+            if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+                toastr.error('Password must contain at least one special character!');
                 isValid = false;
             }
 
