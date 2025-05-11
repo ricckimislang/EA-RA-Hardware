@@ -81,33 +81,36 @@ if ($debug) {
                                     <select class="form-control" id="pay_period_dropdown" required>
                                         <option value="">Select a pay period</option>
                                         <?php
-                                        // Generate pay periods for current month and next month only
-                                        $currentDate = new DateTime();
-                                        for ($i = 0; $i < 2; $i++) {
-                                            $monthDate = clone $currentDate;
-                                            $monthDate->modify("+$i month");
-                                            $monthName = $monthDate->format('F Y');
+                                        // Generate pay periods for any month and year
+                                        $currentYear = date('Y');
+                                        $startYear = $currentYear - 1; // Allow selection from previous year
+                                        $endYear = $currentYear + 1;   // Allow selection up to next year
 
-                                            // First half of month (1-15)
-                                            $firstStart = clone $monthDate;
-                                            $firstStart->modify('first day of this month');
-                                            $firstEnd = clone $firstStart;
-                                            $firstEnd->modify('+14 days');
+                                        for ($year = $startYear; $year <= $endYear; $year++) {
+                                            for ($month = 1; $month <= 12; $month++) {
+                                                $monthDate = new DateTime("$year-$month-01");
+                                                $monthName = $monthDate->format('F Y');
 
-                                            // Second half of month (16-end)
-                                            $secondStart = clone $firstEnd;
-                                            $secondStart->modify('+1 day');
-                                            $secondEnd = clone $monthDate;
-                                            $secondEnd->modify('last day of this month');
+                                                // First half of month (1-15)
+                                                $firstStart = clone $monthDate;
+                                                $firstEnd = clone $firstStart;
+                                                $firstEnd->modify('+14 days');
 
-                                            // Format for display and value
-                                            $firstStartStr = $firstStart->format('Y-m-d');
-                                            $firstEndStr = $firstEnd->format('Y-m-d');
-                                            $secondStartStr = $secondStart->format('Y-m-d');
-                                            $secondEndStr = $secondEnd->format('Y-m-d');
+                                                // Second half of month (16-end)
+                                                $secondStart = clone $firstEnd;
+                                                $secondStart->modify('+1 day');
+                                                $secondEnd = clone $monthDate;
+                                                $secondEnd->modify('last day of this month');
 
-                                            echo "<option value=\"$firstStartStr,$firstEndStr\">" . $monthName . " (1-15)</option>";
-                                            echo "<option value=\"$secondStartStr,$secondEndStr\">" . $monthName . " (16-" . $secondEnd->format('d') . ")</option>";
+                                                // Format for display and value
+                                                $firstStartStr = $firstStart->format('Y-m-d');
+                                                $firstEndStr = $firstEnd->format('Y-m-d');
+                                                $secondStartStr = $secondStart->format('Y-m-d');
+                                                $secondEndStr = $secondEnd->format('Y-m-d');
+
+                                                echo "<option value=\"$firstStartStr,$firstEndStr\">" . $monthName . " (1-15)</option>";
+                                                echo "<option value=\"$secondStartStr,$secondEndStr\">" . $monthName . " (16-" . $secondEnd->format('d') . ")</option>";
+                                            }
                                         }
                                         ?>
                                     </select>
