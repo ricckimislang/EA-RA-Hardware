@@ -64,7 +64,7 @@ try {
         $summary['total_products']++;
         $summary['total_value'] += $product['stockLevel'] * $product['costPrice'];
 
-        if ($product['stockLevel'] <= 0) {
+        if ($product['stockLevel'] <= 5) {
             $summary['out_of_stock']++;
         } elseif ($product['stockLevel'] <= $product['lowStockThreshold']) {
             $summary['low_stock']++;

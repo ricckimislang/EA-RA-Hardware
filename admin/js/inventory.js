@@ -94,7 +94,7 @@ function initProductsTable() {
           let levelClass = "normal";
 
           if (type === "display") {
-            if (!isNaN(stock) && stock <= 0) levelClass = "out";
+            if (!isNaN(stock) && stock <= 5) levelClass = "out";
             else if (!isNaN(stock) && !isNaN(threshold) && stock <= threshold)
               levelClass = "low";
 
