@@ -172,7 +172,7 @@ function loadSalesData(additionalFilters = {}) {
                     // Print all transaction IDs to ensure they exist
                     console.log('All transaction IDs:', data.data.map(item => item.transaction_id));
                 }
-                
+
                 updateSalesTable(data.data);
                 updateSummarySection(data.summary);
                 updateTopProducts(data.topProducts);
@@ -205,7 +205,7 @@ function updateCashierFilter(cashiers) {
     // Check if filter already exists
     let cashierFilter = document.getElementById('cashier-filter');
     const currentValue = cashierFilter ? cashierFilter.value : '';
-    
+
     // If filter doesn't exist, create the container
     if (!cashierFilter) {
         const cashierFilterDiv = document.createElement('div');
@@ -213,10 +213,10 @@ function updateCashierFilter(cashiers) {
         cashierFilterDiv.id = 'cashier-filter-container';
         filterContainer.appendChild(cashierFilterDiv);
     }
-    
+
     // Get or create the container
     const filterContainerDiv = document.getElementById('cashier-filter-container');
-    
+
     // Create the select dropdown HTML with all cashiers
     const selectHtml = `
         <div class="input-group">
@@ -227,12 +227,12 @@ function updateCashierFilter(cashiers) {
             </select>
         </div>
     `;
-    
+
     // Update the container content
     filterContainerDiv.innerHTML = selectHtml;
-    
+
     // Re-attach event listener
-    document.getElementById('cashier-filter').addEventListener('change', function() {
+    document.getElementById('cashier-filter').addEventListener('change', function () {
         loadSalesData();
     });
 }
@@ -253,11 +253,8 @@ function updateSalesTable(salesData) {
                 sale.sku,
                 new Date(sale.sale_timestamp).toLocaleString('en-US', {
                     year: 'numeric',
-                    month: 'numeric',
-                    day: 'numeric',
-                    hour: 'numeric',
-                    minute: 'numeric',
-                    hour12: true
+                    month: 'long',
+                    day: 'numeric'
                 }),
                 sale.cashier_name,
                 sale.product_name,
