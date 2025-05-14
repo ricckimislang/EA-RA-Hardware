@@ -119,7 +119,7 @@
             <div class="col-md-12">
                 <div class="card chart-card">
                     <div class="card-body">
-                        <h5 class="card-title">Employee Salary Performance</h5>
+                        <h5 class="card-title">Employee Salary Distribution</h5>
                         <div class="chart-container">
                             <canvas id="employeeSalaryChart"></canvas>
                         </div>

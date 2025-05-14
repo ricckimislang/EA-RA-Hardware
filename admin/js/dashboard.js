@@ -762,7 +762,7 @@ function initializeEmployeeSalaryChart(data) {
         plugins: {
           title: {
             display: true,
-            text: "Employee Salary Performance (Bi-Monthly)",
+            text: "Employee Salary Distribution (Bi-Monthly)",
             font: {
               size: 16,
               weight: 'bold'

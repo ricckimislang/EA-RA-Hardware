@@ -381,7 +381,7 @@ try {
         SELECT c.name as category,
                SUM(CASE WHEN p.stock_level > p.reorder_point THEN 1 ELSE 0 END) as normal_stock,
                SUM(CASE WHEN p.stock_level <= p.reorder_point AND p.stock_level > 0 THEN 1 ELSE 0 END) as low_stock,
-               SUM(CASE WHEN p.stock_level = 0 THEN 1 ELSE 0 END) as out_of_stock
+               SUM(CASE WHEN p.stock_level = 5 THEN 1 ELSE 0 END) as out_of_stock
         FROM products p
         JOIN categories c ON p.category_id = c.category_id
         GROUP BY p.category_id

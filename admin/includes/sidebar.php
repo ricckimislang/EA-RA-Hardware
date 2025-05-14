@@ -21,6 +21,14 @@
                 </a>
             </li>
 
+            <li>
+                <a href="http://localhost/ea-ra-hardware/super_admin/pages/cash_advance.php" class="<?php echo (basename($_SERVER['PHP_SELF']) == 'cash_advance.php') ? 'active' : ''; ?>">
+                    <i class="fas fa-hand-holding-usd"></i>
+                    <span>Cash Advance</span>
+                </a>
+            </li>
+
+
 
             <li>
                 <a href="http://localhost/ea-ra-hardware/admin/pages/inventory.php" class="<?php echo (strpos($_SERVER['PHP_SELF'], 'inventory')) ? 'active' : ''; ?>">
@@ -43,7 +51,12 @@
                 </a>
             </li>
 
-
+            <li>
+                <a href="http://localhost/ea-ra-hardware/admin/pages/sales_history.php" class="<?php echo (strpos($_SERVER['PHP_SELF'], 'sales_history')) ? 'active' : ''; ?>">
+                    <i class="fas fa-history"></i>
+                    <span>Sales History</span>
+                </a>
+            </li>
 
             <li>
                 <a href="http://localhost/ea-ra-hardware/admin/pages/attendance_reports.php" class="<?php echo (strpos($_SERVER['PHP_SELF'], 'attendance_reports')) ? 'active' : ''; ?>">
