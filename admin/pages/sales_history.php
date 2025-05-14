@@ -82,6 +82,7 @@ include_once '../includes/head.php';
                                     <th>Price</th>
                                     <th>Discount</th>
                                     <th>Total</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -89,7 +90,7 @@ include_once '../includes/head.php';
                             </tbody>
                             <tfoot>
                                 <tr>
-                                    <th colspan="8" class="text-end">Total Sales Amount:</th>
+                                    <th colspan="9" class="text-end">Total Sales Amount:</th>
                                     <th id="totalSales">₱0.00</th>
                                 </tr>
                             </tfoot>
@@ -139,6 +140,125 @@ include_once '../includes/head.php';
                             </ul>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Return Processing Modal -->
+    <div class="modal fade" id="returnModal" tabindex="-1" aria-labelledby="returnModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="returnModalLabel">Process Return</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="transaction-details mb-4">
+                        <h6>Transaction Details</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Transaction ID:</strong> <span id="return-transaction-id"></span></p>
+                                <p><strong>Product:</strong> <span id="return-product-name"></span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Quantity:</strong> <span id="return-quantity"></span></p>
+                                <p><strong>Total Amount:</strong> <span id="return-total"></span></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <form id="return-form">
+                        <input type="hidden" name="transaction_id" id="return-transaction-id-input">
+                        <input type="hidden" name="sku" id="return-sku-input">
+                        
+                        <div class="mb-3">
+                            <label for="return-type" class="form-label">Return Type</label>
+                            <select class="form-select" id="return-type" name="return_type" required>
+                                <option value="refund">Refund</option>
+                                <option value="exchange">Exchange</option>
+                                <option value="store_credit">Store Credit</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="return-quantity-input" class="form-label">Return Quantity</label>
+                            <input type="number" class="form-control" id="return-quantity-input" name="return_quantity" min="1" required>
+                            <div class="form-text">Enter the quantity being returned</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="product-condition" class="form-label">Product Condition</label>
+                            <select class="form-select" id="product-condition" name="product_condition" required>
+                                <option value="">Select Product Condition</option>
+                                <option value="good">Good Condition</option>
+                                <option value="minor_damage">Minor Damage</option>
+                                <option value="major_damage">Major Damage</option>
+                                <option value="defective">Defective</option>
+                            </select>
+                            <div class="form-text">Describe the current condition of the product being returned</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="return-reason" class="form-label">Return Reason</label>
+                            <select class="form-select" id="return-reason" name="return_reason" required>
+                                <option value="">Select a reason</option>
+                                <option value="damaged">Product Damaged</option>
+                                <option value="defective">Product Defective</option>
+                                <option value="other">Other (Please Specify)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="return-notes" class="form-label">Additional Notes</label>
+                            <textarea class="form-control" id="return-notes" name="notes" rows="3"></textarea>
+                        </div>
+                        
+                        <div id="customer-fields">
+                            <div class="mb-3">
+                                <label for="customer-name" class="form-label">Customer Name</label>
+                                <input type="text" class="form-control" id="customer-name" name="customer_name">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="customer-contact" class="form-label">Contact Number</label>
+                                <input type="text" class="form-control" id="customer-contact" name="contact_number">
+                            </div>
+                        </div>
+                        
+                        <div id="refund-fields">
+                            <div class="mb-3">
+                                <label for="refund-method" class="form-label">Refund Method</label>
+                                <select class="form-select" id="refund-method" name="refund_method">
+                                    <option value="cash">Cash</option>
+                                    
+                                    <option value="store_credit">Store Credit</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div id="store-credit-fields" class="d-none">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> A store credit memo will be generated. The customer can use this credit for future purchases.
+                            </div>
+                        </div>
+                        
+                        <div id="exchange-fields" class="d-none">
+                            <div class="mb-3">
+                                <label for="exchange-sku" class="form-label">Exchange SKU</label>
+                                <input type="text" class="form-control" id="exchange-sku" name="exchange_sku">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="exchange-qty" class="form-label">Exchange Quantity</label>
+                                <input type="number" class="form-control" id="exchange-qty" name="exchange_quantity" min="1">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" form="return-form" class="btn btn-primary">Process Return</button>
                 </div>
             </div>
         </div>

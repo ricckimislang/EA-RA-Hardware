@@ -37,6 +37,13 @@
             </li>
 
             <li>
+                <a href="http://localhost/ea-ra-hardware/admin/pages/store_credits.php" class="<?php echo (strpos($_SERVER['PHP_SELF'], 'store_credits')) ? 'active' : ''; ?>">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Store Credits</span>
+                </a>
+            </li>
+
+            <li>
                 <a href="http://localhost/ea-ra-hardware/admin/pages/employees.php" class="<?php echo (strpos($_SERVER['PHP_SELF'], 'employees')) ? 'active' : ''; ?>">
                     <i class="fas fa-users"></i>
                     <span>Employees</span>

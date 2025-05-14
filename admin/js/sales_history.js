@@ -43,7 +43,8 @@ function initSalesTable() {
             { title: "Quantity", data: 5 },
             { title: "Price", data: 6 },
             { title: "Discount", data: 7 },
-            { title: "Total", data: 8 }
+            { title: "Total", data: 8 },
+            { title: "Actions", data: 9 }
         ],
         columnDefs: [
             { targets: '_all', visible: true }
@@ -128,6 +129,100 @@ function setupEventListeners() {
     // Cashier filter change
     $(document).on('change', '#cashier-filter', function () {
         loadSalesData();
+    });
+    
+    // Process Return button click handler
+    $(document).on('click', '.btn-process-return', function() {
+        const transactionId = $(this).data('transaction-id');
+        const row = $(this).closest('tr');
+        const rowData = salesTable.row(row).data();
+        
+        // Populate the return modal with transaction details
+        $('#return-transaction-id').text(transactionId);
+        $('#return-product-name').text(rowData[4]); // Product name is at index 4
+        $('#return-quantity').text(rowData[5]);     // Quantity is at index 5
+        $('#return-total').text(rowData[8]);        // Total is at index 8
+        
+        // Set max quantity for return
+        $('#return-quantity-input').attr('max', rowData[5]);
+        $('#return-quantity-input').val(rowData[5]); // Default to full quantity
+        
+        // Set the hidden input values
+        $('#return-transaction-id-input').val(transactionId);
+        $('#return-sku-input').val(rowData[1]);     // SKU is at index 1
+        
+        // Show the modal
+        $('#returnModal').modal('show');
+    });
+    
+    // Return form submission
+    $('#return-form').on('submit', function(e) {
+        e.preventDefault();
+        
+        // Add validation for customer name and contact for store credit
+        if ($('#return-type').val() === 'store_credit') {
+            if (!$('#customer-name').val().trim()) {
+                showError('Customer name is required for store credit');
+                return;
+            }
+            if (!$('#customer-contact').val().trim()) {
+                showError('Customer contact is required for store credit');
+                return;
+            }
+        }
+        
+        const formData = new FormData(this);
+        
+        // Process the return via AJAX
+        fetch('api/process_return.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Close modal and reload data
+                $('#returnModal').modal('hide');
+                
+                if (data.data && data.data.credit_code) {
+                    // For store credit, open the credit memo in a new window
+                    showSuccess('Store credit issued successfully. Opening credit memo...');
+                    window.open(`print_credit_memo.php?code=${data.data.credit_code}`, '_blank');
+                } else {
+                    showSuccess(data.message || 'Return processed successfully');
+                }
+                
+                loadSalesData(); // Reload table data
+            } else {
+                showError(data.message || 'Failed to process return');
+            }
+        })
+        .catch(error => {
+            showError('Error processing return: ' + error.message);
+        });
+    });
+    
+    // Return type change handler
+    $('#return-type').on('change', function() {
+        const returnType = $(this).val();
+        
+        // Show/hide appropriate fields based on return type
+        if (returnType === 'exchange') {
+            $('#exchange-fields').removeClass('d-none');
+            $('#refund-fields').addClass('d-none');
+            $('#customer-fields').removeClass('d-none');
+            $('#store-credit-fields').addClass('d-none');
+        } else if (returnType === 'store_credit') {
+            $('#exchange-fields').addClass('d-none');
+            $('#refund-fields').addClass('d-none');
+            $('#customer-fields').removeClass('d-none');
+            $('#store-credit-fields').removeClass('d-none');
+        } else {
+            $('#exchange-fields').addClass('d-none');
+            $('#customer-fields').removeClass('d-none');
+            $('#refund-fields').removeClass('d-none');
+            $('#store-credit-fields').addClass('d-none');
+        }
     });
 }
 
@@ -259,9 +354,12 @@ function updateSalesTable(salesData) {
                 sale.cashier_name,
                 sale.product_name,
                 sale.quantity_sold,
-                '₱' + formatNumber(sale.sale_price),
+                '₱' + formatNumber(sale.sale_price),    
                 sale.discount_applied + '%',
-                '₱' + formatNumber(sale.sale_price * sale.quantity_sold * (1 - sale.discount_applied / 100))
+                '₱' + formatNumber(sale.sale_price * sale.quantity_sold * (1 - sale.discount_applied / 100)),
+                `<button class="btn btn-sm btn-outline-primary btn-process-return" data-transaction-id="${sale.transaction_id}">
+                    <i class="fas fa-exchange-alt"></i> Process Return
+                </button>`
             ]);
         });
     }
@@ -383,6 +481,18 @@ function showError(message) {
         toastr.error(message, 'Error');
     } else {
         alert('Error: ' + message);
+    }
+}
+
+/**
+ * Show success message using toast notification
+ * @param {string} message - Success message to display
+ */
+function showSuccess(message) {
+    if (typeof toastr !== 'undefined') {
+        toastr.success(message, 'Success');
+    } else {
+        alert('Success: ' + message);
     }
 }
 
