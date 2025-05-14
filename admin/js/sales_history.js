@@ -21,7 +21,7 @@ function initSalesTable() {
     salesTable = $('#salesTable').DataTable({
         responsive: true,
         pageLength: 25,
-        order: [[1, 'desc']], // Sort by date column (index 1) in descending order
+        order: [[2, 'desc']], // Sort by date column (index 2) in descending order
         language: {
             search: "Search records:",
             lengthMenu: "Show _MENU_ records per page",
@@ -33,6 +33,25 @@ function initSalesTable() {
                 previous: "Previous"
             }
         },
+        // Ensure all columns are visible and properly defined
+        columns: [
+            { title: "Transaction ID", data: 0 },
+            { title: "SKU", data: 1 },
+            { title: "Date & Time", data: 2 },
+            { title: "Cashier", data: 3 },
+            { title: "Product", data: 4 },
+            { title: "Quantity", data: 5 },
+            { title: "Price", data: 6 },
+            { title: "Discount", data: 7 },
+            { title: "Total", data: 8 }
+        ],
+        columnDefs: [
+            { targets: '_all', visible: true }
+        ],
+        // Disable row number column
+        rowReorder: false,
+        // Turn off auto-index column
+        autoWidth: true,
         // Add export functionality
         dom: 'Bfrtip',
         buttons: [
@@ -41,7 +60,7 @@ function initSalesTable() {
                 text: '<i class="fas fa-file-excel"></i> Export to Excel',
                 className: 'btn btn-sm btn-success me-2',
                 exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5, 6, 7] // Export all visible columns
+                    columns: [0, 1, 2, 3, 4, 5, 6, 7, 8] // Export all visible columns including Total
                 },
                 title: 'Sales History Report'
             },
@@ -50,7 +69,7 @@ function initSalesTable() {
                 text: '<i class="fas fa-print"></i> Print',
                 className: 'btn btn-sm btn-info',
                 exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5, 6, 7] // Print all visible columns
+                    columns: [0, 1, 2, 3, 4, 5, 6, 7, 8] // Print all visible columns including Total
                 },
                 title: 'Sales History Report',
                 customize: function (win) {
@@ -147,6 +166,13 @@ function loadSalesData(additionalFilters = {}) {
         })
         .then(data => {
             if (data.success) {
+                // Debug: Log the first record to see if transaction_id exists
+                if (data.data.length > 0) {
+                    console.log('First sales record:', data.data[0]);
+                    // Print all transaction IDs to ensure they exist
+                    console.log('All transaction IDs:', data.data.map(item => item.transaction_id));
+                }
+                
                 updateSalesTable(data.data);
                 updateSummarySection(data.summary);
                 updateTopProducts(data.topProducts);
@@ -223,6 +249,7 @@ function updateSalesTable(salesData) {
     if (salesData.length > 0) {
         salesData.forEach(sale => {
             salesTable.row.add([
+                sale.transaction_id,
                 sale.sku,
                 new Date(sale.sale_timestamp).toLocaleString('en-US', {
                     year: 'numeric',

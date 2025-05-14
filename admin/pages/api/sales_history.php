@@ -29,7 +29,9 @@ try {
     $productId = isset($_GET['product_id']) ? (int)$_GET['product_id'] : 0;
 
     // Build SQL with JOIN to get product details including SKU
-    $sql = "SELECT ps.*, p.sku, p.name as product_name 
+    $sql = "SELECT ps.sale_id, ps.transaction_id, ps.cashier_name, ps.product_id, 
+            ps.quantity_sold, ps.discount_applied, ps.sale_price, ps.sale_timestamp,
+            p.sku, p.name as product_name 
             FROM product_sales ps
             JOIN products p ON ps.product_id = p.product_id 
             WHERE DATE(ps.sale_timestamp) BETWEEN ? AND ?";

@@ -28,8 +28,6 @@
                 </a>
             </li>
 
-
-
             <li>
                 <a href="http://localhost/ea-ra-hardware/admin/pages/inventory.php" class="<?php echo (strpos($_SERVER['PHP_SELF'], 'inventory')) ? 'active' : ''; ?>">
                     <i class="fas fa-boxes"></i>

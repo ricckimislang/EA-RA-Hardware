@@ -14,6 +14,18 @@ if (isset($_GET['start_date']) && isset($_GET['end_date'])) {
 
 include_once '../includes/head.php'; 
 ?>
+<style>   /* Make transaction ID column more visible */
+    #salesTable th:first-child,
+    #salesTable td:first-child {
+        background-color: #f0f8ff; /* Light blue background */
+        font-weight: bold;
+        min-width: 120px;
+    }
+    
+    /* Ensure all table cells display correctly */
+    #salesTable td, #salesTable th {
+        display: table-cell !important;
+    }</style>
 <body>
     <!-- Include Sidebar -->
     <?php include_once '../includes/sidebar.php'; ?>
@@ -61,6 +73,7 @@ include_once '../includes/head.php';
                         <table id="salesTable" class="table table-striped table-hover">
                             <thead>
                                 <tr>
+                                    <th>Transaction ID</th>
                                     <th>SKU</th>
                                     <th>Date & Time</th>
                                     <th>Cashier</th>
@@ -76,7 +89,7 @@ include_once '../includes/head.php';
                             </tbody>
                             <tfoot>
                                 <tr>
-                                    <th colspan="7" class="text-end">Total Sales Amount:</th>
+                                    <th colspan="8" class="text-end">Total Sales Amount:</th>
                                     <th id="totalSales">₱0.00</th>
                                 </tr>
                             </tfoot>
