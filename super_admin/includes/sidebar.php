@@ -51,6 +51,13 @@
             </li>
 
             <li>
+                <a href="http://localhost/ea-ra-hardware/admin/pages/sales_history.php" class="<?php echo (strpos($_SERVER['PHP_SELF'], 'sales_history')) ? 'active' : ''; ?>">
+                    <i class="fas fa-history"></i>
+                    <span>Sales History</span>
+                </a>
+            </li>
+
+            <li>
                 <a href="http://localhost/ea-ra-hardware/admin/pages/attendance_reports.php" class="<?php echo (strpos($_SERVER['PHP_SELF'], 'attendance_reports')) ? 'active' : ''; ?>">
                     <i class="fas fa-clock"></i>
                     <span>Attendance Reports</span>
