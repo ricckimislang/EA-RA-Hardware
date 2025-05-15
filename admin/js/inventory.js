@@ -210,9 +210,9 @@ $("#applyFilters").click(function () {
     const stockMatch =
       !stockFilter ||
       (stockFilter === "low" &&
-        product.stockLevel <= product.lowStockThreshold &&
-        product.stockLevel > 0) ||
-      (stockFilter === "out" && product.stockLevel <= 0) ||
+        product.stockLevel > 5 &&
+        product.stockLevel <= product.lowStockThreshold) ||
+      (stockFilter === "out" && product.stockLevel <= 5) ||
       (stockFilter === "normal" &&
         product.stockLevel > product.lowStockThreshold);
 

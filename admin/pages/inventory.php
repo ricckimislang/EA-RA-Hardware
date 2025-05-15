@@ -49,7 +49,7 @@
                 <div class="card">
                     <div class="card-body">
                         <h6>Total Inventory Value</h6>
-                        <h2 id="totalValue">₱0</h2>
+                        <!-- <h2 id="totalValue">₱0</h2> -->
                     </div>
                 </div>
             </div>
