@@ -141,6 +141,46 @@ include_once '../includes/head.php';
         </div>
     </div>
     
+    <!-- Use Credit Modal -->
+    <div class="modal fade" id="useCreditModal" tabindex="-1" aria-labelledby="useCreditModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="useCreditModalLabel">Use Store Credit</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="use-credit-form">
+                        <input type="hidden" id="use-credit-code" name="credit_code">
+                        
+                        <div class="mb-3">
+                            <label for="use-transaction-id" class="form-label">Transaction ID</label>
+                            <input type="text" class="form-control" id="use-transaction-id" name="transaction_id" required>
+                            <div class="form-text">Enter the ID of the transaction where this credit is being applied</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="use-credit-amount" class="form-label">Amount to Use</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₱</span>
+                                <input type="number" class="form-control" id="use-credit-amount" name="amount_used" step="0.01" min="0.01" required>
+                            </div>
+                            <div class="form-text">Maximum available: ₱<span id="use-max-amount">0.00</span></div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <small>Note: If the full amount is used, the credit will be automatically deactivated.</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="submit-use-credit">Apply Credit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- JavaScript Files -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -185,6 +225,78 @@ include_once '../includes/head.php';
                 loadCreditDetails(creditCode);
             });
             
+            // Handle use credit click
+            $(document).on('click', '.btn-use-credit', function() {
+                const creditCode = $(this).data('credit-code');
+                const remaining = parseFloat($(this).data('remaining'));
+                
+                $('#use-credit-code').val(creditCode);
+                $('#use-max-amount').text(remaining.toFixed(2));
+                $('#use-credit-amount').attr('max', remaining);
+                $('#useCreditModal').modal('show');
+            });
+            
+            // Handle use credit form submission
+            $('#submit-use-credit').on('click', function() {
+                const form = $('#use-credit-form')[0];
+                
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+                
+                const formData = new FormData(form);
+                
+                // Validate amount
+                const amountUsed = parseFloat(formData.get('amount_used'));
+                const maxAmount = parseFloat($('#use-max-amount').text());
+                
+                if (amountUsed <= 0) {
+                    alert('Amount must be greater than zero');
+                    return;
+                }
+                
+                if (amountUsed > maxAmount) {
+                    alert('Amount exceeds available credit balance');
+                    return;
+                }
+                
+                // Submit form via AJAX
+                fetch('api/use_store_credit.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success message
+                        if (typeof toastr !== 'undefined') {
+                            toastr.success(data.message);
+                        } else {
+                            alert('Success: ' + data.message);
+                        }
+                        
+                        // Close modal and reload credits
+                        $('#useCreditModal').modal('hide');
+                        loadStoreCredits();
+                    } else {
+                        // Show error message
+                        if (typeof toastr !== 'undefined') {
+                            toastr.error(data.message);
+                        } else {
+                            alert('Error: ' + data.message);
+                        }
+                    }
+                })
+                .catch(error => {
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error('Error: ' + error.message);
+                    } else {
+                        alert('Error: ' + error.message);
+                    }
+                });
+            });
+            
             // Function to load store credits
             function loadStoreCredits() {
                 fetch('api/get_store_credits.php')
@@ -207,14 +319,15 @@ include_once '../includes/head.php';
                 
                 credits.forEach(credit => {
                     // Calculate remaining amount
-                    const remaining = (parseFloat(credit.credit_amount) - parseFloat(credit.used_amount)).toFixed(2);
+                    const remaining = parseFloat(credit.credit_amount) - parseFloat(credit.used_amount);
+                    const remainingFormatted = remaining.toFixed(2);
                     const isActive = parseInt(credit.is_active) === 1 && remaining > 0;
                     
                     creditsTable.row.add({
                         'credit_code': credit.credit_code,
                         'customer_name': credit.customer_name || 'N/A',
                         'amount': '₱' + parseFloat(credit.credit_amount).toFixed(2),
-                        'remaining': '₱' + remaining,
+                        'remaining': '₱' + remainingFormatted,
                         'issue_date': formatDate(credit.issue_date),
                         'expiry_date': formatDate(credit.expiry_date),
                         'status': isActive ? 
@@ -227,6 +340,12 @@ include_once '../includes/head.php';
                             <a href="print_credit_memo.php?code=${credit.credit_code}" class="btn btn-sm btn-outline-secondary" target="_blank">
                                 <i class="fas fa-print"></i> Print
                             </a>
+                            <button class="btn btn-sm btn-outline-success btn-use-credit ${!isActive ? 'disabled' : ''}" 
+                                data-credit-code="${credit.credit_code}" 
+                                data-remaining="${remaining}" 
+                                ${!isActive ? 'disabled' : ''}>
+                                <i class="fas fa-cash-register"></i> Use
+                            </button>
                         `
                     });
                 });
@@ -288,6 +407,29 @@ include_once '../includes/head.php';
                     `);
                 });
                 
+                // Set usage history
+                const usageHistoryList = $('#usage-history-list');
+                usageHistoryList.empty();
+                
+                if (credit.usage_history && credit.usage_history.length > 0) {
+                    credit.usage_history.forEach(usage => {
+                        usageHistoryList.append(`
+                            <tr>
+                                <td>${formatDateTime(usage.usage_date)}</td>
+                                <td>${usage.transaction_id}</td>
+                                <td>₱${parseFloat(usage.amount_used).toFixed(2)}</td>
+                                <td>₱${parseFloat(usage.remaining_after).toFixed(2)}</td>
+                            </tr>
+                        `);
+                    });
+                } else {
+                    usageHistoryList.append(`
+                        <tr>
+                            <td colspan="4" class="text-center">No usage history found</td>
+                        </tr>
+                    `);
+                }
+                
                 // Update print link
                 $('#print-credit-link').attr('href', `print_credit_memo.php?code=${credit.credit_code}`);
             }
@@ -300,6 +442,20 @@ include_once '../includes/head.php';
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric'
+                });
+            }
+            
+            // Helper function to format date and time
+            function formatDateTime(dateString) {
+                if (!dateString) return 'N/A';
+                const date = new Date(dateString);
+                return date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                }) + ' ' + date.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit'
                 });
             }
             

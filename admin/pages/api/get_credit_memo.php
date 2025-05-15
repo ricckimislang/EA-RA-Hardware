@@ -80,6 +80,32 @@ try {
     $items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
     
+    // Get usage history
+    $usageHistory = [];
+    $usageStmt = $conn->prepare("
+        SELECT 
+            usage_id,
+            transaction_id,
+            amount_used,
+            remaining_after,
+            usage_date
+        FROM credit_usage_history
+        WHERE credit_id = ?
+        ORDER BY usage_date DESC
+    ");
+    
+    if ($usageStmt) {
+        $usageStmt->bind_param("i", $credit['credit_id']);
+        $usageStmt->execute();
+        $usageResult = $usageStmt->get_result();
+        
+        if ($usageResult->num_rows > 0) {
+            $usageHistory = $usageResult->fetch_all(MYSQLI_ASSOC);
+        }
+        
+        $usageStmt->close();
+    }
+    
     // Calculate remaining credit
     $remainingCredit = $credit['credit_amount'] - $credit['used_amount'];
     
@@ -98,6 +124,7 @@ try {
         'is_active' => (bool)$credit['is_active'],
         'processed_by' => $credit['processed_by_username'],
         'items' => $items,
+        'usage_history' => $usageHistory,
         'store_name' => 'EA-RA Hardware',
         'store_address' => 'Address Line 1, City, State, ZIP',
         'store_contact' => '+1-123-456-7890',
