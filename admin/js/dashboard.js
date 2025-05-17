@@ -22,6 +22,34 @@ document.addEventListener("DOMContentLoaded", function () {
   } else {
     console.error("Time range select element not found");
   }
+
+  // Add event listener for employee salary month filter
+  const salaryMonthFilter = document.getElementById("employeeSalaryMonth");
+  if (salaryMonthFilter) {
+    salaryMonthFilter.addEventListener("change", function() {
+      const chartContainer = document.querySelector('#employeeSalaryChart').closest('.chart-container');
+      chartContainer.innerHTML = '<div class="text-center p-5"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+
+      // Fetch data for the selected month
+      fetch(`api/dashboard_data.php?timeRange=month&salaryMonth=${this.value}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Rebuild the chart container
+            chartContainer.innerHTML = '<canvas id="employeeSalaryChart"></canvas>';
+            
+            // Initialize the chart with new data
+            initializeEmployeeSalaryChart(data.employeeSalaries);
+          } else {
+            chartContainer.innerHTML = '<div class="alert alert-danger">Error loading salary data. Please try again.</div>';
+          }
+        })
+        .catch(error => {
+          console.error("Error fetching salary data:", error);
+          chartContainer.innerHTML = '<div class="alert alert-danger">Error loading salary data. Please try again.</div>';
+        });
+    });
+  }
 });
 
 function debugDashboardStructure() {

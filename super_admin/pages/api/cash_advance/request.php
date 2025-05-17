@@ -17,7 +17,7 @@ try {
     $employeeId = intval($_POST['employee_id']);
     $amount = floatval($_POST['amount']);
     $paymentMethod = isset($_POST['payment_method']) ? $conn->real_escape_string($_POST['payment_method']) : 'cash';
-    $notes = isset($_POST['notes']) ? $conn->real_escape_string($_POST['notes']) : '';
+    $notes = isset($_POST['notes']) ? nl2br(htmlspecialchars($conn->real_escape_string($_POST['notes']), ENT_QUOTES, 'UTF-8')) : '';
     $requestDate = date('Y-m-d');
     
     // Validate amount (minimum 100)

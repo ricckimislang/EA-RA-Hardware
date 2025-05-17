@@ -5,6 +5,9 @@ include_once '../../../database/config.php';
 // Get time range parameter
 $timeRange = isset($_GET['timeRange']) ? $_GET['timeRange'] : 'month';
 
+// Add this near where other parameters are handled
+$salaryMonth = isset($_GET['salaryMonth']) ? $_GET['salaryMonth'] : date('Y-m');
+
 // Set date range based on timeRange
 $endDate = date('Y-m-d');
 switch ($timeRange) {
@@ -282,10 +285,10 @@ try {
         FROM payroll p
         JOIN pay_periods pp ON p.pay_period_id = pp.id
         JOIN employees e ON p.id = e.id
-        -- WHERE pp.end_date BETWEEN ? AND ? -- Removed for demo data
+        WHERE DATE_FORMAT(pp.end_date, '%Y-%m') = ?
         ORDER BY e.id, pp.end_date
     ");
-    // $stmt_ind->bind_param("ss", $startDate, $endDate); // Bind if using date filter
+    $stmt_ind->bind_param("s", $salaryMonth);
     $stmt_ind->execute();
     $result_ind = $stmt_ind->get_result();
 

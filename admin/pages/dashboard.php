@@ -119,7 +119,15 @@
             <div class="col-md-12">
                 <div class="card chart-card">
                     <div class="card-body">
-                        <h5 class="card-title">Employee Salary Distribution</h5>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title mb-0">Employee Salary Distribution</h5>
+                            <input type="month" 
+                                   class="form-control" 
+                                   id="employeeSalaryMonth" 
+                                   style="width: auto;"
+                                   value="<?php echo date('Y-m'); ?>" 
+                                   max="<?php echo date('Y-m'); ?>">
+                        </div>
                         <div class="chart-container">
                             <canvas id="employeeSalaryChart"></canvas>
                         </div>

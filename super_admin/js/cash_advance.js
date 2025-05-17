@@ -83,6 +83,12 @@ function submitCashAdvanceRequest() {
     // Create form data from the form
     const formData = new FormData(form);
     
+    // Ensure notes are properly handled
+    const notesTextarea = document.getElementById('notes');
+    if (notesTextarea) {
+        formData.set('notes', notesTextarea.value.trim());
+    }
+    
     // Show loading message
     showMessage(messageDiv, 'Submitting cash advance request...', 'info');
     
@@ -428,7 +434,7 @@ function viewCashAdvanceDetails(id) {
                     new Date(advance.approval_date).toLocaleDateString() : 'Not approved yet';
                 document.getElementById('detail-status').textContent = advance.status.toUpperCase();
                 document.getElementById('detail-payment-method').textContent = advance.payment_method || 'Not specified';
-                document.getElementById('detail-notes').textContent = advance.notes || 'No notes';
+                document.getElementById('detail-notes').innerHTML = (advance.notes || 'No notes').replace(/\r?\n/g, '<br>');
                 
                 // Show payroll deduction info if available
                 if (advance.payroll_id) {

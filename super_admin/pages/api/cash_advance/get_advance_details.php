@@ -14,7 +14,7 @@ try {
     // Get the cash advance details
     $sql = "SELECT ca.id, ca.employee_id, e.full_name as employee_name, ca.amount, 
                   ca.request_date, ca.approval_date, ca.status, ca.payment_method, 
-                  ca.notes, ca.payroll_id, ca.approved_by, u.full_name as approver_name,
+                  ca.notes, ca.payroll_id, ca.approved_by, u.fullname as approver_name,
                   p.title as position
            FROM cash_advances ca
            JOIN employees e ON ca.employee_id = e.id
