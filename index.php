@@ -158,51 +158,6 @@
             </form>
         </div>
     </div>
-    <!-- OTP Verification Modal -->
-    <div class="modal fade" id="otpModal" tabindex="-1" aria-labelledby="otpModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="otpModalLabel">
-                        <i class="fas fa-shield-alt me-2"></i>Two-Factor Authentication
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="text-center mb-4">
-                        <i class="fas fa-envelope fa-3x text-primary mb-3"></i>
-                        <p class="lead">Please enter the 6-digit OTP sent to your email.</p>
-                        <p class="text-muted small">Check your inbox and spam folder</p>
-                    </div>
-                    <div class="d-flex justify-content-center gap-2 mb-4">
-                        <input type="text" class="form-control form-control-lg text-center otp-input" maxlength="1" style="width: 50px; height: 50px;" pattern="[0-9]" inputmode="numeric">
-                        <input type="text" class="form-control form-control-lg text-center otp-input" maxlength="1" style="width: 50px; height: 50px;" pattern="[0-9]" inputmode="numeric">
-                        <input type="text" class="form-control form-control-lg text-center otp-input" maxlength="1" style="width: 50px; height: 50px;" pattern="[0-9]" inputmode="numeric">
-                        <input type="text" class="form-control form-control-lg text-center otp-input" maxlength="1" style="width: 50px; height: 50px;" pattern="[0-9]" inputmode="numeric">
-                        <input type="text" class="form-control form-control-lg text-center otp-input" maxlength="1" style="width: 50px; height: 50px;" pattern="[0-9]" inputmode="numeric">
-                        <input type="text" class="form-control form-control-lg text-center otp-input" maxlength="1" style="width: 50px; height: 50px;" pattern="[0-9]" inputmode="numeric">
-                    </div>
-                    <div class="text-center">
-                        <p id="otpTimer" class="text-muted mb-2">
-                            <i class="fas fa-clock me-2"></i>OTP expires in: <span class="fw-bold">05:00</span>
-                        </p>
-                        <button type="button" class="btn btn-link text-primary" id="resendOtp" disabled>
-                            <i class="fas fa-redo-alt me-1"></i>Resend OTP
-                            <span class="resend-cooldown"></span>
-                        </button>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-1"></i>Cancel
-                    </button>
-                    <button type="button" class="btn btn-primary" id="verifyOtp">
-                        <i class="fas fa-check me-1"></i>Verify OTP
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -317,159 +272,41 @@
                 const formData = new FormData(formElement);
 
                 fetch('api/login/login_process.php', {
-                        method: 'POST',
-                        body: formData,
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            resetLoginAttempts(); // Reset attempts on successful login
-                            showNotification(data.message, 'success');
-                            
-                            // Show OTP modal
-                            const otpModal = new bootstrap.Modal(document.getElementById('otpModal'));
-                            otpModal.show();
-                            
-                            // Start OTP timer
-                            startOtpTimer();
-                            
-                            // Handle OTP verification
-                            document.getElementById('verifyOtp').addEventListener('click', function() {
-                                const otpInputs = document.querySelectorAll('.otp-input');
-                                const otp = Array.from(otpInputs).map(input => input.value).join('');
-                                
-                                if (otp.length !== 6) {
-                                    showNotification('Please enter a valid 6-digit OTP', 'error');
-                                    return;
-                                }
-                                
-                                // Verify OTP
-                                fetch('api/login/verify_otp.php', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                    },
-                                    body: JSON.stringify({
-                                        user_id: data.user_id,
-                                        otp: otp
-                                    })
-                                })
-                                .then(response => response.json())
-                                .then(result => {
-                                    if (result.success) {
-                                        otpModal.hide();
-                                        showNotification('OTP verified successfully', 'success');
-                                        // Proceed with login
-                                        setTimeout(() => {
-                                            switch (data.usertype) {
-                                                case 1: //superadmin
-                                                    window.location.href = 'super_admin/index.php';
-                                                    break;
-                                                case 2: //admin
-                                                    window.location.href = 'admin/index.php';
-                                                    break;
-                                                case 3: //cashier
-                                                    window.location.href = 'cashier/index.php';
-                                                    break;
-                                                default:
-                                                    showNotification('Invalid User Type. Please contact the administrator.', 'error');
-                                            }
-                                        }, 1000);
-                                    } else {
-                                        showNotification(result.message || 'Invalid OTP. Please try again.', 'error');
-                                    }
-                                })
-                                .catch(err => {
-                                    console.error('OTP verification error:', err);
-                                    showNotification('Error verifying OTP. Please try again.', 'error');
-                                });
-                            });
-                            
-                            // Handle OTP input auto-focus
-                            const otpInputs = document.querySelectorAll('.otp-input');
-                            otpInputs.forEach((input, index) => {
-                                input.addEventListener('input', function() {
-                                    if (this.value.length === 1) {
-                                        if (index < otpInputs.length - 1) {
-                                            otpInputs[index + 1].focus();
-                                        }
-                                    }
-                                });
-                                
-                                input.addEventListener('keydown', function(e) {
-                                    if (e.key === 'Backspace' && !this.value && index > 0) {
-                                        otpInputs[index - 1].focus();
-                                    }
-                                });
-                            });
-                            
-                            // Handle resend OTP
-                            document.getElementById('resendOtp').addEventListener('click', function() {
-                                fetch('api/login/resend_otp.php', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                    },
-                                    body: JSON.stringify({
-                                        user_id: data.user_id
-                                    })
-                                })
-                                .then(response => response.json())
-                                .then(result => {
-                                    if (result.success) {
-                                        showNotification('New OTP sent successfully', 'success');
-                                        startOtpTimer();
-                                        // Clear OTP inputs
-                                        otpInputs.forEach(input => input.value = '');
-                                        otpInputs[0].focus();
-                                    } else {
-                                        showNotification(result.message || 'Failed to resend OTP', 'error');
-                                    }
-                                })
-                                .catch(err => {
-                                    console.error('Resend OTP error:', err);
-                                    showNotification('Error resending OTP', 'error');
-                                });
-                            });
-                            
-                        } else {
-                            // Check if it's an email error
-                            if (data.error_type === 'email_error') {
-                                showNotification(data.message, 'error');
-                            } else {
-                                recordFailedAttempt(); // Only record failed attempt if it's not an email error
+                    method: 'POST',
+                    body: formData,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        resetLoginAttempts(); // Reset attempts on successful login
+                        showNotification(data.message, 'success');
+                        
+                        // Redirect based on user type
+                        setTimeout(() => {
+                            switch (data.usertype) {
+                                case 1: //superadmin
+                                    window.location.href = 'super_admin/index.php';
+                                    break;
+                                case 2: //admin
+                                    window.location.href = 'admin/index.php';
+                                    break;
+                                case 3: //cashier
+                                    window.location.href = 'cashier/index.php';
+                                    break;
+                                default:
+                                    showNotification('Invalid User Type. Please contact the administrator.', 'error');
                             }
-                        }
-                    })
-                    .catch(err => {
-                        console.error('Fetch error:', err);
-                        showNotification('Something went wrong during login. Please try again.', 'error');
-                    });
-            });
-            
-            // OTP Timer function
-            function startOtpTimer() {
-                const timerElement = document.querySelector('#otpTimer span');
-                let timeLeft = 5 * 60; // 5 minutes in seconds
-                const resendButton = document.getElementById('resendOtp');
-                
-                const timer = setInterval(() => {
-                    const minutes = Math.floor(timeLeft / 60);
-                    const seconds = timeLeft % 60;
-                    timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                    
-                    if (timeLeft <= 0) {
-                        clearInterval(timer);
-                        document.getElementById('verifyOtp').disabled = true;
-                        resendButton.disabled = false;
-                        showNotification('OTP has expired. Please request a new one.', 'error');
+                        }, 1000);
+                    } else {
+                        // If login failed
+                        recordFailedAttempt();
                     }
-                    timeLeft--;
-                }, 1000);
-                
-                // Store timer ID to clear it when needed
-                document.getElementById('otpModal').dataset.timerId = timer;
-            }
+                })
+                .catch(err => {
+                    console.error('Fetch error:', err);
+                    showNotification('Something went wrong during login. Please try again.', 'error');
+                });
+            });
         });
     </script>
 </body>
