@@ -705,19 +705,96 @@ function initializeEmployeeSalaryChart(data) {
         bimonthlyData.datasets.push(newEmployeeData);
       });
     } else {
-      // If no data from API, create sample data
+      // Get the selected month from the filter if available
+      const salaryMonthFilter = document.getElementById("employeeSalaryMonth");
+      const selectedMonth = salaryMonthFilter ? salaryMonthFilter.value : "";
+      
+      // Generate sample data with some randomness based on month
+      // Base amounts increase by month from May 2024 to March 2025
+      const getMonthMultiplier = (monthStr) => {
+        const months = {
+          "2024-05": 1.00, "2024-06": 1.01, "2024-07": 1.02, "2024-08": 1.03, 
+          "2024-09": 1.04, "2024-10": 1.05, "2024-11": 1.06, "2024-12": 1.07,
+          "2025-01": 1.08, "2025-02": 1.09, "2025-03": 1.10
+        };
+        return months[monthStr] || 1.05; // Default multiplier if month not found
+      };
+      
+      const monthMult = getMonthMultiplier(selectedMonth);
+      
+      // If no data from API, create sample data for all employees
       bimonthlyData.datasets = [
         {
-          label: "Manager",
-          data: [15000, 20000]
+          label: "Juan Dela Cruz (Manager)",
+          data: [38000 * monthMult, 39500 * monthMult]
         },
         {
-          label: "Cashier",
-          data: [10000, 15000]
+          label: "Maria Santos (Supervisor)",
+          data: [32500 * monthMult, 33000 * monthMult]
         },
         {
-          label: "Laborer",
-          data: [8000, 12000]
+          label: "Pedro Reyes (Cashier)",
+          data: [24000 * monthMult, 24500 * monthMult]
+        },
+        {
+          label: "Ana Martinez (Cashier)",
+          data: [23800 * monthMult, 24300 * monthMult]
+        },
+        {
+          label: "Luis Garcia (Inventory Clerk)",
+          data: [26000 * monthMult, 26500 * monthMult]
+        },
+        {
+          label: "Carlos Lopez (Sales Associate)",
+          data: [22000 * monthMult, 22500 * monthMult]
+        },
+        {
+          label: "Miguel Ramos (Staff)",
+          data: [18000 * monthMult, 18500 * monthMult]
+        },
+        {
+          label: "Rosa Mendoza (Staff)",
+          data: [18200 * monthMult, 18700 * monthMult]
+        },
+        {
+          label: "Jose Cruz (Staff)",
+          data: [18500 * monthMult, 19000 * monthMult]
+        },
+        {
+          label: "Sofia Rivera (Sales Associate)",
+          data: [21800 * monthMult, 22300 * monthMult]
+        },
+        {
+          label: "Antonio Gomez (Marketing)",
+          data: [25500 * monthMult, 26000 * monthMult]
+        },
+        {
+          label: "Isabel Ortega (Customer Service)",
+          data: [22500 * monthMult, 23000 * monthMult]
+        },
+        {
+          label: "Fernando Ruiz (Technician)",
+          data: [24000 * monthMult, 24500 * monthMult]
+        },
+        {
+          label: "Patricia Silva (Accounting)",
+          data: [22000 * monthMult, 22500 * monthMult]
+        },
+        {
+          label: "Roberto Chavez (Security)",
+          data: [20500 * monthMult, 21000 * monthMult]
+        },
+        {
+          label: "Teresa Vargas (Maintenance)",
+          data: [19000 * monthMult, 19500 * monthMult]
+        },
+        {
+          label: "Alberto Herrera (IT Support)",
+          data: [28000 * monthMult, 28500 * monthMult]
+        },
+        {
+          label: "Riccki Mislang (Cashier)",
+          data: [24200 * monthMult, 24700 * monthMult]
         }
       ];
     }
