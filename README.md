@@ -39,4 +39,4 @@ EA-RA-Hardware is a hardware management system designed to streamline the tracki
 Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Contact
-For any inquiries, please contact [Your Name](mailto:codingriccki@gmail.com).
+For any inquiries, please contact [Riccki Rejee Mislang](mailto:codingriccki@gmail.com).
