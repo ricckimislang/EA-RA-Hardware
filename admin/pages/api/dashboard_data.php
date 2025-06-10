@@ -2,6 +2,9 @@
 header('Content-Type: application/json');
 include_once '../../../database/config.php';
 
+// Set timezone to match your location
+date_default_timezone_set('Asia/Manila');
+
 // Get time range parameter
 $timeRange = isset($_GET['timeRange']) ? $_GET['timeRange'] : 'month';
 
@@ -9,12 +12,12 @@ $timeRange = isset($_GET['timeRange']) ? $_GET['timeRange'] : 'month';
 $salaryMonth = isset($_GET['salaryMonth']) ? $_GET['salaryMonth'] : date('Y-m');
 
 // Set date range based on timeRange
-$endDate = date('Y-m-d');
+$endDate = date('Y-m-d 23:59:59');  // End of current day
 switch ($timeRange) {
     case 'today':
-        $startDate = date('Y-m-d');
-        $previousStartDate = date('Y-m-d', strtotime('-1 day'));
-        $previousEndDate = date('Y-m-d', strtotime('-1 day'));
+        $startDate = date('Y-m-d 00:00:00');  // Start of current day
+        $previousStartDate = date('Y-m-d 00:00:00', strtotime('-1 day'));
+        $previousEndDate = date('Y-m-d 23:59:59', strtotime('-1 day'));
         $groupBy = 'HOUR(ps.sale_timestamp)';
         $dateFormat = '%H:00';
         $labels = array_map(function($hour) {
@@ -22,26 +25,26 @@ switch ($timeRange) {
         }, range(0, 23));
         break;
     case 'week':
-        $startDate = date('Y-m-d', strtotime('monday this week'));
-        $previousStartDate = date('Y-m-d', strtotime('monday last week'));
-        $previousEndDate = date('Y-m-d', strtotime('sunday last week'));
+        $startDate = date('Y-m-d 00:00:00', strtotime('monday this week'));
+        $previousStartDate = date('Y-m-d 00:00:00', strtotime('monday last week'));
+        $previousEndDate = date('Y-m-d 23:59:59', strtotime('sunday last week'));
         $groupBy = 'DAYNAME(ps.sale_timestamp)';
         $dateFormat = '%W';
         $labels = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
         break;
     case 'year':
-        $startDate = date('Y-01-01');
-        $previousStartDate = date('Y-01-01', strtotime('-1 year'));
-        $previousEndDate = date('Y-12-31', strtotime('-1 year'));
+        $startDate = date('Y-01-01 00:00:00');
+        $previousStartDate = date('Y-01-01 00:00:00', strtotime('-1 year'));
+        $previousEndDate = date('Y-12-31 23:59:59', strtotime('-1 year'));
         $groupBy = 'MONTH(ps.sale_timestamp)';
         $dateFormat = '%b';
         $labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         break;
     case 'month':
     default:
-        $startDate = date('Y-m-01');
-        $previousStartDate = date('Y-m-01', strtotime('-1 month'));
-        $previousEndDate = date('Y-m-t', strtotime('-1 month'));
+        $startDate = date('Y-m-01 00:00:00');
+        $previousStartDate = date('Y-m-01 00:00:00', strtotime('-1 month'));
+        $previousEndDate = date('Y-m-t 23:59:59', strtotime('-1 month'));
         $groupBy = 'DAY(ps.sale_timestamp)';
         $dateFormat = '%d';
         $daysInMonth = date('t');
@@ -94,7 +97,7 @@ try {
     $stmt = $conn->prepare("
         SELECT SUM(ps.sale_price) as current_sales
         FROM product_sales ps
-        WHERE DATE(ps.sale_timestamp) BETWEEN ? AND ?
+        WHERE ps.sale_timestamp BETWEEN ? AND ?
     ");
     $stmt->bind_param("ss", $startDate, $endDate);
     $stmt->execute();
@@ -105,7 +108,7 @@ try {
     $stmt = $conn->prepare("
         SELECT SUM(ps.sale_price) as previous_sales
         FROM product_sales ps
-        WHERE DATE(ps.sale_timestamp) BETWEEN ? AND ?
+        WHERE ps.sale_timestamp BETWEEN ? AND ?
     ");
     $stmt->bind_param("ss", $previousStartDate, $previousEndDate);
     $stmt->execute();
@@ -149,7 +152,7 @@ try {
     $stmt = $conn->prepare("
         SELECT COUNT(DISTINCT ps.transaction_id) as current_orders
         FROM product_sales ps
-        WHERE DATE(ps.sale_timestamp) BETWEEN ? AND ?
+        WHERE ps.sale_timestamp BETWEEN ? AND ?
     ");
     $stmt->bind_param("ss", $startDate, $endDate);
     $stmt->execute();
@@ -160,7 +163,7 @@ try {
     $stmt = $conn->prepare("
         SELECT COUNT(DISTINCT ps.transaction_id) as previous_orders
         FROM product_sales ps
-        WHERE DATE(ps.sale_timestamp) BETWEEN ? AND ?
+        WHERE ps.sale_timestamp BETWEEN ? AND ?
     ");
     $stmt->bind_param("ss", $previousStartDate, $previousEndDate);
     $stmt->execute();
@@ -194,7 +197,7 @@ try {
     $stmt = $conn->prepare("
         SELECT $groupBy as period, SUM(ps.sale_price) as sales
         FROM product_sales ps
-        WHERE DATE(ps.sale_timestamp) BETWEEN ? AND ? 
+        WHERE ps.sale_timestamp BETWEEN ? AND ? 
         GROUP BY $groupBy 
         ORDER BY ps.sale_timestamp
     ");
@@ -216,7 +219,7 @@ try {
     $stmt = $conn->prepare("
         SELECT $groupBy as period, SUM(ps.sale_price) as sales
         FROM product_sales ps
-        WHERE DATE(ps.sale_timestamp) BETWEEN ? AND ? 
+        WHERE ps.sale_timestamp BETWEEN ? AND ? 
         GROUP BY $groupBy 
         ORDER BY ps.sale_timestamp
     ");
@@ -359,7 +362,7 @@ try {
                SUM((ps.sale_price - p.cost_price)) as profit
         FROM product_sales ps
         JOIN products p ON ps.product_id = p.product_id
-        WHERE DATE(ps.sale_timestamp) BETWEEN ? AND ?
+        WHERE ps.sale_timestamp BETWEEN ? AND ?
         GROUP BY ps.product_id
         ORDER BY sales_amount DESC
         LIMIT 10
@@ -417,7 +420,7 @@ try {
                p.stock_level as current_stock
         FROM product_sales ps
         JOIN products p ON ps.product_id = p.product_id
-        WHERE DATE(ps.sale_timestamp) BETWEEN ? AND ?
+        WHERE ps.sale_timestamp BETWEEN ? AND ?
         GROUP BY ps.product_id, p.name, p.stock_level
         ORDER BY total_quantity DESC
         LIMIT 5
